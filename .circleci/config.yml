@@ -1,0 +1,25 @@
+# Java CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
+#    working_directory: ~/Project
+    steps:
+      - checkout
+#      - run: 
+#          name: Compiling Code
+#          command: javac -d ../bin src/*.java
+#      - run:
+#          name: Start ORB
+#          command: orbd -ORBInitialPort 1050
+#      - run: 
+#          name: Start Servers
+#          command: java CenterServer -ORBInitialPort 1050 -ORBInitialHost localhost
+#      - run:
+#          name: Run Tests
+#          command: java Tests
