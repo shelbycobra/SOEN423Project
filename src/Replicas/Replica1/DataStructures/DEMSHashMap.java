@@ -1,9 +1,5 @@
 package Replicas.Replica1.DataStructures;
 
-import Replicas.Record;
-
-import java.util.concurrent.Semaphore;
-
 public class DEMSHashMap {
 	
 	private class HashNode {
@@ -20,48 +16,31 @@ public class DEMSHashMap {
 			this.next = link;
 		}
 		
-		public void setNext(HashNode link) {this.next = link;}
+		void setNext(HashNode link) {this.next = link;}
 		public void setRecord(Record record) {this.record = record;}
-		public int getKey() {return key;}
+		int getKey() {return key;}
 		public Record getRecord() {return record;}
-		public HashNode getNext() {return next;}
-		public String getRecordID() {return recordID;}
+		HashNode getNext() {return next;}
+		String getRecordID() {return recordID;}
 	}
 	
 	private HashNode map[] = new HashNode[26];
 	private int recordCount = 0;
 	private int ID_count = 0;
-
-    static Semaphore mutex = new Semaphore(1);
 	
 	public synchronized String addRecord(Record record, String recordType){
 		HashNode newNode = new HashNode(record.getLastName().toUpperCase().charAt(0), recordType + produceRecordIDString("" + ID_count), record, null);
 
-		int key = newNode.getKey();
-        if (map[key] == null)
-            map[key] = newNode;
-        else {
-            HashNode node = map[key];
-            while (node.getNext() != null){
-                node = node.getNext();
-            }
-            node.setNext(newNode);
-        }
-        try {
-            mutex.acquire();
-            ID_count++;
-            recordCount++;
-            mutex.release();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return newNode.getRecordID();
+		return addHashNode(newNode);
 	}
 	
 	public synchronized String addRecord(String recordID, Record record){
 		HashNode newNode = new HashNode(record.getLastName().toUpperCase().charAt(0), recordID, record, null);
+		return addHashNode(newNode);
+	}
 
-		int key = newNode.getKey();
+	private synchronized String addHashNode(HashNode newNode) {
+        int key = newNode.getKey();
         if (map[key] == null)
             map[key] = newNode;
         else {
@@ -71,21 +50,14 @@ public class DEMSHashMap {
             }
             node.setNext(newNode);
         }
-        
-        try {
-            mutex.acquire();
-            ID_count++;
-            recordCount++;
-            mutex.release();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        ID_count++;
+        recordCount++;
         return newNode.getRecordID();
-	}
-	
+
+    }
 	public synchronized Record getRecord(String recordID){
-            for (int i  = 0; i < map.length; i++) {
-                HashNode node = map[i];
+            for (HashNode node : map) {
                 while (node != null){
                     if (node.getRecordID().equals(recordID)) {
                         return node.getRecord();
@@ -98,8 +70,7 @@ public class DEMSHashMap {
 	
 	public synchronized boolean replaceRecord(Record record){
 		int id = record.getEmployeeID();
-        for (int i  = 0; i < map.length; i++) {
-            HashNode node = map[i];
+        for (HashNode node : map) {
             while (node != null){
                 if (node.getRecord().getEmployeeID() == id) {
                     node.setRecord(record);
@@ -128,13 +99,7 @@ public class DEMSHashMap {
                     } else {
                         prevNode = currentNode.getNext();
                     }
-                    try {
-                        mutex.acquire();
-                        recordCount--;
-                        mutex.release();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    recordCount--;
                     return true;
                 }
                 prevNode = currentNode; //Will only be set when len >0

@@ -1,23 +1,16 @@
 package Replicas.Replica1.DataStructures;
-import Replicas.Project;
-import Replicas.Record;
 
 public class ManagerRecord extends Record {
 	
-	private Project[] projects = new Replicas.Replica1.DataStructures.Project[10];
+	private Project[] projects = new Project[10];
 	private String location;
 
-	public ManagerRecord(String firstName, String lastName, int employeeID, String mailID, Replicas.Replica1.DataStructures.Project[] projects, String location) {
+	public ManagerRecord(String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location) {
 		super(firstName, lastName, employeeID, mailID);
 		if (projects != null)
 			this.projects = projects;
 		if (location.equals("CA") || location.equals("UK") || location.equals("US"))
 			this.location =  location;
-
-        System.out.println("Projects of MR" + employeeID + ": ");
-        for (Replicas.Replica1.DataStructures.Project p: projects) {
-            System.out.println(p);
-        }
 	}
 	
 	public void setLocation(String location){
@@ -26,11 +19,11 @@ public class ManagerRecord extends Record {
 	}
 	
 	//Getters
-	public Replicas.Replica1.DataStructures.Project getProject(int i) {
+	public Project getProject(int i) {
         return projects[i];
 	}
 	
-	public Replicas.Replica1.DataStructures.Project[] getProjects(){
+	public Project[] getProjects(){
 		return projects;
 	}
 	
@@ -41,7 +34,7 @@ public class ManagerRecord extends Record {
     public String getData() {
         String project_strs = ":";
         for (int i = 0; i < projects.length; i++) {
-            Replicas.Replica1.DataStructures.Project project = projects[i];
+            Project project = projects[i];
             project_strs += project.getProjectID() + ":" + project.getProjectClient() + ":" + project.getProjectName() + ":";
         }
         return super.getData() + project_strs + location;
