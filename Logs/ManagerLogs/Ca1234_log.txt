@@ -1,0 +1,42 @@
+October 27, 2018 18:38:22 - Manager ID: Ca1234 - Ca1234 Successful login
+October 27, 2018 18:38:22 - Manager ID: Ca1234 - Connecting to port 3500...
+October 27, 2018 18:38:22 - Manager ID: Ca1234 - Connected to CA server.
+October 27, 2018 18:38:25 - Manager ID: Ca1234 - Creating an Employee Record
+October 27, 2018 18:38:30 - Manager ID: Ca1234 - Employee Name: qwe qwe
+October 27, 2018 18:38:32 - Manager ID: Ca1234 - Employee ID: 213
+October 27, 2018 18:38:38 - Manager ID: Ca1234 - Mail ID e@ee.ca
+October 27, 2018 18:38:41 - Manager ID: Ca1234 - Project ID: P12345
+October 27, 2018 18:38:41 - Manager ID: Ca1234 - Creating Employee Record ...
+October 27, 2018 18:38:41 - Manager ID: Ca1234 - Created Employee Record for qwe qwe, EmployeeID: 213.
+October 27, 2018 18:39:02 - Manager ID: Ca1234 - Record ID: ER0
+October 27, 2018 18:39:04 - Manager ID: Ca1234 - Location: UK
+October 27, 2018 18:39:04 - Manager ID: Ca1234 - 
+Attempting to transfer record ...
+October 27, 2018 19:31:37 - Manager ID: Ca1234 - Ca1234 Successful login
+October 27, 2018 19:31:37 - Manager ID: Ca1234 - Connecting to port 3500...
+October 27, 2018 19:31:37 - Manager ID: Ca1234 - Connected to CA server.
+October 27, 2018 19:31:39 - Manager ID: Ca1234 - Creating a Manager Record
+October 27, 2018 19:31:40 - Manager ID: Ca1234 - Manager Name: wer wqert
+October 27, 2018 19:31:42 - Manager ID: Ca1234 - Employee ID: 1241
+October 27, 2018 19:31:46 - Manager ID: Ca1234 - Mail ID fg@d.ca
+October 27, 2018 19:31:49 - Manager ID: Ca1234 - Added project P12345 to record.
+October 27, 2018 19:31:50 - Manager ID: Ca1234 - Chose not to add another project.
+October 27, 2018 19:32:06 - Manager ID: Ca1234 - Creating Manager Record ...
+October 27, 2018 19:32:06 - Manager ID: Ca1234 - Created Manager Record for wer wqert, Employee ID: 1241.
+October 27, 2018 19:35:22 - Manager ID: Ca1234 - Logging out and exiting system.
+
+October 27, 2018 19:59:38 - Manager ID: Ca1234 - Ca1234 Successful login
+October 27, 2018 19:59:38 - Manager ID: Ca1234 - Connecting to port 3500...
+October 27, 2018 19:59:38 - Manager ID: Ca1234 - Connected to CA server.
+October 27, 2018 19:59:40 - Manager ID: Ca1234 - Creating a Manager Record
+October 27, 2018 19:59:41 - Manager ID: Ca1234 - Manager Name: wer wert
+October 27, 2018 19:59:42 - Manager ID: Ca1234 - Employee ID: 1234
+October 27, 2018 19:59:45 - Manager ID: Ca1234 - Mail ID d@d.ca
+October 27, 2018 19:59:48 - Manager ID: Ca1234 - Added project P12345 to record.
+October 27, 2018 19:59:49 - Manager ID: Ca1234 - Chose not to add another project.
+October 27, 2018 19:59:52 - Manager ID: Ca1234 - Creating Manager Record ...
+October 27, 2018 19:59:52 - Manager ID: Ca1234 - Created Manager Record for wer wert, Employee ID: 1234.
+October 27, 2018 20:00:03 - Manager ID: Ca1234 - Record ID: MR0
+October 27, 2018 20:00:07 - Manager ID: Ca1234 - Location: UK
+October 27, 2018 20:00:07 - Manager ID: Ca1234 - 
+Attempting to transfer record ...

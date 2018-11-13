@@ -1,8 +1,11 @@
+package Replicas.Replica1;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
-import DataStructures.*;
+
+import Replicas.Replica1.DataStructures.*;
+
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.net.*;
 import java.lang.System;
@@ -26,7 +29,7 @@ public class DEMSImpl {
     }
     
     //Implementation of createMRecord 
-    public String createMRecord (String ManagerID, String firstName, String lastName, int employeeID, String mailID,  Project[] projects, String location) {
+    public String createMRecord (String ManagerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location) {
         if (lastName.length() <1) 
             return "Last Name must not be empty";
         ManagerRecord mRecord = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);

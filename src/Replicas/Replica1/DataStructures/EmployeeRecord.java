@@ -1,6 +1,8 @@
-package DataStructures;
+package Replicas.Replica1.DataStructures;
 
-public class EmployeeRecord extends Record{
+import Replicas.Record;
+
+public class EmployeeRecord extends Record {
 
 	private String projectID = "";
 	

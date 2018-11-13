@@ -1,3 +1,9 @@
+# Intellij files
+*.iml
+
+# bin folder
+/bin
+
 # Compiled class file
 *.class
 

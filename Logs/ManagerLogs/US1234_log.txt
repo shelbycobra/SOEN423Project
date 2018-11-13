@@ -1,0 +1,24 @@
+October 28, 2018 09:41:36 - Manager ID: US1234 - US1234 Successful login
+October 28, 2018 09:41:36 - Manager ID: US1234 - Connecting to port 5500...
+October 28, 2018 09:41:36 - Manager ID: US1234 - Connected to US server.
+October 28, 2018 09:41:41 - Manager ID: US1234 - Creating an Employee Record
+October 28, 2018 09:41:42 - Manager ID: US1234 - Employee Name: sdf sfd
+October 28, 2018 09:41:43 - Manager ID: US1234 - Employee ID: 123
+October 28, 2018 09:41:45 - Manager ID: US1234 - Mail ID d@d.ac
+October 28, 2018 09:41:49 - Manager ID: US1234 - Project ID: P12345
+October 28, 2018 09:41:49 - Manager ID: US1234 - Creating Employee Record ...
+October 28, 2018 09:41:49 - Manager ID: US1234 - Created Employee Record for sdf sfd, EmployeeID: 123.
+October 28, 2018 09:41:59 - Manager ID: US1234 - Record ID: ER0
+October 28, 2018 09:41:59 - Manager ID: US1234 - Location: CA
+October 28, 2018 09:41:59 - Manager ID: US1234 - 
+Attempting to transfer record ...
+October 28, 2018 09:41:59 - Manager ID: US1234 - Transfer A Record: Record was successfully transferred. CA server added record ID ER0
+October 28, 2018 09:42:43 - Manager ID: US1234 - Getting Record Count ...
+October 28, 2018 09:42:43 - Manager ID: US1234 - Record count: US:0 CA:2 UK:1 
+October 28, 2018 09:43:00 - Manager ID: US1234 - Record ID: ER0
+October 28, 2018 09:43:01 - Manager ID: US1234 - Location: CA
+October 28, 2018 09:43:01 - Manager ID: US1234 - 
+Attempting to transfer record ...
+October 28, 2018 09:43:01 - Manager ID: US1234 - Transfer A Record: Invalid Record ID: Record Does Not Exist in Current Database:DataStructures.DEMSHashMap@4efd693d
+October 28, 2018 15:41:01 - Manager ID: US1234 - Logging out and exiting system.
+

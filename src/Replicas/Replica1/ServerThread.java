@@ -1,9 +1,15 @@
-import DataStructures.*;
+package Replicas.Replica1;
+
+import Replicas.Replica1.DataStructures.DEMSHashMap;
+import Replicas.Replica1.DataStructures.EmployeeRecord;
+import Replicas.Replica1.DataStructures.ManagerRecord;
+import Replicas.Replica1.DataStructures.Project;
+import Replicas.Replica1.DataStructures.Record;
+
 import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.Arrays;
 import java.util.ArrayList;
 
 public class ServerThread implements Runnable {

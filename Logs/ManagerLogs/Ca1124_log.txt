@@ -1,0 +1,16 @@
+October 27, 2018 20:16:47 - Manager ID: Ca1124 - Ca1124 Successful login
+October 27, 2018 20:16:47 - Manager ID: Ca1124 - Connecting to port 3500...
+October 27, 2018 20:16:47 - Manager ID: Ca1124 - Connected to CA server.
+October 27, 2018 20:16:49 - Manager ID: Ca1124 - Creating a Manager Record
+October 27, 2018 20:16:50 - Manager ID: Ca1124 - Manager Name: sdfg sdfg
+October 27, 2018 20:16:51 - Manager ID: Ca1124 - Employee ID: 1234
+October 27, 2018 20:16:53 - Manager ID: Ca1124 - Invalid Email: w@w/ca
+October 27, 2018 20:16:55 - Manager ID: Ca1124 - Mail ID w@w.ca
+October 27, 2018 20:17:00 - Manager ID: Ca1124 - Added project P12345 to record.
+October 27, 2018 20:17:00 - Manager ID: Ca1124 - Chose not to add another project.
+October 27, 2018 20:17:02 - Manager ID: Ca1124 - Creating Manager Record ...
+October 27, 2018 20:17:02 - Manager ID: Ca1124 - Created Manager Record for sdfg sdfg, Employee ID: 1234.
+October 27, 2018 20:17:07 - Manager ID: Ca1124 - Record ID: MR0
+October 27, 2018 20:17:08 - Manager ID: Ca1124 - Location: UK
+October 27, 2018 20:17:08 - Manager ID: Ca1124 - 
+Attempting to transfer record ...

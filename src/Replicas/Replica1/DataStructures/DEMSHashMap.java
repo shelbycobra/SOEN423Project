@@ -1,4 +1,6 @@
-package DataStructures;
+package Replicas.Replica1.DataStructures;
+
+import Replicas.Record;
 
 import java.util.concurrent.Semaphore;
 

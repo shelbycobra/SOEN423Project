@@ -1,4 +1,4 @@
-package DataStructures;
+package Replicas.Replica1.DataStructures;
 
 public abstract class Record {
 

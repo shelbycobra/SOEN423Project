@@ -1,0 +1,7 @@
+October 28, 2018 09:40:55 - Manager ID: cA1234 - cA1234 Successful login
+October 28, 2018 09:40:55 - Manager ID: cA1234 - Connecting to port 3500...
+October 28, 2018 09:40:55 - Manager ID: cA1234 - Connected to CA server.
+October 28, 2018 09:43:40 - Manager ID: cA1234 - Getting Record Count ...
+October 28, 2018 09:43:40 - Manager ID: cA1234 - Record count: CA:2 UK:1 US:0 
+October 28, 2018 09:46:01 - Manager ID: cA1234 - Logging out and exiting system.
+
