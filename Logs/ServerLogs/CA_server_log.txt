@@ -4616,3 +4616,23 @@ Added Manager Record: MR00000
 		Project Client: sfse
 		Project Name: sfs
 
+November 13, 2018 14:11:20 - CA server in running on port 
+November 13, 2018 14:12:23 - CA server in running on port 
+November 13, 2018 14:20:50 - CA server in running on port 
+November 13, 2018 14:23:59 - CA server in running on port 
+November 13, 2018 14:24:53 - CA server in running on port 
+November 13, 2018 14:27:48 - CA server in running on port 
+November 13, 2018 14:28:25 - CA server in running on port 
+November 13, 2018 14:29:32 - CA server in running on port 
+November 13, 2018 14:31:14 - CA server in running on port 
+November 13, 2018 14:33:17 - CA server in running on port 
+November 13, 2018 15:04:14 - CA server in running on port 
+November 13, 2018 15:14:33 - CA server in running on port 
+November 13, 2018 15:16:45 - CA server in running on port 
+November 13, 2018 15:17:22 - CA server in running on port 
+November 13, 2018 15:17:47 - CA server in running on port 
+November 13, 2018 15:18:26 - CA server in running on port 
+November 13, 2018 15:18:49 - CA server in running on port 
+November 13, 2018 15:19:13 - CA server in running on port 
+November 13, 2018 15:19:28 - CA server in running on port 
+November 13, 2018 15:20:11 - CA server in running on port 
