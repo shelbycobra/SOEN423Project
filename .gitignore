@@ -1,5 +1,6 @@
 # Intellij files
 *.iml
+.idea/
 
 # bin folder
 /bin
