@@ -1,9 +1,14 @@
 # Intellij files
 *.iml
 .idea/
+.directory
+Test/Logs/
+Logs/
+*.txt
 
 # bin folder
-/bin
+bin/
+out/
 
 # Compiled class file
 *.class

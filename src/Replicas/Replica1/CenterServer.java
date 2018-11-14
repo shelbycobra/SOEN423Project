@@ -7,14 +7,12 @@ import java.util.PriorityQueue;
 
 public class CenterServer {
 
-
     private static final int CA_PORT = 3500, UK_PORT = 4500, US_PORT = 5500;
 
     private Thread CA_server;
     private Thread UK_server;
     private Thread US_server;
     private MulticastSocket socket;
-//    private DatagramSocket socket;
     private PriorityQueue<ArrayList<String>> deliveryQueue;
 
     public CenterServer() {
@@ -39,7 +37,6 @@ public class CenterServer {
         try {
             if (CA_server.isAlive() && UK_server.isAlive() && US_server.isAlive()) {
                 setupMulticastSocket();
-//                setupDatagramSocket();
                 waitForMessages();
             }
         } catch (Exception e) {
@@ -53,28 +50,17 @@ public class CenterServer {
         socket.joinGroup(group);
     }
 
-//    private void setupDatagramSocket() throws Exception {
-////        InetAddress group = InetAddress.getByName("228.5.6.7");
-//        socket = new DatagramSocket(6789);
-////        socket.joinGroup(group);
-//    }
-
     private void waitForMessages() throws Exception {
         byte[] buffer = new byte[1000];
         String[] msg_data;
         while (true) {
-            System.out.println("\nCenterServer is waiting for messsages\n");
             DatagramPacket message = new DatagramPacket(buffer, buffer.length);
             socket.receive(message);
-            System.out.println("\nReceived message");
-            System.out.println(new String(message.getData()).trim());
 
             msg_data = (new String(message.getData())).trim().split(":");
             ArrayList<String> msg_list = new ArrayList<>(Arrays.asList(msg_data));
 
-            System.out.println("Adding to deliveryQueue");
             deliveryQueue.add(msg_list);
-            System.out.println("In centerserver: " + deliveryQueue.peek());
         }
     }
 
