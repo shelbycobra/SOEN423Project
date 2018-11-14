@@ -39,6 +39,8 @@ public class CenterServer {
                 setupMulticastSocket();
                 waitForMessages();
             }
+        } catch (SocketException e) {
+            System.out.println("CenterServer Socket is closed.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -56,10 +58,8 @@ public class CenterServer {
         while (true) {
             DatagramPacket message = new DatagramPacket(buffer, buffer.length);
             socket.receive(message);
-
             msg_data = (new String(message.getData())).trim().split(":");
             ArrayList<String> msg_list = new ArrayList<>(Arrays.asList(msg_data));
-
             deliveryQueue.add(msg_list);
         }
     }
@@ -78,7 +78,6 @@ public class CenterServer {
         US_server.join();
         if (socket != null)
             socket.close();
-        System.exit(0);
     }
 
 }
