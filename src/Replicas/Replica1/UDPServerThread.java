@@ -9,7 +9,7 @@ public class UDPServerThread implements Runnable {
 
     private static final byte GET_COUNTS = 0x01, CHECK_RECORD = 0x02, ADD_RECORD = 0X03; 
     
-    private DEMSHashMap map = null;
+    private DEMSHashMap map;
     private DatagramSocket aSocket = null;
     private DatagramPacket request = null;
     private int port;
@@ -59,7 +59,7 @@ public class UDPServerThread implements Runnable {
     /*
     *  SEND RECORD COUNTS
     */
-    private void sendRecordCount() throws SocketException, IOException {
+    private void sendRecordCount() throws IOException {
         byte[] m = (location + ":" + map.getRecordCount()).getBytes();
         DatagramPacket reply = new DatagramPacket(m, m.length, request.getAddress(), request.getPort());
         aSocket.send(reply);
@@ -68,7 +68,7 @@ public class UDPServerThread implements Runnable {
     /*
      * CHECK RECORDS
      */
-     private void checkRecords(String recordID) throws SocketException, IOException{
+     private void checkRecords(String recordID) throws IOException{
         
         byte[] m = new byte[1];
         

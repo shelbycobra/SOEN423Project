@@ -5,11 +5,6 @@ import Replicas.Replica1.DataStructures.Project;
 import org.junit.Assert;
 import org.junit.Before;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
-
 public class ManagerRecordTest {
 
     private ManagerRecord mRecord;
