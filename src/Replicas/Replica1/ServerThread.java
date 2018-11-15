@@ -3,9 +3,9 @@ package Replicas.Replica1;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-public class ServerThread implements Runnable {
+public class ServerThread extends Thread {
 
-
+    private DEMSImpl demsImpl;
     private String location;
     private int UDP_port;
     
@@ -30,7 +30,7 @@ public class ServerThread implements Runnable {
 
             DEMSImpl demsImpl = new DEMSImpl(location, log);
 
-            UDPServerThread UDPThread = new UDPServerThread(demsImpl.getMap(), UDP_port, location);
+            UDPServerThread UDPThread = new UDPServerThread(demsImpl, UDP_port, location);
 
             udp_thd = new Thread(UDPThread);
 
@@ -49,7 +49,6 @@ public class ServerThread implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(location + " Server exiting...");
     }
     
     /*
@@ -60,5 +59,9 @@ public class ServerThread implements Runnable {
         SimpleDateFormat sdf = new SimpleDateFormat("MMMMMMMM dd, yyyy HH:mm:ss");
         log.write( sdf.format(cal.getTime()) + " - "+ message + "\n");
         log.flush();
+    }
+
+    public DEMSImpl getDemsImpl() {
+        return demsImpl;
     }
 }

@@ -7,8 +7,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MessageDeliveryTest {
 
@@ -28,6 +26,10 @@ public class MessageDeliveryTest {
 
         public CenterServer getCenterServer() {
             return centerServer;
+        }
+
+        public void shutdown() {
+            centerServer.shutdownServers();
         }
 
     }
@@ -51,17 +53,17 @@ public class MessageDeliveryTest {
             eRecord = new EmployeeRecord("John", "Smith", 123, "john@gmail.com", "P12345");
 
             // Creating messages that follow the following format
-            //sequence_num:FE_data:msg_ID:param1:param2: ... :paramN
-            String msg_str_1 = "1:FE Data:1:" + eRecord.getData();
-            String msg_str_2 = "2:FE Data:2:" + eRecord.getData();
-            String msg_str_3 = "3:FE Data:3:" + eRecord.getData();
-            String msg_str_4 = "4:FE Data:4:" + eRecord.getData();
-            String msg_str_5 = "5:FE Data:5:" + eRecord.getData();
-            String msg_str_6 = "6:FE Data:6:" + eRecord.getData();
-            String msg_str_7 = "7:FE Data:7:" + eRecord.getData();
-            String msg_str_8 = "8:FE Data:8:" + eRecord.getData();
-            String msg_str_9 = "9:FE Data:9:" + eRecord.getData();
-            String msg_str_10 = "10:FE Data:10:" + eRecord.getData();
+            //sequence_num:ManagerID:msg_ID:command_type:param1:param2: ... :paramN
+            String msg_str_1 = "1:CA1234:1:2:" + eRecord.getData();
+            String msg_str_2 = "2:CA1234:2:2:" + eRecord.getData();
+            String msg_str_3 = "3:CA1234:3:2:" + eRecord.getData();
+            String msg_str_4 = "4:CA1234:4:2:" + eRecord.getData();
+            String msg_str_5 = "5:CA1234:5:2:" + eRecord.getData();
+            String msg_str_6 = "6:CA1234:6:2:" + eRecord.getData();
+            String msg_str_7 = "7:CA1234:7:2:" + eRecord.getData();
+            String msg_str_8 = "8:CA1234:8:2:" + eRecord.getData();
+            String msg_str_9 = "9:CA1234:9:2:" + eRecord.getData();
+            String msg_str_10 = "10:CA1234:10:2:" + eRecord.getData();
 
             // Creating 10 message byte arrays
             byte[] msg1 = msg_str_1.getBytes();
@@ -92,12 +94,12 @@ public class MessageDeliveryTest {
 //             Sending packets in reverse order
 //            Thread.sleep(1000);
 //            socket.send(packet10);
-            Thread.sleep(1000);
-            socket.send(packet9);
-            Thread.sleep(1000);
-            socket.send(packet8);
-            Thread.sleep(1000);
-            socket.send(packet7);
+//            Thread.sleep(1000);
+//            socket.send(packet9);
+//            Thread.sleep(1000);
+//            socket.send(packet8);
+//            Thread.sleep(1000);
+//            socket.send(packet7);
             Thread.sleep(1000);
             socket.send(packet6);
             Thread.sleep(1000);
@@ -113,21 +115,18 @@ public class MessageDeliveryTest {
 
             // Getting top message
             Thread.sleep(1000);
-            ArrayList<String> msg_list = centerServerThread.getCenterServer().getDeliveryQueue().peek();
-            Assert.assertEquals(Arrays.asList(msg_str_1.split(":")), msg_list);
+            String msg_list = centerServerThread.getCenterServer().getDeliveryQueue().peek();
             System.out.println("At top of delivery queue: " + msg_list);
-
-            // Removing top message
-            System.out.println("\nRemoving top message\n");
-            centerServerThread.getCenterServer().getDeliveryQueue().remove(msg_list);
 
             // Getting new top message
             msg_list = centerServerThread.getCenterServer().getDeliveryQueue().peek();
 
             // Top message should equal the next message in line.
-            Assert.assertEquals(Arrays.asList(msg_str_2.split(":")), msg_list);
+            Assert.assertNotEquals(msg_str_2, msg_list);
             System.out.println("At top of delivery queue: " + msg_list);
 
+            // Making sure the delivery queue is empty
+            Assert.assertNull(msg_list);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,7 +135,9 @@ public class MessageDeliveryTest {
     @After
     public void tearDown() {
         try {
-            centerServerThread.getCenterServer().shutdownServers();
+            System.out.println("Tearing down");
+            while (!centerServerThread.getCenterServer().getDeliveryQueue().isEmpty());
+            centerServerThread.shutdown();
             centerServerThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();

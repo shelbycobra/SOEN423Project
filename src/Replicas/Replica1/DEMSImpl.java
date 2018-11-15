@@ -201,7 +201,7 @@ public class DEMSImpl {
             System.arraycopy(recordID.getBytes(), 0, buffer, 1, recordID.getBytes().length);
             
             //Send check record packet
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port+1);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
             aSocket.send(packet);
             
             //Receive answer
@@ -218,7 +218,7 @@ public class DEMSImpl {
                 System.arraycopy(recordData.getBytes(), 0, buffer, 1, recordData.getBytes().length);
                 
                 //Send transfer request.
-                packet = new DatagramPacket(buffer, buffer.length, address, port+1);
+                packet = new DatagramPacket(buffer, buffer.length, address, port);
                 aSocket.send(packet);
                 
                 //receive answer
