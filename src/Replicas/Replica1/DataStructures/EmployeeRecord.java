@@ -39,7 +39,7 @@ public class EmployeeRecord extends Record {
 	}
 	
     public String printData() {
-        String msg = "\n\tName:" + getFirstName() + " " + getLastName() + "\n\tEmployee ID: " + getEmployeeID() + "\n\tMail ID: " + getMailID() + "\n\tProjectID: " + projectID;
+        String msg = "\n\tName:" + getFirstName() + " " + getLastName() + "\n\tEmployee ID: " + getEmployeeID() + "\n\tMail ID: " + getMailID() + "\n\tProjectID: " + projectID + "\n";
         System.out.println(msg);
         return msg;
 	}

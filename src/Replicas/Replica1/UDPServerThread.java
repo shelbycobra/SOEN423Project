@@ -4,6 +4,7 @@ import java.net.*;
 import Replicas.Replica1.DataStructures.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class UDPServerThread extends Thread {
 
@@ -27,11 +28,11 @@ public class UDPServerThread extends Thread {
     public void run() {
         try {
             aSocket = new DatagramSocket(port);
-            byte[] buffer = new byte[256];
             System.out.println(location + "server UDP Socket started. Waiting for request...");
             
             while(true) 
             {
+                byte[] buffer = new byte[256];
                 request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
                 byte request_type = request.getData()[0];
@@ -43,7 +44,7 @@ public class UDPServerThread extends Thread {
                     String recordID = new String(request.getData());
                     checkRecords(recordID);
                 } else if (request_type == ADD_RECORD) {
-                    String recordData = new String(request.getData());
+                    String recordData = new String(request.getData()).trim();
                     String[] data = recordData.split(":");
                     addRecord(data);
                 }
@@ -59,30 +60,34 @@ public class UDPServerThread extends Thread {
                     switch (Integer.parseInt(recordData[3])){
                         case 1: {
                             // Get projects
-                            Project[] projects = getProjectArray(recordData, 9);
+                            Project[] projects = getProjectArray(recordData, 8);
 
-                            // Call DEMSImpl method
+                            // Create Manager Record
                             String msg = demsImpl.createMRecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], projects, recordData[recordData.length-1]);
                             System.out.println(msg);
                             continue;
                         } case 2: {
-                            // Call DEMSImpl method
+                            // Create Employee Record
                             String msg = demsImpl.createERecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], recordData[8]);
                             System.out.println(msg);
                             continue;
                         } case 3: {
+                            // Get Record Count
                             String counts = demsImpl.getRecordCounts(recordData[1]);
                             System.out.println("Record count: " + counts);
                             continue;
                         } case 4: {
+                            // Edit Record
                             String output = demsImpl.editRecord(recordData[1], recordData[4], recordData[5], recordData[6]);
                             System.out.println("\n" + output);
                             continue;
                         } case 5: {
+                            // Transfer Record
                             String output = demsImpl.transferRecord(recordData[1], recordData[4], recordData[5]);
                             System.out.println(output);
                             continue;
                         } case 6: {
+                            // Exit System
                             System.out.println("\nLogging out and exiting system...\n");
                             continue;
                         } default: {
@@ -90,13 +95,12 @@ public class UDPServerThread extends Thread {
                             continue;
                         }
                     }
-
                 }
             }
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e){
-            e.printStackTrace();
+            System.out.println("Socket already bound.");
         } finally {
             if(aSocket != null) 
                 aSocket.close();
@@ -137,8 +141,8 @@ public class UDPServerThread extends Thread {
      private void addRecord(String[] recordData) throws IOException {
 
         String message = "";
-        
-        if (recordData[0].trim().charAt(0) == 'E') {
+
+         if (recordData[0].trim().charAt(0) == 'E') {
 
             // Make employee record
             EmployeeRecord eRecord = new EmployeeRecord(recordData[1], recordData[2], Integer.parseInt(recordData[3]), recordData[4], recordData[5]);

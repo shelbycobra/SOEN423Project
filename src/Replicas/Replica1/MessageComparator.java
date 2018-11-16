@@ -13,9 +13,10 @@ public class MessageComparator implements Comparator<String> {
 
 
         // Compare sequence numbers
-        // if o1 < o2, value will be < 0;
+        // if o1 < o2, value will be -1;
         // if o1 == o2, value will be == 0;
-        // if o1 > o2, value will be > 0;
-        return seqNum1 - seqNum2;
+        // if o1 > o2, value will be 1;
+
+        return Integer.compare(seqNum1, seqNum2);
     }
 }
