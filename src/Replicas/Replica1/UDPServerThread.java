@@ -4,6 +4,7 @@ import java.net.*;
 import Replicas.Replica1.DataStructures.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class UDPServerThread implements Runnable {
 
@@ -31,26 +32,32 @@ public class UDPServerThread implements Runnable {
             System.out.println(location + "server UDP Socket started. Waiting for request...");
             
             while(true) 
-            { 
+            {
                 request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
                 byte request_type = request.getData()[0];
-                
+
+                // Checks first for Transfer Record messages
                 if (request_type == GET_COUNTS)
                     sendRecordCount();
                 else if (request_type == CHECK_RECORD) {
-                    String recordID = new String(request.getData(), 0);
+                    String recordID = new String(request.getData());
                     checkRecords(recordID);
                 } else if (request_type == ADD_RECORD) {
                     String recordData = new String(request.getData());
                     String[] data = recordData.split(":");
                     addRecord(data);
-                } else {
-                    String[] recordData = new String(request.getData()).split(":");
+                }
+
+                // All other message types
+                else {
+                    String[] recordData = new String(request.getData()).trim().split(":");
 
                     // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
+
+                    System.out.println(Arrays.toString(recordData));
 
                     switch (Integer.parseInt(recordData[3])){
                         case 1: {
@@ -59,13 +66,11 @@ public class UDPServerThread implements Runnable {
 
                             // Call DEMSImpl method
                             String msg = demsImpl.createMRecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], projects, recordData[recordData.length-1]);
-
                             System.out.println(msg);
                             continue;
                         } case 2: {
                             // Call DEMSImpl method
                             String msg = demsImpl.createERecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], recordData[8]);
-
                             System.out.println(msg);
                             continue;
                         } case 3: {

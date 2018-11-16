@@ -12,28 +12,39 @@ public class CenterServer {
     private ServerThread CA_DEMS_server;
     private ServerThread UK_DEMS_server;
     private ServerThread US_DEMS_server;
+
     private MulticastSocket socket;
     private PriorityQueue<String> deliveryQueue;
     private int lastSequenceNumber = 0;
     private Semaphore mutex;
+    private Semaphore deliveryQueueMutex;
 
     private ListenForPacketsThread listenForPackets;
     private ProcessMessageThread processMessageThread;
-    
+
     private class ListenForPacketsThread extends Thread {
+
+        private Semaphore deliveryQueueMutex;
+
+        private ListenForPacketsThread(Semaphore sem) {
+            deliveryQueueMutex = sem;
+        }
+
         @Override
         public void run() {
             try {
-                byte[] buffer = new byte[1000];
+
                 String msg_data;
                 while (true) {
-                    System.out.println("listen");
+                    byte[] buffer = new byte[256];
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     socket.receive(message);
+                    msg_data = (new String(message.getData())).trim();
                     mutex.acquire();
-                        msg_data = (new String(message.getData())).trim();
-                        deliveryQueue.add(msg_data);
+                    deliveryQueue.add(msg_data);
                     mutex.release();
+
+                    deliveryQueueMutex.release();
                 }
             } catch (IOException e) {
                 System.out.println("ListenForPacketsThread is shutting down");
@@ -41,42 +52,52 @@ public class CenterServer {
                 e.printStackTrace();
             }
         }
+
     }
 
     private class ProcessMessageThread extends Thread {
+
+        private Semaphore deliveryQueueMutex;
+
+        private ProcessMessageThread(Semaphore sem) {
+            deliveryQueueMutex = sem;
+        }
+
         @Override
         public void run() {
             System.out.println("Processing messages");
+            try {
+                while (true) {
 
-            while (true) {
-                System.out.println("process");
-                try {
-                    Thread.sleep(500);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                    Thread.sleep(100);
+                    deliveryQueueMutex.acquire();
 
-                if (deliveryQueue.peek() != null) {
-                    int seqNum = Integer.parseInt(deliveryQueue.peek().split(":")[0]);
-                    System.out.println(seqNum);
-                    if (seqNum == lastSequenceNumber + 1) {
-                        lastSequenceNumber = seqNum;
-                        System.out.println("Last Sequence Number: " + lastSequenceNumber);
-                        sendMessageToServer(deliveryQueue.peek());
-                    }
+                    int seqNum;
+                    while ((seqNum = Integer.parseInt(deliveryQueue.peek().split(":")[0])) != lastSequenceNumber + 1);
+                    lastSequenceNumber = seqNum;
+                    sendMessageToServer(deliveryQueue.peek());
+
                 }
+            } catch (InterruptedException e) {
+                System.out.println("ProcessMessageThread is shutting down.");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
         private void sendMessageToServer(String msg){
+
+            System.out.println("Sending message to server: " + msg);
             // Set port number
             int port = setPortNumber(msg.split(":")[1].substring(0,2));
-            System.out.println("Port = " + port);
-
-            // Remove msg from delivery queue
-            deliveryQueue.remove(msg);
 
             try {
+
+                // Remove msg from delivery queue
+                mutex.acquire();
+                deliveryQueue.remove(msg);
+                mutex.release();
+
                 // Setup Server Socket
                 InetAddress address = InetAddress.getByName("localhost");
                 DatagramSocket serverSocket = new DatagramSocket();
@@ -89,12 +110,13 @@ public class CenterServer {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
             }
-
         }
 
         private int setPortNumber(String location) {
-            System.out.println("Location = " + location);
             if ("CA".equals(location))
                 return CA_PORT;
             else if ("UK".equals(location)) {
@@ -111,6 +133,7 @@ public class CenterServer {
         mutex = new Semaphore(1);
         MessageComparator msgComp = new MessageComparator();
         deliveryQueue = new PriorityQueue<>(msgComp);
+        deliveryQueueMutex = new Semaphore(0);
     }
 
     public void runServers() {
@@ -125,9 +148,9 @@ public class CenterServer {
         try {
             if (CA_DEMS_server.isAlive() && UK_DEMS_server.isAlive() && US_DEMS_server.isAlive()) {
                 setupMulticastSocket();
-                listenForPackets = new ListenForPacketsThread();
+                listenForPackets = new ListenForPacketsThread(deliveryQueueMutex);
                 listenForPackets.start();
-                processMessageThread = new ProcessMessageThread();
+                processMessageThread = new ProcessMessageThread(deliveryQueueMutex);
                 processMessageThread.start();
             }
         } catch (SocketException e) {
@@ -139,10 +162,15 @@ public class CenterServer {
         }
     }
 
+    public Semaphore getDelMutex() {
+        return deliveryQueueMutex;
+    }
+
     private void setupMulticastSocket() throws Exception {
         InetAddress group = InetAddress.getByName("228.5.6.7");
         socket = new MulticastSocket(6789);
         socket.joinGroup(group);
+
     }
 
     public PriorityQueue<String> getDeliveryQueue() {
@@ -159,5 +187,6 @@ public class CenterServer {
         if (socket != null)
             socket.close();
     }
+
 }
 

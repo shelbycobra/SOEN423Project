@@ -1,7 +1,10 @@
 package DEMS;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import java.io.IOException;
 import java.net.*;
+import java.sql.Statement;
 import java.util.ArrayDeque;
 import java.util.concurrent.Semaphore;
 
@@ -18,13 +21,20 @@ public class Sequencer {
     private static class ListenForMessagesThread extends Thread {
 
         public void run() {
-            byte[] buffer = new byte[1000];
-            DatagramPacket message = new DatagramPacket(buffer, buffer.length);
             try {
-                while (true) {
+                byte[] buffer = new byte[1000];
+                DatagramPacket message = new DatagramPacket(buffer, buffer.length);
+
+                while (true)
+                {
+                    System.out.println("Listening for messages");
                     datagramSocket.receive(message);
+                    System.out.println("Received message");
+
                     mutex.acquire();
-                    queue.add(new String(message.getData()).trim());
+                    String data = new String(message.getData()).trim();
+                    queue.add(data);
+                    System.out.println("Queue size = " + queue.size());
                     mutex.release();
                 }
             } catch (IOException e) {
@@ -36,16 +46,27 @@ public class Sequencer {
     }
 
     public Sequencer() {
+
     }
 
-    public void startup () {
+//    public static void main (String[] args) {
+//        System.out.println("Starting up sequencer\n");
+//        try {
+//            System.out.println("Setting up sockets\n");
+//            group = InetAddress.getByName("228.5.6.7");
+//            multicastSocket = new MulticastSocket(6789);
+//            multicastSocket.joinGroup(group);
+//            datagramSocket = new DatagramSocket(8000);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-        System.out.println("Starting up sequencer\n");
+    public void startup () {
         try {
-            setupMulticastSocket();
-            setupDatagramSocket();
-            listenForMessages  = new ListenForMessagesThread();
-            listenForMessages.start();
+            setupSockets();
+//            listenForMessages  = new ListenForMessagesThread();
+//            listenForMessages.start();
             processMessage();
         } catch (IOException e) {
             e.printStackTrace();
@@ -55,26 +76,31 @@ public class Sequencer {
 
     }
 
-    private static void setupMulticastSocket() throws IOException{
+    private  void setupSockets() throws IOException{
+        System.out.println("Setting up sockets\n");
         group = InetAddress.getByName("228.5.6.7");
         multicastSocket = new MulticastSocket(6789);
         multicastSocket.joinGroup(group);
+        datagramSocket = new DatagramSocket(8888);
+
+        byte[] buffer = "ACK".getBytes();
+        DatagramPacket p = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), 8000);
+
+        datagramSocket.send(p);
     }
 
-    private static void setupDatagramSocket() throws IOException{
-        InetAddress address = InetAddress.getByName("localhost");
-        datagramSocket = new DatagramSocket(4000);
-    }
-
-    private static void processMessage() throws IOException, InterruptedException {
-        System.out.println("Processing message");
+    private  void processMessage() throws IOException, InterruptedException {
+        System.out.println("Processing messages");
         while (true) {
             boolean resendPacket = true;
             while (resendPacket) {
+
                 // Wait until queue isn't empty
-                while (!queue.isEmpty());
+                System.out.println("Wait until queue isn't empty");
+                while (queue.isEmpty());
 
                 //  Add sequence number to message and send
+                System.out.println("Add sequence number to message and send");
                 byte[] buffer = (sequenceNumber+":"+queue.peekFirst()).getBytes();
                 DatagramPacket message = new DatagramPacket(buffer, buffer.length, group,6789);
                 multicastSocket.send(message);

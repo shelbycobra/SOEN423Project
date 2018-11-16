@@ -6,7 +6,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.net.*;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
 
 public class MessageDeliveryTest {
 
@@ -14,6 +17,8 @@ public class MessageDeliveryTest {
     private EmployeeRecord eRecord;
     private InetAddress address;
     private CenterServerThread centerServerThread;
+    private PriorityQueue deliveryQueue;
+
 
     private class CenterServerThread extends Thread {
 
@@ -21,6 +26,7 @@ public class MessageDeliveryTest {
 
         public void run() {
             centerServer = new CenterServer();
+            deliveryQueue = centerServer.getDeliveryQueue();
             centerServer.runServers();
         }
 
@@ -42,13 +48,15 @@ public class MessageDeliveryTest {
             socket.joinGroup(address);
             centerServerThread = new CenterServerThread();
             centerServerThread.start();
+            Thread.sleep(100);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void sendPacket1() {
+    public void sendTenPackets() {
+//        setup();
         try {
             eRecord = new EmployeeRecord("John", "Smith", 123, "john@gmail.com", "P12345");
 
@@ -92,51 +100,66 @@ public class MessageDeliveryTest {
             System.out.println("Sending packets");
 
 //             Sending packets in reverse order
-//            Thread.sleep(1000);
-//            socket.send(packet10);
-//            Thread.sleep(1000);
-//            socket.send(packet9);
-//            Thread.sleep(1000);
-//            socket.send(packet8);
-//            Thread.sleep(1000);
-//            socket.send(packet7);
-            Thread.sleep(1000);
-            socket.send(packet6);
-            Thread.sleep(1000);
+//            Thread.sleep(100);
+            socket.send(packet10);
+            Thread.sleep(10);
             socket.send(packet5);
-            Thread.sleep(1000);
+            
+            Thread.sleep(10);
             socket.send(packet4);
-            Thread.sleep(1000);
-            socket.send(packet3);
-            Thread.sleep(1000);
-            socket.send(packet2);
-            Thread.sleep(1000);
+            
+            Thread.sleep(10);
             socket.send(packet1);
+            
+            Thread.sleep(10);
+            socket.send(packet3);
+            
+            Thread.sleep(10);
+            socket.send(packet9);
+            
+            Thread.sleep(10);
+            socket.send(packet8);
+            
+            Thread.sleep(10);
+            socket.send(packet7);
+            
+            Thread.sleep(10);
+            socket.send(packet6);
+            
+            Thread.sleep(10);
+            socket.send(packet2);
+            
+
+            System.out.println("Sent all packets");
 
             // Getting top message
-            Thread.sleep(1000);
-            String msg_list = centerServerThread.getCenterServer().getDeliveryQueue().peek();
-            System.out.println("At top of delivery queue: " + msg_list);
+
+            while(deliveryQueue.size() > 0)
+                Thread.sleep(10);
+
+            String msg_list = (String) deliveryQueue.peek();
 
             // Getting new top message
-            msg_list = centerServerThread.getCenterServer().getDeliveryQueue().peek();
+            msg_list = (String) deliveryQueue.peek();
 
             // Top message should equal the next message in line.
             Assert.assertNotEquals(msg_str_2, msg_list);
-            System.out.println("At top of delivery queue: " + msg_list);
+            System.out.println("\nAt top of delivery queue: " + msg_list);
 
             // Making sure the delivery queue is empty
             Assert.assertNull(msg_list);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+//        tearDown();
     }
 
     @After
     public void tearDown() {
         try {
+            Thread.sleep(1000);
             System.out.println("Tearing down");
-            while (!centerServerThread.getCenterServer().getDeliveryQueue().isEmpty());
             centerServerThread.shutdown();
             centerServerThread.join();
         } catch (InterruptedException e) {
