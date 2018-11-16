@@ -3,12 +3,11 @@ package Replicas.Replica1;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-public class ServerThread implements Runnable {
-
+public class ServerThread extends Thread {
 
     private String location;
     private int UDP_port;
-    
+
     public ServerThread (String location, int port) {
         this.location = location;
         UDP_port = port;
@@ -16,32 +15,30 @@ public class ServerThread implements Runnable {
     
     @Override
     public void run() {
-        Thread udp_thd = null;
+        UDPServerThread UDPThread = null;
         BufferedWriter log = null;
         try {
             // Create log file
             String logFileName = "Logs/ServerLogs/" + location + "_server_log.txt";
             log = new BufferedWriter(new FileWriter(logFileName, true));
 
-            System.out.println(location + "Server ready and waiting...");
-            String msg = location + " server in running on port ";
+            System.out.println(location + " server ready and waiting...");
+            String msg = location + " server is running on port " + UDP_port + "\n";
             System.out.println(msg);
             writeToLogFile(msg, log);
 
             DEMSImpl demsImpl = new DEMSImpl(location, log);
 
-            UDPServerThread UDPThread = new UDPServerThread(demsImpl.getMap(), UDP_port, location);
+            UDPThread = new UDPServerThread(demsImpl, UDP_port, location);
 
-            udp_thd = new Thread(UDPThread);
-
-            udp_thd.start();
+            UDPThread.start();
 
         } catch (Exception e) {
             System.err.println("ERROR: " + e);
         }
         try {
-            if (udp_thd != null)
-                udp_thd.join();
+            if (UDPThread != null)
+                UDPThread.join();
             if (log != null)
                 log.close();
         } catch (InterruptedException e) {
@@ -49,7 +46,6 @@ public class ServerThread implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(location + " Server exiting...");
     }
     
     /*
@@ -61,4 +57,5 @@ public class ServerThread implements Runnable {
         log.write( sdf.format(cal.getTime()) + " - "+ message + "\n");
         log.flush();
     }
+
 }
