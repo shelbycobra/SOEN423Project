@@ -4,9 +4,8 @@ import java.net.*;
 import Replicas.Replica1.DataStructures.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class UDPServerThread implements Runnable {
+public class UDPServerThread extends Thread {
 
     private static final byte GET_COUNTS = 0x01, CHECK_RECORD = 0x02, ADD_RECORD = 0X03; 
 
@@ -56,8 +55,6 @@ public class UDPServerThread implements Runnable {
                     // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
-
-                    System.out.println(Arrays.toString(recordData));
 
                     switch (Integer.parseInt(recordData[3])){
                         case 1: {
@@ -179,7 +176,7 @@ public class UDPServerThread implements Runnable {
          ArrayList<Project> projects =  new ArrayList<>();
 
          // Add projects to list
-         int i = 5;
+         int i = startIndex;
          while (i < recordData.length-1 ) {
              Project proj = new Project(recordData[i], recordData[i+1],recordData[i+2]);
              projects.add(proj);

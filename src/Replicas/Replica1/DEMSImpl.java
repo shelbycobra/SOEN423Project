@@ -34,7 +34,7 @@ public class DEMSImpl {
             return "Last Name must not be empty";
         ManagerRecord mRecord = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
         String recordID = map.addRecord(mRecord, "MR");
-        String msg = "Manager ID: " + ManagerID + "\nAdded Manager Record: " + recordID + "\n";
+        String msg = "\nManager ID: " + ManagerID + "\nAdded Manager Record: " + recordID + "\n";
         System.out.println("\nServer: "+location + " - " + msg);
         msg += mRecord.printData();
         
@@ -53,7 +53,7 @@ public class DEMSImpl {
             return "Last Name must not be empty";
         EmployeeRecord eRecord = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
         String recordID = map.addRecord(eRecord, "ER");
-        String msg = "Manager ID: " + ManagerID + "\nAdded Employee Record: " + recordID + "\n";
+        String msg = "\nManager ID: " + ManagerID + "\nAdded Employee Record: " + recordID + "\n";
         System.out.println("\nServer: "+location + " - " + msg);
         msg += eRecord.printData();
         
@@ -102,7 +102,7 @@ public class DEMSImpl {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Manager ID: " + ManagerID + " - " + "Record Counts: "+ counts);
+        System.out.println("\nManager ID: " + ManagerID + " - " + "Record Counts: "+ counts);
         return counts;
     }
     

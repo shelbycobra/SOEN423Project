@@ -20,15 +20,9 @@ public class CenterServer {
     private Semaphore deliveryQueueMutex;
 
     private ListenForPacketsThread listenForPackets;
-    private ProcessMessageThread processMessageThread;
+    private ProcessMessageThread processMessage;
 
     private class ListenForPacketsThread extends Thread {
-
-        private Semaphore deliveryQueueMutex;
-
-        private ListenForPacketsThread(Semaphore sem) {
-            deliveryQueueMutex = sem;
-        }
 
         @Override
         public void run() {
@@ -56,12 +50,6 @@ public class CenterServer {
     }
 
     private class ProcessMessageThread extends Thread {
-
-        private Semaphore deliveryQueueMutex;
-
-        private ProcessMessageThread(Semaphore sem) {
-            deliveryQueueMutex = sem;
-        }
 
         @Override
         public void run() {
@@ -92,7 +80,6 @@ public class CenterServer {
             int port = setPortNumber(msg.split(":")[1].substring(0,2));
 
             try {
-
                 // Remove msg from delivery queue
                 mutex.acquire();
                 deliveryQueue.remove(msg);
@@ -148,10 +135,10 @@ public class CenterServer {
         try {
             if (CA_DEMS_server.isAlive() && UK_DEMS_server.isAlive() && US_DEMS_server.isAlive()) {
                 setupMulticastSocket();
-                listenForPackets = new ListenForPacketsThread(deliveryQueueMutex);
+                listenForPackets = new ListenForPacketsThread();
                 listenForPackets.start();
-                processMessageThread = new ProcessMessageThread(deliveryQueueMutex);
-                processMessageThread.start();
+                processMessage = new ProcessMessageThread();
+                processMessage.start();
             }
         } catch (SocketException e) {
             System.out.println("CenterServer Socket is closed.");
@@ -160,10 +147,6 @@ public class CenterServer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public Semaphore getDelMutex() {
-        return deliveryQueueMutex;
     }
 
     private void setupMulticastSocket() throws Exception {
@@ -183,10 +166,9 @@ public class CenterServer {
         UK_DEMS_server.interrupt();
         US_DEMS_server.interrupt();
         listenForPackets.interrupt();
-        processMessageThread.interrupt();
+        processMessage.interrupt();
         if (socket != null)
             socket.close();
     }
-
 }
 
