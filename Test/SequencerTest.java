@@ -13,7 +13,7 @@ import java.net.*;
 
 import static org.junit.Assert.*;
 
-public class SequencerDriver {
+public class SequencerTest {
 
     private Sequencer sequencer;
     private CenterServer centerServer;
