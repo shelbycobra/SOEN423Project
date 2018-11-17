@@ -1,5 +1,9 @@
 package Replicas.Replica1;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.PriorityQueue;
@@ -17,47 +21,49 @@ public class CenterServer {
 
     private int lastSequenceNumber = 0;
     private MulticastSocket socket;
-    private PriorityQueue<String> deliveryQueue;
+    private PriorityQueue<JSONObject> deliveryQueue;
     private Semaphore mutex; // Used to ensure that the delivery queue is thread safe
     private Semaphore deliveryQueueMutex; // Used to signal the Process Messages Thread to start processing a message
+    private JSONParser parser = new JSONParser();
 
     private class ListenForPacketsThread extends Thread {
 
         @Override
         public void run() {
             try {
-                String msg_data;
                 while (true) {
-                    byte[] buffer = new byte[256];
+                    byte[] buffer = new byte[1000];
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     socket.receive(message);
 
+//                    System.out.println("Received Message = " + new String(message.getData()));
                     // Get message string
-                    msg_data = (new String(message.getData())).trim();
+                    JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
                     // Immediately send "SeqNum:ACK" after receiving a message
-                    int seqNum =  Integer.parseInt(msg_data.split(":")[0]);
+                    int seqNum =  Integer.parseInt( (String) jsonMessage.get("sequenceNumber"));
                     sendACK(seqNum);
 
                     // Add message to delivery queue
                     mutex.acquire();
-                    deliveryQueue.add(msg_data);
+                    deliveryQueue.add(jsonMessage);
                     mutex.release();
 
                     // Signal to Process Messages Thread to start processing a message from the queue
                     deliveryQueueMutex.release();
                 }
-            }
-            catch (IOException e) {
+            } catch (InterruptedException | IOException e) {
                 System.out.println("ListenForPacketsThread is shutting down");
-            }
-            catch (InterruptedException e) {
-                System.out.println("ListenForPacketsThread is shutting down");
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
         }
 
-        private void sendACK(int num) throws IOException {
-            byte[] ack = (num+":ACK").getBytes();
+        private void sendACK(Integer num) throws IOException {
+            JSONObject jsonAck = new JSONObject();
+            jsonAck.put("sequenceNumber", num);
+            jsonAck.put("commandType", "ACK");
+            byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
             socket.send(packet);
@@ -78,7 +84,7 @@ public class CenterServer {
                     int seqNum;
                     int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    while ((seqNum = Integer.parseInt(deliveryQueue.peek().split(":")[0])) < nextSequenceNumber)
+                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get("sequenceNumber"))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
 
@@ -98,22 +104,26 @@ public class CenterServer {
             }
         }
 
-        private void sendMessageToServer(String msg){
+        private void sendMessageToServer(JSONObject message){
 
-//            System.out.println("CenterServer: Sending message to server: " + msg);
-            int port = setPortNumber(msg.split(":")[1].substring(0,2));
+            if (message == null) {
+                System.out.println("Cannot send null to servers");
+                return;
+            }
+
+            int port = setPortNumber(((String) message.get("managerID")).substring(0,2));
 
             try {
                 // Remove msg from delivery queue
                 mutex.acquire();
-                deliveryQueue.remove(msg);
+                deliveryQueue.remove(message);
                 mutex.release();
 
                 // Setup Server Socket
                 InetAddress address = InetAddress.getByName("localhost");
                 DatagramSocket serverSocket = new DatagramSocket();
-                byte[] buffer = msg.getBytes();
-
+                byte[] buffer = message.toString().getBytes();
+                System.out.println("CenterServer msg to server = " + message.toString());
                 // Send packet
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
                 serverSocket.send(packet);
@@ -185,7 +195,7 @@ public class CenterServer {
         socket.joinGroup(group);
     }
 
-    public PriorityQueue<String> getDeliveryQueue() {
+    public PriorityQueue<JSONObject> getDeliveryQueue() {
         return deliveryQueue;
     }
 

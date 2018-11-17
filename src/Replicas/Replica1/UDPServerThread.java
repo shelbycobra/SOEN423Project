@@ -2,9 +2,10 @@ package Replicas.Replica1;
 
 import java.net.*;
 import Replicas.Replica1.DataStructures.*;
+import org.json.simple.*;
+import org.json.simple.parser.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class UDPServerThread extends Thread {
 
@@ -17,7 +18,7 @@ public class UDPServerThread extends Thread {
     private int port;
     private String location;
 
-    public UDPServerThread (DEMSImpl demsImpl, int port, String location) {
+    UDPServerThread (DEMSImpl demsImpl, int port, String location) {
         this.demsImpl = demsImpl;
         this.map = demsImpl.getMap();
         this.port = port;
@@ -32,9 +33,10 @@ public class UDPServerThread extends Thread {
             
             while(true) 
             {
-                byte[] buffer = new byte[256];
+                byte[] buffer = new byte[1000];
                 request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
+
                 byte request_type = request.getData()[0];
 
                 // Checks first for Transfer Record messages
@@ -51,39 +53,48 @@ public class UDPServerThread extends Thread {
 
                 // All other message types
                 else {
-                    String[] recordData = new String(request.getData()).trim().split(":");
+                    JSONParser parser = new JSONParser();
+                    JSONObject jsonMessage = (JSONObject) parser.parse(new String(request.getData()).trim());
 
                     // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-                    switch (Integer.parseInt(recordData[3])){
+                    switch (Integer.parseInt( (String) jsonMessage.get("commandType"))) {
                         case 1: {
                             // Get projects
-                            Project[] projects = getProjectArray(recordData, 8);
+                            JSONArray jsonProjects = (JSONArray) jsonMessage.get("projects");
+                            Project[] projects = getProjectArray(jsonProjects);
+                            System.out.println("Creating Record: " + jsonMessage.toJSONString());
 
                             // Create Manager Record
-                            String msg = demsImpl.createMRecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], projects, recordData[recordData.length-1]);
+                            String msg = demsImpl.createMRecord((String) jsonMessage.get("managerID"),
+                                    (String) jsonMessage.get("firstName"),
+                                    (String) jsonMessage.get("lastName"),
+                                    Integer.parseInt( (String) jsonMessage.get("employeeID")),
+                                    (String) jsonMessage.get("mailID"),
+                                    projects,
+                                    (String) jsonMessage.get("location"));
                             System.out.println(msg);
                             continue;
                         } case 2: {
                             // Create Employee Record
-                            String msg = demsImpl.createERecord(recordData[1], recordData[4], recordData[5], Integer.parseInt(recordData[6]), recordData[7], recordData[8]);
+                            String msg = demsImpl.createERecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("firstName"), (String) jsonMessage.get("lastName"), Integer.parseInt( (String) jsonMessage.get("employeeID")), (String) jsonMessage.get("mailID"), (String) jsonMessage.get("projectID"));
                             System.out.println(msg);
                             continue;
                         } case 3: {
                             // Get Record Count
-                            String counts = demsImpl.getRecordCounts(recordData[1]);
+                            String counts = demsImpl.getRecordCounts((String) jsonMessage.get("managerID"));
                             System.out.println("Record count: " + counts);
                             continue;
                         } case 4: {
                             // Edit Record
-                            String output = demsImpl.editRecord(recordData[1], recordData[4], recordData[5], recordData[6]);
+                            String output = demsImpl.editRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("fieldName"), (String) jsonMessage.get("newValue"));
                             System.out.println("\n" + output);
                             continue;
                         } case 5: {
                             // Transfer Record
-                            String output = demsImpl.transferRecord(recordData[1], recordData[4], recordData[5]);
+                            String output = demsImpl.transferRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("targetServer"));
                             System.out.println(output);
                             continue;
                         } case 6: {
@@ -97,7 +108,7 @@ public class UDPServerThread extends Thread {
                     }
                 }
             }
-        } catch (SocketException e) {
+        } catch (ParseException | SocketException e) {
             e.printStackTrace();
         } catch (IOException e){
             System.out.println("Socket already bound.");
@@ -176,18 +187,34 @@ public class UDPServerThread extends Thread {
         aSocket.send(reply);
      }
 
-     private Project[] getProjectArray(String[] recordData, int startIndex) {
+     private Project[] getProjectArray(JSONArray recordData) {
          ArrayList<Project> projects =  new ArrayList<>();
 
+         System.out.println("Getting Project Array: " + recordData.toJSONString());
+
          // Add projects to list
-         int i = startIndex;
-         while (i < recordData.length-1 ) {
-             Project proj = new Project(recordData[i], recordData[i+1],recordData[i+2]);
+         for (Object obj : recordData) {
+             JSONObject jsonProject = (JSONObject) obj;
+             Project proj = new Project((String) jsonProject.get("projectID"), (String) jsonProject.get("projectClient"), (String) jsonProject.get("projectName"));
              projects.add(proj);
-             i +=3;
          }
 
          Project[] prj_arr = new Project[projects.size()];
          return projects.toArray(prj_arr);
      }
+
+    private Project[] getProjectArray(String[] recordData, int startIndex) {
+        ArrayList<Project> projects =  new ArrayList<>();
+
+        // Add projects to list
+        int i = startIndex;
+        while (i < recordData.length-1 ) {
+            Project proj = new Project(recordData[i], recordData[i+1],recordData[i+2]);
+            projects.add(proj);
+            i +=3;
+        }
+
+        Project[] prj_arr = new Project[projects.size()];
+        return projects.toArray(prj_arr);
+    }
 }

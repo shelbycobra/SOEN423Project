@@ -1,5 +1,9 @@
 package DEMS;
 
+import org.json.simple.parser.JSONParser;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayDeque;
@@ -12,21 +16,22 @@ public class Sequencer {
     private final static int MAX_NUM_ACKS = 1, MULTICAST_PORT = 6789;
 
     private int sequenceNumber = 1;
-    private ArrayDeque<String> deliveryQueue = new ArrayDeque<>();
+    private ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
     private Map<Integer, SentMessage> sentMessagesHashMap = new HashMap<>();
     private MulticastSocket multicastSocket;
     private DatagramSocket datagramSocket;
     private InetAddress group;
     private Semaphore mutex = new Semaphore(1);
     private Semaphore processMessageSem = new Semaphore(0);
+    private JSONParser parser;
 
     private class SentMessage {
 
-        private String message;
+        private JSONObject message;
         private int numAcks = 0;
         private long creationTime;
 
-        SentMessage(String message) {
+        SentMessage(JSONObject message) {
             this.message = message;
             creationTime = System.currentTimeMillis();
         }
@@ -35,7 +40,7 @@ public class Sequencer {
             return ++numAcks;
         }
 
-        String getMessage() {
+        JSONObject getMessage() {
             return message;
         }
 
@@ -48,28 +53,26 @@ public class Sequencer {
 
         public void run() {
             try {
-                DatagramPacket message;
 
                 while (true) {
-                    byte[] buffer = new byte[256];
-                    message = new DatagramPacket(buffer, buffer.length);
-
+                    byte[] buffer = new byte[1000];
+                    DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(message);
                     String data = new String(message.getData()).trim();
-
-//                    System.out.println("\nSequencer: Message received - " + data);
+                    JSONObject jsonMessage;
+                    jsonMessage = (JSONObject) parser.parse(data);
 
                     // Check if received message is an ACK message
                     try {
                         // Will throw NumberFormatException if the message is coming from the FE
-                        int ackSeqNum = Integer.parseInt(data.split(":")[0]);
+                        int ackSeqNum = Integer.parseInt( "" + jsonMessage.get("sequenceNumber"));
 
                         // If no exception is thrown, then Process Ack
                         processAck(ackSeqNum);
-                    } catch (NumberFormatException e) {
+                    } catch (NullPointerException | NumberFormatException e) {
                         // Add FE message to queue
                         mutex.acquire();
-                        deliveryQueue.add(data);
+                        deliveryQueue.add(jsonMessage);
 
                         // Signal to Sequencer to start processing the message
                         processMessageSem.release();
@@ -79,6 +82,8 @@ public class Sequencer {
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
@@ -96,7 +101,7 @@ public class Sequencer {
 
             long difference = currentTime - msg.getCreationTime();
             if (MAX_NUM_ACKS <= msg.incrementNumAcks()) {
-//                System.out.println("\nSequence Number " + ackSeqNum + " - All Replicas have successfully received message. Time: " + difference);
+                System.out.println("\nSequence Number " + ackSeqNum + " - All Replicas have successfully received message. Time: " + difference);
                 sentMessagesHashMap.remove(ackSeqNum);
             } else {
                 for (Map.Entry<Integer, SentMessage> entry : sentMessagesHashMap.entrySet()) {
@@ -109,9 +114,9 @@ public class Sequencer {
             }
         }
 
-        private void resend(String message) throws IOException {
-            System.out.println("Resending message: " + message+"\n");
-            byte[] buffer = message.getBytes();
+        private void resend(JSONObject message) throws IOException {
+            System.out.println("Resending message: " + message.toString()+"\n");
+            byte[] buffer = message.toString().getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
             multicastSocket.send(packet);
         }
@@ -120,6 +125,8 @@ public class Sequencer {
     public void startup () {
         try {
             setupSockets();
+            parser = new JSONParser();
+            
             ListenForMessagesThread listenForMessages  = new ListenForMessagesThread();
             listenForMessages.start();
             processMessage();
@@ -146,14 +153,16 @@ public class Sequencer {
             processMessageSem.acquire();
 
             //  Add sequence number to message and send to all replicas
-            String messageData = sequenceNumber + ":" + deliveryQueue.removeFirst();
+            JSONObject jsonMessage =  deliveryQueue.removeFirst();
+            String num = ""+sequenceNumber;
+            jsonMessage.put("sequenceNumber", num);
 
             // Remove message from deliveryQueue and add it to sentMessageHashMap
             mutex.acquire();
-            sentMessagesHashMap.put(sequenceNumber, new SentMessage(messageData));
+            sentMessagesHashMap.put(sequenceNumber, new SentMessage(jsonMessage));
             mutex.release();
 
-            byte[] buffer = messageData.getBytes();
+            byte[] buffer = jsonMessage.toString().getBytes();
             DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
             multicastSocket.send(message);
 
