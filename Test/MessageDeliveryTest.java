@@ -6,10 +6,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.net.*;
 import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
 
 public class MessageDeliveryTest {
 

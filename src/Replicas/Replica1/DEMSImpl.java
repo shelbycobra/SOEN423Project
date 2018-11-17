@@ -2,9 +2,7 @@ package Replicas.Replica1;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-
 import Replicas.Replica1.DataStructures.*;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.net.*;
@@ -53,7 +51,7 @@ public class DEMSImpl {
             return "Last Name must not be empty";
         EmployeeRecord eRecord = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
         String recordID = map.addRecord(eRecord, "ER");
-        String msg = "\nManager ID: " + ManagerID + "\nAdded Employee Record: " + recordID + "\n";
+        String msg = "\nManager ID: " + ManagerID + "\nAdded Employee Record: " + recordID;
         System.out.println("\nServer: "+location + " - " + msg);
         msg += eRecord.printData();
         
@@ -82,18 +80,21 @@ public class DEMSImpl {
             for (UDPRequestServerThread thd : threads)
                 if (thd != null)
                     thd.start();
-            
+
             // let all threads catch up
             Thread.sleep(100);
             
             counts = location + ":" + this.map.getRecordCount() + " ";
-            
+
             for (UDPRequestServerThread thd : threads) {
                 if (thd != null) {
                     counts += thd.getMessage() + " ";
                     thd.join();
-                    }
+                }
             }
+
+            System.out.println("\nManager ID: " + ManagerID + " - " + "Record Counts: "+ counts);
+
             writeToLogFile("Record Counts: "+ counts, log);
         } catch (SocketException e) {
             e.getMessage();
@@ -102,7 +103,6 @@ public class DEMSImpl {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("\nManager ID: " + ManagerID + " - " + "Record Counts: "+ counts);
         return counts;
     }
     
@@ -170,11 +170,11 @@ public class DEMSImpl {
             }
             if (result)
                 return msg;
-            else return "ERROR:Record does not exist in hashmap";
+            else return "=== ERROR === Record "+recordID+" does not exist in "+location+" hashmap";
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "ERROR: Somehow an invalid record ID got in here.";
+        return "=== ERROR === Somehow an invalid record ID got in here.";
     }
     
     //Implementation of transferRecord
@@ -184,7 +184,7 @@ public class DEMSImpl {
         DatagramSocket aSocket = null;
         
         if (remoteCenterServerName.trim().equals(location))
-            return "Entry already exists in database:" + map;
+            return "Entry "+recordID+" already exists in database:" + map;
         
         try {
             InetAddress address = InetAddress.getByName("localhost");
@@ -210,11 +210,11 @@ public class DEMSImpl {
             
             char answer = (char)buffer[0];
             if (answer == YES) {
-                System.out.println("Record was not found in " + remoteCenterServerName + " database.\n" + ManagerID + " is transferring record " + recordID);
+                System.out.println("Record "+recordID+" was not found in " + remoteCenterServerName + " database.\n" + ManagerID + " is transferring record " + recordID);
                 buffer[0] = ADD_RECORD;
             
                 String recordData = recordID + ":" + record.getData();
-                
+
                 System.arraycopy(recordData.getBytes(), 0, buffer, 1, recordData.getBytes().length);
                 
                 //Send transfer request.
@@ -230,7 +230,7 @@ public class DEMSImpl {
                 map.removeRecord(recordID);
                 
             } else {
-                return msg += "Record already exists in the " + remoteCenterServerName + " server.";
+                return msg += "Record "+recordID+" already exists in the " + remoteCenterServerName + " server.";
             }
             
             writeToLogFile("Manager ID: " + ManagerID + " - " + msg, log);
@@ -241,7 +241,7 @@ public class DEMSImpl {
                 aSocket.close();
         }
         
-        return "Record was successfully transferred. " + remoteCenterServerName + " server added record ID " + msg;
+        return "Record "+recordID+" was successfully transferred. " + remoteCenterServerName + " server added record ID " + msg;
     }
     
     /**
@@ -267,6 +267,43 @@ public class DEMSImpl {
             return 5500;
         else 
             return 6000;
+    }
+
+    private class UDPRequestServerThread extends Thread{
+
+        private DatagramPacket packet;
+        private DatagramSocket aSocket;
+        private int port;
+        private byte[] buffer;
+        private String message;
+
+        public UDPRequestServerThread(DatagramSocket aSocket, int port, byte msg){
+            this.aSocket = aSocket;
+            this.port = port;
+            buffer = new byte[256];
+            buffer[0] = msg;
+        }
+
+        @Override
+        public void run() {
+            InetAddress address;
+            try {
+                address = InetAddress.getByName("localhost");
+                packet = new DatagramPacket(buffer, buffer.length, address, port);
+                aSocket.send(packet);
+                packet = new DatagramPacket(buffer, buffer.length);
+                aSocket.receive(packet);
+                message = new String (packet.getData(), 0, packet.getLength());
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public String getMessage(){
+            return message;
+        }
     }
     
     public DEMSHashMap getMap() {
