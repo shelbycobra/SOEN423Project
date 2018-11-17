@@ -79,11 +79,7 @@ public class Sequencer {
                         mutex.release();
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
+            } catch (ParseException | InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
