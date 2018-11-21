@@ -1,0 +1,26 @@
+module FrontEnd
+{
+	struct Project
+	{
+		string projectID;
+		string clientName;
+		string projectName;
+	};
+	
+	typedef sequence<Project> Projects;
+    
+	interface FrontEndInterface
+	{
+		string createMRecord(in string managerID, in string firstName, in string lastName, in string employeeID, in string mailID, in Projects projects, in string location);
+	
+		string createERecord(in string managerID, in string firstName, in string lastName, in string employeeID, in string mailID, in string projectID);
+		
+		string getRecordCount(in string managerID);
+		
+		string editRecord (in string managerID, in string recordID, in string fieldName, in string newValue);
+		
+		string transferRecord (in string managerID, in string recordID, in string remoteCenterServerName);
+		
+		oneway void shutdown();
+	};
+};
