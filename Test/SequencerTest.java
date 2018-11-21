@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import java.io.IOException;
 import java.net.*;
+import Dems.MessageKeys;
 
 import static org.junit.Assert.*;
 
@@ -63,44 +64,44 @@ public class SequencerTest {
         System.out.println("========================================\n");
 
         JSONObject eRecord1 = new JSONObject();
-        eRecord1.put("firstName","John");
-        eRecord1.put("lastName", "Smith");
-        eRecord1.put("employeeID","123");
-        eRecord1.put("mailID", "john@gmail.com");
-        eRecord1.put("projectID", "P12345");
-        eRecord1.put("managerID", "CA1234");
-        eRecord1.put("commandType","2");
-        eRecord1.put("messageID","1");
+        eRecord1.put(MessageKeys.FIRST_NAME,"John");
+        eRecord1.put(MessageKeys.LAST_NAME, "Smith");
+        eRecord1.put(MessageKeys.EMPLOYEE_ID,"123");
+        eRecord1.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        eRecord1.put(MessageKeys.PROJECT_ID, "P12345");
+        eRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
+        eRecord1.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord1.put(MessageKeys.MESSAGE_ID,"1");
 
         JSONObject eRecord2 = new JSONObject();
-        eRecord2.put("firstName","John");
-        eRecord2.put("lastName", "Smith");
-        eRecord2.put("employeeID","123");
-        eRecord2.put("mailID", "john@gmail.com");
-        eRecord2.put("projectID", "P12345");
-        eRecord2.put("managerID", "CA1234");
-        eRecord2.put("commandType","2");
-        eRecord2.put("messageID","2");
+        eRecord2.put(MessageKeys.FIRST_NAME,"John");
+        eRecord2.put(MessageKeys.LAST_NAME, "Smith");
+        eRecord2.put(MessageKeys.EMPLOYEE_ID,"123");
+        eRecord2.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        eRecord2.put(MessageKeys.PROJECT_ID, "P12345");
+        eRecord2.put(MessageKeys.MANAGER_ID, "CA1234");
+        eRecord2.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord2.put(MessageKeys.MESSAGE_ID,"2");
 
         JSONObject eRecord3 = new JSONObject();
-        eRecord3.put("firstName","John");
-        eRecord3.put("lastName", "Smith");
-        eRecord3.put("employeeID","123");
-        eRecord3.put("mailID", "john@gmail.com");
-        eRecord3.put("projectID", "P12345");
-        eRecord3.put("managerID", "CA1234");
-        eRecord3.put("commandType","2");
-        eRecord3.put("messageID","3");
+        eRecord3.put(MessageKeys.FIRST_NAME,"John");
+        eRecord3.put(MessageKeys.LAST_NAME, "Smith");
+        eRecord3.put(MessageKeys.EMPLOYEE_ID,"123");
+        eRecord3.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        eRecord3.put(MessageKeys.PROJECT_ID, "P12345");
+        eRecord3.put(MessageKeys.MANAGER_ID, "CA1234");
+        eRecord3.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord3.put(MessageKeys.MESSAGE_ID,"3");
 
         JSONObject eRecord4 = new JSONObject();
-        eRecord4.put("firstName","John");
-        eRecord4.put("lastName", "Smith");
-        eRecord4.put("employeeID","123");
-        eRecord4.put("mailID", "john@gmail.com");
-        eRecord4.put("projectID", "P12345");
-        eRecord4.put("managerID", "CA1234");
-        eRecord4.put("commandType","2");
-        eRecord4.put("messageID","4");
+        eRecord4.put(MessageKeys.FIRST_NAME,"John");
+        eRecord4.put(MessageKeys.LAST_NAME, "Smith");
+        eRecord4.put(MessageKeys.EMPLOYEE_ID,"123");
+        eRecord4.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        eRecord4.put(MessageKeys.PROJECT_ID, "P12345");
+        eRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
+        eRecord4.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord4.put(MessageKeys.MESSAGE_ID,"4");
 
 //        EmployeeRecord eRecord1 = new EmployeeRecord("John", "Smith", 123, "john@gmail.com", "P12345");
 //        EmployeeRecord eRecord2 = new EmployeeRecord("Carl", "Santiago", 456, "carl@gmail.com", "P55665");
@@ -124,54 +125,54 @@ public class SequencerTest {
 
         JSONArray projects = new JSONArray();
         JSONObject project = new JSONObject();
-        project.put("projectID", "P12345");
-        project.put("projectName", "Project");
-        project.put("projectClient", "Corp.");
+        project.put(MessageKeys.PROJECT_ID, "P12345");
+        project.put(MessageKeys.PROJECT_NAME, "Project");
+        project.put(MessageKeys.PROJECT_CLIENT, "Corp.");
         projects.add(project);
 
         JSONObject mRecord1 = new JSONObject();
-        mRecord1.put("firstName","John");
-        mRecord1.put("lastName", "Smith");
-        mRecord1.put("employeeID","123");
-        mRecord1.put("mailID", "john@gmail.com");
-        mRecord1.put("managerID", "CA1234");
-        mRecord1.put("commandType","1");
-        mRecord1.put("messageID","5");
-        mRecord1.put("projects", projects);
-        mRecord1.put("location", "CA");
+        mRecord1.put(MessageKeys.FIRST_NAME,"John");
+        mRecord1.put(MessageKeys.LAST_NAME, "Smith");
+        mRecord1.put(MessageKeys.EMPLOYEE_ID,"123");
+        mRecord1.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        mRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
+        mRecord1.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord1.put(MessageKeys.MESSAGE_ID,"5");
+        mRecord1.put(MessageKeys.PROJECTS, projects);
+        mRecord1.put(MessageKeys.LOCATION, "CA");
 
         JSONObject mRecord2 = new JSONObject();
-        mRecord2.put("firstName","John");
-        mRecord2.put("lastName", "Smith");
-        mRecord2.put("employeeID","123");
-        mRecord2.put("mailID", "john@gmail.com");
-        mRecord2.put("managerID", "US1234");
-        mRecord2.put("commandType","1");
-        mRecord2.put("messageID","5");
-        mRecord2.put("projects", projects);
-        mRecord2.put("location", "US");
+        mRecord2.put(MessageKeys.FIRST_NAME,"John");
+        mRecord2.put(MessageKeys.LAST_NAME, "Smith");
+        mRecord2.put(MessageKeys.EMPLOYEE_ID,"123");
+        mRecord2.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        mRecord2.put(MessageKeys.MANAGER_ID, "US1234");
+        mRecord2.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord2.put(MessageKeys.MESSAGE_ID,"5");
+        mRecord2.put(MessageKeys.PROJECTS, projects);
+        mRecord2.put(MessageKeys.LOCATION, "US");
 
         JSONObject mRecord3 = new JSONObject();
-        mRecord3.put("firstName","John");
-        mRecord3.put("lastName", "Smith");
-        mRecord3.put("employeeID","123");
-        mRecord3.put("mailID", "john@gmail.com");
-        mRecord3.put("managerID", "UK1234");
-        mRecord3.put("commandType","1");
-        mRecord3.put("messageID","6");
-        mRecord3.put("projects", projects);
-        mRecord3.put("location", "UK");
+        mRecord3.put(MessageKeys.FIRST_NAME,"John");
+        mRecord3.put(MessageKeys.LAST_NAME, "Smith");
+        mRecord3.put(MessageKeys.EMPLOYEE_ID,"123");
+        mRecord3.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        mRecord3.put(MessageKeys.MANAGER_ID, "UK1234");
+        mRecord3.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord3.put(MessageKeys.MESSAGE_ID,"6");
+        mRecord3.put(MessageKeys.PROJECTS, projects);
+        mRecord3.put(MessageKeys.LOCATION, "UK");
 
         JSONObject mRecord4 = new JSONObject();
-        mRecord4.put("firstName","John");
-        mRecord4.put("lastName", "Smith");
-        mRecord4.put("employeeID","123");
-        mRecord4.put("mailID", "john@gmail.com");
-        mRecord4.put("managerID", "CA1234");
-        mRecord4.put("commandType","1");
-        mRecord4.put("messageID","7");
-        mRecord4.put("projects", projects);
-        mRecord4.put("location", "CA");
+        mRecord4.put(MessageKeys.FIRST_NAME,"John");
+        mRecord4.put(MessageKeys.LAST_NAME, "Smith");
+        mRecord4.put(MessageKeys.EMPLOYEE_ID,"123");
+        mRecord4.put(MessageKeys.MAIL_ID, "john@gmail.com");
+        mRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
+        mRecord4.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord4.put(MessageKeys.MESSAGE_ID,"7");
+        mRecord4.put(MessageKeys.PROJECTS, projects);
+        mRecord4.put(MessageKeys.LOCATION, "CA");
 
 //        Project project = new Project("P12345", "Some Corp.", "Project 1");
 //        Project[] projs = {project};
@@ -201,33 +202,33 @@ public class SequencerTest {
         // Getting Record Count
 
         JSONObject getRecords1 = new JSONObject();
-        getRecords1.put("managerID", "CA1234");
-        getRecords1.put("messageID","9");
-        getRecords1.put("commandType","3");
+        getRecords1.put(MessageKeys.MANAGER_ID, "CA1234");
+        getRecords1.put(MessageKeys.MESSAGE_ID,"9");
+        getRecords1.put(MessageKeys.COMMAND_TYPE,"3");
 
         JSONObject editRecord1 = new JSONObject();
-        editRecord1.put("managerID", "CA1234");
-        editRecord1.put("messageID","10");
-        editRecord1.put("commandType","4");
-        editRecord1.put("recordID", "ER00000");
-        editRecord1.put("fieldName", "mailID");
-        editRecord1.put("newValue", "mail@mail.com");
+        editRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
+        editRecord1.put(MessageKeys.MESSAGE_ID,"10");
+        editRecord1.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord1.put(MessageKeys.RECORD_ID, "ER00000");
+        editRecord1.put(MessageKeys.FIELD_NAME, MessageKeys.MAIL_ID);
+        editRecord1.put(MessageKeys.NEW_VALUE, "mail@mail.com");
 
         JSONObject editRecord2 = new JSONObject();
-        editRecord2.put("managerID", "UK1234");
-        editRecord2.put("messageID","11");
-        editRecord2.put("commandType","4");
-        editRecord2.put("recordID", "MR00001");
-        editRecord2.put("fieldName", "projectID");
-        editRecord2.put("newValue", "P99999");
+        editRecord2.put(MessageKeys.MANAGER_ID, "UK1234");
+        editRecord2.put(MessageKeys.MESSAGE_ID,"11");
+        editRecord2.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord2.put(MessageKeys.RECORD_ID, "MR00001");
+        editRecord2.put(MessageKeys.FIELD_NAME, MessageKeys.PROJECT_ID);
+        editRecord2.put(MessageKeys.NEW_VALUE, "P99999");
 
         JSONObject editRecord3 = new JSONObject();
-        editRecord3.put("managerID", "US1234");
-        editRecord3.put("messageID","12");
-        editRecord3.put("commandType","4");
-        editRecord3.put("recordID", "MR00001");
-        editRecord3.put("fieldNamw", "projectClient");
-        editRecord3.put("newValue", "Another Corp.");
+        editRecord3.put(MessageKeys.MANAGER_ID, "US1234");
+        editRecord3.put(MessageKeys.MESSAGE_ID,"12");
+        editRecord3.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord3.put(MessageKeys.RECORD_ID, "MR00001");
+        editRecord3.put(MessageKeys.FIELD_NAME, MessageKeys.PROJECT_CLIENT);
+        editRecord3.put(MessageKeys.NEW_VALUE, "Another Corp.");
 
 //        String msg_str_9 = "CA1234:9:3";
 //        String msg_str_10 = "CA1234:10:4:ER00000:mailID:mail@mail.com";
@@ -246,28 +247,28 @@ public class SequencerTest {
         System.out.println("==================================\n");
 
         JSONObject transferRecord1 = new JSONObject();
-        transferRecord1.put("managerID", "CA1234");
-        transferRecord1.put("messageID","13");
-        transferRecord1.put("commandType","5");
-        transferRecord1.put("recordID", "ER00000");
-        transferRecord1.put("targetServer", "UK");
+        transferRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
+        transferRecord1.put(MessageKeys.MESSAGE_ID,"13");
+        transferRecord1.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord1.put(MessageKeys.RECORD_ID, "ER00000");
+        transferRecord1.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords2 = new JSONObject();
-        getRecords2.put("managerID", "UK1234");
-        getRecords2.put("messageID","14");
-        getRecords2.put("commandType","3");
+        getRecords2.put(MessageKeys.MANAGER_ID, "UK1234");
+        getRecords2.put(MessageKeys.MESSAGE_ID,"14");
+        getRecords2.put(MessageKeys.COMMAND_TYPE,"3");
 
         JSONObject transferRecord2 = new JSONObject();
-        transferRecord2.put("managerID", "CA1234");
-        transferRecord2.put("messageID","15");
-        transferRecord2.put("commandType","5");
-        transferRecord2.put("recordID", "ER00001");
-        transferRecord2.put("targetServer", "UK");
+        transferRecord2.put(MessageKeys.MANAGER_ID, "CA1234");
+        transferRecord2.put(MessageKeys.MESSAGE_ID,"15");
+        transferRecord2.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord2.put(MessageKeys.RECORD_ID, "ER00001");
+        transferRecord2.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords3 = new JSONObject();
-        getRecords3.put("managerID", "UK1234");
-        getRecords3.put("messageID","16");
-        getRecords3.put("commandType","3");
+        getRecords3.put(MessageKeys.MANAGER_ID, "UK1234");
+        getRecords3.put(MessageKeys.MESSAGE_ID,"16");
+        getRecords3.put(MessageKeys.COMMAND_TYPE,"3");
 
 //        String msg_str_13 = "CA1234:13:5:ER00000:UK";
 //        String msg_str_14 = "UK1234:14:3";
@@ -280,28 +281,28 @@ public class SequencerTest {
         byte[] msg16 = getRecords3.toString().getBytes();
 
         JSONObject transferRecord3 = new JSONObject();
-        transferRecord3.put("managerID", "CA1234");
-        transferRecord3.put("messageID","17");
-        transferRecord3.put("commandType","5");
-        transferRecord3.put("recordID", "MR00002");
-        transferRecord3.put("targetServer", "UK");
+        transferRecord3.put(MessageKeys.MANAGER_ID, "CA1234");
+        transferRecord3.put(MessageKeys.MESSAGE_ID,"17");
+        transferRecord3.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord3.put(MessageKeys.RECORD_ID, "MR00002");
+        transferRecord3.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords4 = new JSONObject();
-        getRecords4.put("managerID", "US1234");
-        getRecords4.put("messageID","18");
-        getRecords4.put("commandType","3");
+        getRecords4.put(MessageKeys.MANAGER_ID, "US1234");
+        getRecords4.put(MessageKeys.MESSAGE_ID,"18");
+        getRecords4.put(MessageKeys.COMMAND_TYPE,"3");
 
         JSONObject transferRecord4 = new JSONObject();
-        transferRecord4.put("managerID", "CA1234");
-        transferRecord4.put("messageID","19");
-        transferRecord4.put("commandType","5");
-        transferRecord4.put("recordID", "ER00002");
-        transferRecord4.put("targetServer", "UK");
+        transferRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
+        transferRecord4.put(MessageKeys.MESSAGE_ID,"19");
+        transferRecord4.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord4.put(MessageKeys.RECORD_ID, "ER00002");
+        transferRecord4.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords5 = new JSONObject();
-        getRecords5.put("managerID", "US1234");
-        getRecords5.put("messageID","20");
-        getRecords5.put("commandType","3");
+        getRecords5.put(MessageKeys.MANAGER_ID, "US1234");
+        getRecords5.put(MessageKeys.MESSAGE_ID,"20");
+        getRecords5.put(MessageKeys.COMMAND_TYPE,"3");
 
 //        String msg_str_17 = "CA1234:17:5:MR00002:UK";
 //        String msg_str_18 = "US1234:18:3";

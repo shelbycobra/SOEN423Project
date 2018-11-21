@@ -60,41 +60,41 @@ public class UDPServerThread extends Thread {
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-                    switch (Integer.parseInt( (String) jsonMessage.get("commandType"))) {
+                    switch (Integer.parseInt( (String) jsonMessage.get(MessageKeys.COMMAND_TYPE))) {
                         case 1: {
                             // Get projects
-                            JSONArray jsonProjects = (JSONArray) jsonMessage.get("projects");
+                            JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
                             Project[] projects = getProjectArray(jsonProjects);
                             System.out.println("Creating Record: " + jsonMessage.toJSONString());
 
                             // Create Manager Record
-                            String msg = demsImpl.createMRecord((String) jsonMessage.get("managerID"),
-                                    (String) jsonMessage.get("firstName"),
-                                    (String) jsonMessage.get("lastName"),
-                                    Integer.parseInt( (String) jsonMessage.get("employeeID")),
-                                    (String) jsonMessage.get("mailID"),
+                            String msg = demsImpl.createMRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID),
+                                    (String) jsonMessage.get(MessageKeys.FIRST_NAME),
+                                    (String) jsonMessage.get(MessageKeys.LAST_NAME),
+                                    Integer.parseInt( (String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)),
+                                    (String) jsonMessage.get(MessageKeys.MAIL_ID),
                                     projects,
-                                    (String) jsonMessage.get("location"));
+                                    (String) jsonMessage.get(MessageKeys.LOCATION));
                             System.out.println(msg);
                             continue;
                         } case 2: {
                             // Create Employee Record
-                            String msg = demsImpl.createERecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("firstName"), (String) jsonMessage.get("lastName"), Integer.parseInt( (String) jsonMessage.get("employeeID")), (String) jsonMessage.get("mailID"), (String) jsonMessage.get("projectID"));
+                            String msg = demsImpl.createERecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.FIRST_NAME), (String) jsonMessage.get(MessageKeys.LAST_NAME), Integer.parseInt( (String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)), (String) jsonMessage.get(MessageKeys.MAIL_ID), (String) jsonMessage.get(MessageKeys.PROJECT_ID));
                             System.out.println(msg);
                             continue;
                         } case 3: {
                             // Get Record Count
-                            String counts = demsImpl.getRecordCounts((String) jsonMessage.get("managerID"));
+                            String counts = demsImpl.getRecordCounts((String) jsonMessage.get(MessageKeys.MANAGER_ID));
                             System.out.println("Record count: " + counts);
                             continue;
                         } case 4: {
                             // Edit Record
-                            String output = demsImpl.editRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("fieldName"), (String) jsonMessage.get("newValue"));
+                            String output = demsImpl.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
                             System.out.println("\n" + output);
                             continue;
                         } case 5: {
                             // Transfer Record
-                            String output = demsImpl.transferRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("targetServer"));
+                            String output = demsImpl.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
                             System.out.println(output);
                             continue;
                         } case 6: {
@@ -195,7 +195,7 @@ public class UDPServerThread extends Thread {
          // Add projects to list
          for (Object obj : recordData) {
              JSONObject jsonProject = (JSONObject) obj;
-             Project proj = new Project((String) jsonProject.get("projectID"), (String) jsonProject.get("projectClient"), (String) jsonProject.get("projectName"));
+             Project proj = new Project((String) jsonProject.get(MessageKeys.PROJECT_ID), (String) jsonProject.get(MessageKeys.PROJECT_CLIENT), (String) jsonProject.get(MessageKeys.PROJECT_NAME));
              projects.add(proj);
          }
 

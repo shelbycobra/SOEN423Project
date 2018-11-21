@@ -41,7 +41,7 @@ public class CenterServer {
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
                     // Immediately send "SeqNum:ACK" after receiving a message
-                    int seqNum =  Integer.parseInt( (String) jsonMessage.get("sequenceNumber"));
+                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCER_NUMBER));
                     sendACK(seqNum);
 
                     // Add message to delivery queue
@@ -61,8 +61,8 @@ public class CenterServer {
 
         private void sendACK(Integer num) throws IOException {
             JSONObject jsonAck = new JSONObject();
-            jsonAck.put("sequenceNumber", num);
-            jsonAck.put("commandType", "ACK");
+            jsonAck.put(MessageKeys.SEQUENCER_NUMBER, num);
+            jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
             byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
@@ -84,7 +84,7 @@ public class CenterServer {
                     int seqNum;
                     int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get("sequenceNumber"))) < nextSequenceNumber)
+                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
 
@@ -111,7 +111,7 @@ public class CenterServer {
                 return;
             }
 
-            int port = setPortNumber(((String) message.get("managerID")).substring(0,2));
+            int port = setPortNumber(((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2));
 
             try {
                 // Remove msg from delivery queue
@@ -120,7 +120,7 @@ public class CenterServer {
                 mutex.release();
 
                 // Setup Server Socket
-                InetAddress address = InetAddress.getByName("localhost");
+                InetAddress address = InetAddress.getLocalHost();
                 DatagramSocket serverSocket = new DatagramSocket();
                 byte[] buffer = message.toString().getBytes();
                 System.out.println("CenterServer msg to server = " + message.toString());
