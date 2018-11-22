@@ -22,6 +22,7 @@ public class CenterServer implements Runnable {
 
 	private String location;
 	private Thread udpServerThread;
+	private Logger logger;
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
 
@@ -42,7 +43,7 @@ public class CenterServer implements Runnable {
 				byte[] sendData = new byte[1024];
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-					Logger.logger.log("udp waiting for connection");
+					logger.log("udp waiting for connection");
 					serverSocket.receive(receivePacket);
 
 					byte[] b = receivePacket.getData();
@@ -50,7 +51,7 @@ public class CenterServer implements Runnable {
 					ObjectInput in = new ObjectInputStream(bis);
 					MethodCallMessage methodCallMessage = (MethodCallMessage) in.readObject();
 
-					Logger.logger.log("udp method call received: " + methodCallMessage.getMethodName());
+					logger.log("udp method call received: " + methodCallMessage.getMethodName());
 
 					String response = "";
 					if (methodCallMessage.getMethodName().equals("getRecordCounts")) {
@@ -79,7 +80,7 @@ public class CenterServer implements Runnable {
 						response = "ok";
 					}
 
-					Logger.logger.log("udp response: " + response);
+					logger.log("udp response: " + response);
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
 					sendData = response.getBytes();
@@ -94,13 +95,13 @@ public class CenterServer implements Runnable {
 
 	public CenterServer(String location) {
 		this.location = location;
-		Logger.logger = new Logger(location);
+		this.logger = new Logger(location);
 
 		udpServerThread = new Thread(new UdpServer());
 	}
 
 	public synchronized int createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location) {
-		Logger.logger.log(String.format("createMRecord(%s, %s, %s, %d, %s, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projects.toString(), location));
+		this.logger.log(String.format("createMRecord(%s, %s, %s, %d, %s, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projects.toString(), location));
 
 		ArrayList<Project> projectsList = new ArrayList<Project>(Arrays.asList(projects));
 		ManagerRecord record = new ManagerRecord(firstName, lastName, employeeID, mailID, projectsList, location);
@@ -112,7 +113,7 @@ public class CenterServer implements Runnable {
 	}
 
 	public synchronized int createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, int projectID) {
-		Logger.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %d)", managerID, firstName, lastName, employeeID, mailID, projectID));
+		this.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %d)", managerID, firstName, lastName, employeeID, mailID, projectID));
 
 		EmployeeRecord record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
 		char letter = lastName.toLowerCase().charAt(0);
@@ -123,7 +124,7 @@ public class CenterServer implements Runnable {
 	}
 
 	public synchronized String getRecordCounts(String managerID) {
-		Logger.logger.log(String.format("getRecordCounts(%s)", managerID));
+		this.logger.log(String.format("getRecordCounts(%s)", managerID));
 
 		String result = "";
 		for (String key : UDPPortMap.keySet()) {
@@ -149,7 +150,7 @@ public class CenterServer implements Runnable {
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				clientSocket.receive(receivePacket);
 				response = (new String(receivePacket.getData())).trim();
-				Logger.logger.log(String.format("record count from %s: %s", key, response));
+				this.logger.log(String.format("record count from %s: %s", key, response));
 				clientSocket.close();
 			} catch (SocketTimeoutException e) {
 				e.printStackTrace();
@@ -169,7 +170,7 @@ public class CenterServer implements Runnable {
 	}
 
 	public synchronized int editRecord(String managerID, String recordID, String fieldName, String newValue) {
-		Logger.logger.log(String.format("editRecord(%s, %s, %s, %s)", managerID, recordID, fieldName, newValue));
+		this.logger.log(String.format("editRecord(%s, %s, %s, %s)", managerID, recordID, fieldName, newValue));
 
 		for (char key : records.keySet()) {
 			for (Record value : records.get(key)) {
@@ -192,16 +193,16 @@ public class CenterServer implements Runnable {
 	}
 
 	public int printData(String managerID) {
-		Logger.logger.log(String.format("printData(%s)", managerID));
+		this.logger.log(String.format("printData(%s)", managerID));
 
 		for (char key : records.keySet()) {
-			Logger.logger.log(String.format("  %c:", key));
+			this.logger.log(String.format("  %c:", key));
 			for (Record value : records.get(key)) {
-				Logger.logger.log("    " + value.toString());
+				this.logger.log("    " + value.toString());
 				if (value instanceof ManagerRecord) {
-					Logger.logger.log("      projects:");
+					this.logger.log("      projects:");
 					for (Project project : ((ManagerRecord) value).projects) {
-						Logger.logger.log("        " + project.toString());
+						this.logger.log("        " + project.toString());
 					}
 				}
 			}
@@ -211,7 +212,7 @@ public class CenterServer implements Runnable {
 	}
 
 	public synchronized int transferRecord(String managerID, String recordID, String remoteCenterServerName) {
-		Logger.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
+		this.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
 
 		Record recordToTransfer = null;
 
@@ -251,7 +252,7 @@ public class CenterServer implements Runnable {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
 			newServerContainsRecordResponse = (new String(receivePacket.getData())).trim();
-			Logger.logger.log(String.format("recordIDExists from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
+			this.logger.log(String.format("recordIDExists from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
@@ -290,7 +291,7 @@ public class CenterServer implements Runnable {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
 			newServerContainsRecordResponse = (new String(receivePacket.getData())).trim();
-			Logger.logger.log(String.format("transferRecord from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
+			this.logger.log(String.format("transferRecord from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
