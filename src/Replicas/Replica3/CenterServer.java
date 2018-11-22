@@ -31,9 +31,9 @@ public class CenterServer {
 	public static final HashMap<String, Integer> UDPPortMap;
 	static {
 		UDPPortMap = new HashMap<String, Integer>();
-		UDPPortMap.put("ca", 6000);
-		UDPPortMap.put("us", 6001);
-		UDPPortMap.put("uk", 6002);
+		UDPPortMap.put("CA", 6000);
+		UDPPortMap.put("US", 6001);
+		UDPPortMap.put("UK", 6002);
 	}
 
 	class UdpServer implements Runnable {
