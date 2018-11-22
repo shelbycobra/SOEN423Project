@@ -17,6 +17,8 @@ import DEMS.MessageKeys;
 
 public class CenterServerController {
 
+	private Logger logger;
+
 	private Thread centerServerCA;
 	private Thread centerServerUS;
 	private Thread centerServerUK;
@@ -42,7 +44,7 @@ public class CenterServerController {
 					DatagramPacket message = new DatagramPacket(buffer, buffer.length);
 					multicastSocket.receive(message);
 
-					// System.out.println("Received Message = " + new String(message.getData()));
+					// logger.log("Received Message = " + new String(message.getData()));
 					// Get message string
 					JSONObject jsonMessage = (JSONObject) jsonParser.parse(new String(message.getData()).trim());
 
@@ -59,7 +61,7 @@ public class CenterServerController {
 					deliveryQueueMutex.release();
 				}
 			} catch (InterruptedException | IOException e) {
-				System.out.println("ListenForPacketsThread is shutting down");
+				logger.log("ListenForPacketsThread is shutting down");
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
@@ -80,7 +82,7 @@ public class CenterServerController {
 
 		@Override
 		public void run() {
-			System.out.println("CenterServer: Processing messages\n");
+			logger.log("CenterServerController: Processing messages\n");
 			try {
 				while (true) {
 
@@ -94,7 +96,7 @@ public class CenterServerController {
 					{
 						deliveryQueueMutex.acquire();
 
-						System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
+						logger.log("\n*** Removing duplicate [" + seqNum + "] ***\n");
 
 						mutex.acquire();
 						deliveryQueue.remove(deliveryQueue.peek());
@@ -104,7 +106,7 @@ public class CenterServerController {
 					sendMessageToServer(deliveryQueue.peek());
 				}
 			} catch (InterruptedException e) {
-				System.out.println("ProcessMessageThread is shutting down.");
+				logger.log("ProcessMessageThread is shutting down.");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -113,7 +115,7 @@ public class CenterServerController {
 		private void sendMessageToServer(JSONObject message){
 
 			if (message == null) {
-				System.out.println("Cannot send null to servers");
+				logger.log("Cannot send null to servers");
 				return;
 			}
 
@@ -130,7 +132,7 @@ public class CenterServerController {
 				InetAddress address = InetAddress.getLocalHost();
 				DatagramSocket serverSocket = new DatagramSocket();
 				byte[] buffer = message.toString().getBytes();
-				System.out.println("CenterServer msg to server = " + message.toString());
+				logger.log("CenterServerController msg to server = " + message.toString());
 				// Send packet
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
 				serverSocket.send(packet);
@@ -147,6 +149,8 @@ public class CenterServerController {
 	}
 
 	public CenterServerController() {
+		this.logger = new Logger("CenterServerController");
+
 		centerServerCA = new Thread(new CenterServer("CA"));
 		centerServerUS = new Thread(new CenterServer("US"));
 		centerServerUK = new Thread(new CenterServer("UK"));
@@ -174,9 +178,9 @@ public class CenterServerController {
 				processMessages.start();
 			}
 		} catch (SocketException e) {
-			System.out.println("CenterServer Multicast Socket is closed.");
+			this.logger.log("CenterServerController Multicast Socket is closed.");
 		} catch (InterruptedException e ) {
-			System.out.println("CenterServer is shutting down.");
+			this.logger.log("CenterServerController is shutting down.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -194,7 +198,7 @@ public class CenterServerController {
 	}
 
 	public void shutdownServers() {
-		System.out.println("\nShutting down servers...\n");
+		this.logger.log("\nShutting down servers...\n");
 
 		centerServerCA.interrupt();
 		centerServerUS.interrupt();
