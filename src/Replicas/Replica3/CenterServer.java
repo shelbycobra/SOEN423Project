@@ -18,10 +18,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jws.WebMethod;
-import javax.jws.WebService;
-
-@WebService()
 public class CenterServer implements Runnable {
 
 	private String location;
@@ -105,7 +101,6 @@ public class CenterServer implements Runnable {
 		udpServerThread = new Thread(new UdpServer());
 	}
 
-	@WebMethod()
 	public synchronized int createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location) {
 		Logger.logger.log(String.format("createMRecord(%s, %s, %s, %d, %s, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projects.toString(), location));
 
@@ -118,7 +113,6 @@ public class CenterServer implements Runnable {
 		return 0;
 	}
 
-	@WebMethod()
 	public synchronized int createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, int projectID) {
 		Logger.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %d)", managerID, firstName, lastName, employeeID, mailID, projectID));
 
@@ -130,7 +124,6 @@ public class CenterServer implements Runnable {
 		return 0;
 	}
 
-	@WebMethod()
 	public synchronized String getRecordCounts(String managerID) {
 		Logger.logger.log(String.format("getRecordCounts(%s)", managerID));
 
@@ -177,7 +170,6 @@ public class CenterServer implements Runnable {
 		return result;
 	}
 
-	@WebMethod()
 	public synchronized int editRecord(String managerID, String recordID, String fieldName, String newValue) {
 		Logger.logger.log(String.format("editRecord(%s, %s, %s, %s)", managerID, recordID, fieldName, newValue));
 
@@ -201,7 +193,6 @@ public class CenterServer implements Runnable {
 		return -2;
 	}
 
-	@WebMethod()
 	public int printData(String managerID) {
 		Logger.logger.log(String.format("printData(%s)", managerID));
 
@@ -221,7 +212,6 @@ public class CenterServer implements Runnable {
 		return 0;
 	}
 
-	@WebMethod()
 	public synchronized int transferRecord(String managerID, String recordID, String remoteCenterServerName) {
 		Logger.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
 
