@@ -92,8 +92,6 @@ public class CenterServer implements Runnable {
 		}
 	}
 
-	public CenterServer() {}
-
 	public CenterServer(String location) {
 		this.location = location;
 		Logger.logger = new Logger(location);
