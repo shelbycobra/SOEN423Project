@@ -1,9 +1,9 @@
 package Replicas.Replica1;
 
+import DEMS.MessageKeys;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import java.io.IOException;
 import java.net.*;
 import java.util.PriorityQueue;
@@ -41,7 +41,7 @@ public class CenterServer {
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
                     // Immediately send "SeqNum:ACK" after receiving a message
-                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCER_NUMBER));
+                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
                     sendACK(seqNum);
 
                     // Add message to delivery queue
@@ -61,7 +61,7 @@ public class CenterServer {
 
         private void sendACK(Integer num) throws IOException {
             JSONObject jsonAck = new JSONObject();
-            jsonAck.put(MessageKeys.SEQUENCER_NUMBER, num);
+            jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
             jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
             byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket();
@@ -181,6 +181,7 @@ public class CenterServer {
                 processMessages.start();
             }
         } catch (SocketException e) {
+            e.printStackTrace();
             System.out.println("CenterServer Multicast Socket is closed.");
         } catch (InterruptedException e ) {
             System.out.println("CenterServer is shutting down.");

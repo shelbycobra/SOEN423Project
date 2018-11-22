@@ -9,6 +9,8 @@ import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
+import DEMS.MessageKeys;
+import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -123,7 +125,7 @@ public class Server
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
                     // Immediately send "SeqNum:ACK" after receiving a message
-                    int seqNum =  Integer.parseInt( (String) jsonMessage.get("sequenceNumber"));
+                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
                     sendACK(seqNum);
 
                     // Add message to delivery queue
@@ -149,8 +151,8 @@ public class Server
 		private void sendACK(Integer num) throws IOException
         {
             JSONObject jsonAck = new JSONObject();
-            jsonAck.put("sequenceNumber", num);
-            jsonAck.put("commandType", "ACK");
+            jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
+            jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
             byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
@@ -174,7 +176,7 @@ public class Server
                     int seqNum;
                     int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get("sequenceNumber"))) < nextSequenceNumber)
+                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
 
@@ -207,7 +209,7 @@ public class Server
                 return;
             }
 
-            int port = setPortNumber(((String) message.get("managerID")).substring(0,2));
+            int port = setPortNumber(((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2));
 
             try
             {

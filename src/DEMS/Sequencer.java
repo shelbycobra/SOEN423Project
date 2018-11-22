@@ -13,7 +13,7 @@ import java.util.concurrent.Semaphore;
 
 public class Sequencer {
 
-    private final static int MAX_NUM_ACKS = 1, MULTICAST_PORT = 6789;
+    private final static int MAX_NUM_ACKS = 3, MULTICAST_PORT = 6789;
 
     private int sequenceNumber = 1;
     private ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
@@ -65,7 +65,7 @@ public class Sequencer {
                     // Check if received message is an ACK message
                     try {
                         // Will throw NumberFormatException if the message is coming from the FE
-                        int ackSeqNum = Integer.parseInt( "" + jsonMessage.get("sequenceNumber"));
+                        int ackSeqNum = Integer.parseInt( "" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
 
                         // If no exception is thrown, then Process Ack
                         processAck(ackSeqNum);
@@ -151,7 +151,7 @@ public class Sequencer {
             //  Add sequence number to message and send to all replicas
             JSONObject jsonMessage =  deliveryQueue.removeFirst();
             String num = ""+sequenceNumber;
-            jsonMessage.put("sequenceNumber", num);
+            jsonMessage.put(MessageKeys.SEQUENCE_NUMBER, num);
 
             // Remove message from deliveryQueue and add it to sentMessageHashMap
             mutex.acquire();

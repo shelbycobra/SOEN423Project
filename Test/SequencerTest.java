@@ -2,7 +2,7 @@ package Test;
 
 import DEMS.Sequencer;
 import Replicas.Replica1.CenterServer;
-import Replicas.Replica1.DataStructures.*;
+import Replicas.Replica2.Server;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.After;
@@ -10,14 +10,13 @@ import org.junit.Before;
 import org.junit.Test;
 import java.io.IOException;
 import java.net.*;
-import Dems.MessageKeys;
-
-import static org.junit.Assert.*;
+import DEMS.MessageKeys;
 
 public class SequencerTest {
 
     private Sequencer sequencer;
-    private CenterServer centerServer;
+    private CenterServer replica1Servers;
+    private Server replica2Servers;
     private SetupThread setupThread;
     private CenterServerThread centerServerThread;
     private DatagramSocket socket;
@@ -36,8 +35,10 @@ public class SequencerTest {
 
         @Override
         public void run() {
-            centerServer = new CenterServer();
-            centerServer.runServers();
+            replica1Servers = new CenterServer();
+            replica2Servers = new Server();
+            replica1Servers.runServers();
+            replica2Servers.runServers();
         }
     }
 
@@ -47,7 +48,7 @@ public class SequencerTest {
             setupThread = new SetupThread();
             setupThread.start();
             centerServerThread = new CenterServerThread();
-            centerServerThread.start();
+//            centerServerThread.start();
             socket = new DatagramSocket();
             address = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
@@ -243,7 +244,7 @@ public class SequencerTest {
         sendFourRecords(msg9, msg10, msg11, msg12);
 
         System.out.println("\n==================================");
-        System.out.println("==== TRANSFERING FOUR RECORDS ====");
+        System.out.println("==== TRANSFFERING FOUR RECORDS ====");
         System.out.println("==================================\n");
 
         JSONObject transferRecord1 = new JSONObject();
@@ -347,8 +348,8 @@ public class SequencerTest {
         }
     }
 
-    @After
+//    @After
     public void shutdown() {
-        centerServer.shutdownServers();
+        replica1Servers.shutdownServers();
     }
 }
