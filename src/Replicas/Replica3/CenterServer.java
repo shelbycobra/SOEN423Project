@@ -22,9 +22,10 @@ import javax.jws.WebMethod;
 import javax.jws.WebService;
 
 @WebService()
-public class CenterServer {
+public class CenterServer implements Runnable {
 
 	private String location;
+	private Thread udpServerThread;
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
 
@@ -101,8 +102,7 @@ public class CenterServer {
 		this.location = location;
 		Logger.logger = new Logger(location);
 
-		Thread udpServerThread = new Thread(new UdpServer());
-		udpServerThread.start();
+		udpServerThread = new Thread(new UdpServer());
 	}
 
 	@WebMethod()
@@ -322,6 +322,11 @@ public class CenterServer {
 		}
 
 		return 0;
+	}
+
+	@Override
+	public void run() {
+		udpServerThread.start();
 	}
 
 }
