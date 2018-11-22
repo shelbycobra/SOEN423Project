@@ -10,14 +10,13 @@ import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
 import DEMS.MessageKeys;
-import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
+import DEMS.Replica;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import Replicas.Replica2.ServerThread;
-
-public class Server
+public class Server implements Replica
 {
 	private static final int CA_PORT = 6000, UK_PORT = 6001, US_PORT = 6002;
 	
@@ -45,6 +44,7 @@ public class Server
         deliveryQueue = new PriorityQueue<>(msgComp);
     }
 
+    @Override
     public void runServers()
     {
         // Start up servers
@@ -93,6 +93,7 @@ public class Server
         return deliveryQueue;
     }
 
+    @Override
     public void shutdownServers()
     {
         System.out.println("\nShutting down servers...\n");
@@ -107,7 +108,17 @@ public class Server
             socket.close();
         }
     }
-    
+
+    @Override
+    public JSONArray getData() {
+        return null;
+    }
+
+    @Override
+    public void setData(JSONArray array) {
+
+    }
+
     private class ListenForPacketsThread extends Thread
     {
         @Override

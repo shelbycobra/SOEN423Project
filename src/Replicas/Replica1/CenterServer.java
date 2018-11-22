@@ -1,6 +1,8 @@
 package Replicas.Replica1;
 
 import DEMS.MessageKeys;
+import DEMS.Replica;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -9,11 +11,11 @@ import java.net.*;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
-public class CenterServer {
+public class CenterServer implements Replica {
 
     private static final int CA_PORT = 3500, UK_PORT = 4500, US_PORT = 5500;
 
-    private ServerThread CA_DEMS_server;
+    private Replicas.Replica1.ServerThread CA_DEMS_server;
     private ServerThread UK_DEMS_server;
     private ServerThread US_DEMS_server;
     private ListenForPacketsThread listenForPackets;
@@ -140,12 +142,10 @@ public class CenterServer {
         private int setPortNumber(String location) {
             if ("CA".equals(location))
                 return CA_PORT;
-            else if ("UK".equals(location)) {
+            if ("UK".equals(location))
                 return UK_PORT;
-            }
-            else if ("US".equals(location)) {
+            if ("US".equals(location))
                 return US_PORT;
-            }
             return 0;
         }
     }
@@ -160,6 +160,7 @@ public class CenterServer {
         deliveryQueue = new PriorityQueue<>(msgComp);
     }
 
+    @Override
     public void runServers() {
 
         // Start up servers
@@ -200,6 +201,7 @@ public class CenterServer {
         return deliveryQueue;
     }
 
+    @Override
     public void shutdownServers() {
         System.out.println("\nShutting down servers...\n");
         CA_DEMS_server.interrupt();
@@ -209,6 +211,16 @@ public class CenterServer {
         processMessages.interrupt();
         if (socket != null)
             socket.close();
+    }
+
+    @Override
+    public JSONArray getData() {
+        return null;
+    }
+
+    @Override
+    public void setData(JSONArray array) {
+
     }
 }
 
