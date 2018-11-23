@@ -104,14 +104,6 @@ public class SequencerTest {
         eRecord4.put(MessageKeys.COMMAND_TYPE,"2");
         eRecord4.put(MessageKeys.MESSAGE_ID,"4");
 
-//        EmployeeRecord eRecord1 = new EmployeeRecord("John", "Smith", 123, "john@gmail.com", "P12345");
-//        EmployeeRecord eRecord2 = new EmployeeRecord("Carl", "Santiago", 456, "carl@gmail.com", "P55665");
-//        EmployeeRecord eRecord3 = new EmployeeRecord("Jane", "Doe", 789, "jane@gmail.com", "P99663");
-//        EmployeeRecord eRecord4 = new EmployeeRecord("Cathy", "Diaz", 623, "cathy@gmail.com", "P23553");
-
-        // Creating messages that follow the following format
-        //sequence_num:ManagerID:msg_ID:command_type:param1:param2: ... :paramN
-
         byte[] msg1 = eRecord1.toString().getBytes();
         byte[] msg2 = eRecord2.toString().getBytes();
         byte[] msg3 = eRecord3.toString().getBytes();
@@ -175,20 +167,6 @@ public class SequencerTest {
         mRecord4.put(MessageKeys.PROJECTS, projects);
         mRecord4.put(MessageKeys.LOCATION, "CA");
 
-//        Project project = new Project("P12345", "Some Corp.", "Project 1");
-//        Project[] projs = {project};
-//        ManagerRecord mRecord1 = new ManagerRecord("John", "Smith", 123, "john@gmail.com", projs, "CA");
-//        ManagerRecord mRecord2 = new ManagerRecord("Carl", "Santiago", 456, "carl@gmail.com", projs, "UK");
-//        ManagerRecord mRecord3 = new ManagerRecord("Jane", "Doe", 789, "jane@gmail.com", projs, "US");
-//        ManagerRecord mRecord4 = new ManagerRecord("Cathy", "Diaz", 623, "cathy@gmail.com", projs, "CA");
-
-        // Creating messages that follow the following format
-        // sequence_num:ManagerID:msg_ID:command_type:param1:param2: ... :paramN
-//        String msg_str_5 = "CA1234:5:1:" + mRecord1.getData();
-//        String msg_str_6 = "UK1234:6:1:" + mRecord2.getData();
-//        String msg_str_7 = "US1234:7:1:" + mRecord3.getData();
-//        String msg_str_8 = "CA1234:8:1:" + mRecord4.getData();
-
         byte[] msg5 = mRecord1.toString().getBytes();
         byte[] msg6 = mRecord2.toString().getBytes();
         byte[] msg7 = mRecord3.toString().getBytes();
@@ -231,11 +209,6 @@ public class SequencerTest {
         editRecord3.put(MessageKeys.FIELD_NAME, MessageKeys.PROJECT_CLIENT);
         editRecord3.put(MessageKeys.NEW_VALUE, "Another Corp.");
 
-//        String msg_str_9 = "CA1234:9:3";
-//        String msg_str_10 = "CA1234:10:4:ER00000:mailID:mail@mail.com";
-//        String msg_str_11 = "UK1234:11:4:MR00001:projectID:P99999";
-//        String msg_str_12 = "US5533:12:4:MR00001:projectClient:Another Corp.";
-
         byte[] msg9 = getRecords1.toString().getBytes();
         byte[] msg10 = editRecord1.toString().getBytes();
         byte[] msg11 = editRecord2.toString().getBytes();
@@ -271,11 +244,6 @@ public class SequencerTest {
         getRecords3.put(MessageKeys.MESSAGE_ID,"16");
         getRecords3.put(MessageKeys.COMMAND_TYPE,"3");
 
-//        String msg_str_13 = "CA1234:13:5:ER00000:UK";
-//        String msg_str_14 = "UK1234:14:3";
-//        String msg_str_15 = "CA1234:15:5:ER00001:UK";
-//        String msg_str_16 = "UK1244:16:3";
-
         byte[] msg13 = transferRecord1.toString().getBytes();
         byte[] msg14 = getRecords2.toString().getBytes();
         byte[] msg15 = transferRecord2.toString().getBytes();
@@ -304,11 +272,6 @@ public class SequencerTest {
         getRecords5.put(MessageKeys.MANAGER_ID, "US1234");
         getRecords5.put(MessageKeys.MESSAGE_ID,"20");
         getRecords5.put(MessageKeys.COMMAND_TYPE,"3");
-
-//        String msg_str_17 = "CA1234:17:5:MR00002:UK";
-//        String msg_str_18 = "US1234:18:3";
-//        String msg_str_19 = "CA1234:19:5:ER00002:UK";
-//        String msg_str_20 = "US1234:20:3";
 
         byte[] msg17 = transferRecord3.toString().getBytes();
         byte[] msg18 = getRecords4.toString().getBytes();
@@ -348,7 +311,7 @@ public class SequencerTest {
         }
     }
 
-//    @After
+    @After
     public void shutdown() {
         replica1Servers.shutdownServers();
     }

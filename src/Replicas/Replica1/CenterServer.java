@@ -1,5 +1,6 @@
 package Replicas.Replica1;
 
+import DEMS.Config;
 import DEMS.MessageKeys;
 import DEMS.Replica;
 import org.json.simple.JSONArray;
@@ -11,7 +12,6 @@ import java.net.*;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import DEMS.UDPPortNumbers;
 
 public class CenterServer implements Replica {
 
@@ -143,11 +143,11 @@ public class CenterServer implements Replica {
 
         private int setPortNumber(String location) {
             if ("CA".equals(location))
-                return UDPPortNumbers.R1_CA_PORT;
+                return Config.Replica1.CA_PORT;
             if ("UK".equals(location))
-                return UDPPortNumbers.R1_UK_PORT;
+                return Config.Replica1.UK_PORT;
             if ("US".equals(location))
-                return UDPPortNumbers.R1_US_PORT;
+                return Config.Replica1.US_PORT;
             return 0;
         }
     }
@@ -166,9 +166,9 @@ public class CenterServer implements Replica {
     public void runServers() {
 
         // Start up servers
-        CA_DEMS_server = new ServerThread("CA", UDPPortNumbers.R1_CA_PORT);
-        UK_DEMS_server = new ServerThread("UK", UDPPortNumbers.R1_UK_PORT);
-        US_DEMS_server = new ServerThread("US", UDPPortNumbers.R1_US_PORT);
+        CA_DEMS_server = new ServerThread("CA", Config.Replica1.CA_PORT);
+        UK_DEMS_server = new ServerThread("UK", Config.Replica1.UK_PORT);
+        US_DEMS_server = new ServerThread("US", Config.Replica1.US_PORT);
 
         CA_DEMS_server.start();
         UK_DEMS_server.start();
@@ -195,7 +195,7 @@ public class CenterServer implements Replica {
 
     private void setupMulticastSocket() throws Exception {
         InetAddress group = InetAddress.getByName("228.5.6.7");
-        socket = new MulticastSocket(6789);
+        socket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
         socket.joinGroup(group);
     }
 

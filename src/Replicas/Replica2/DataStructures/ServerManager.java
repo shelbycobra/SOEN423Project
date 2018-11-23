@@ -11,11 +11,7 @@ import java.util.HashMap;
 public class ServerManager
 {
 	private static int currentRecordID = 10000;
-	
-	public static int caPort = 6000;
-	public static int usPort = 6001;
-	public static int ukPort = 6002;
-	
+
 	public static void example()
 	{
 		System.out.println("running example: " + currentRecordID);

@@ -21,7 +21,7 @@ import org.omg.CORBA.*;
 
 import DEMS.Command;
 import DEMS.MessageKeys;
-import DEMS.UDPPortNumbers;
+import DEMS.PortNumbers;
 
 /*
  * 1) Receives a client request as a CORBA invocation. 
@@ -84,7 +84,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				socket = new DatagramSocket();
 				byte[] messageBuffer = payload.toString().getBytes();
 				InetAddress host = InetAddress.getByName("localhost");
-				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, UDPPortNumbers.FE_SEQ);
+				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, PortNumbers.FE_SEQ);
 
 				System.out.println("Sending message to sequencer...");
 				socket.send(request);
@@ -97,7 +97,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			}
 			catch (SocketTimeoutException e)
 			{
-				System.out.println("Server on port " + UDPPortNumbers.FE_SEQ + " is not responding.");
+				System.out.println("Server on port " + PortNumbers.FE_SEQ + " is not responding.");
 			}
 			catch (SocketException e)
 			{
@@ -233,13 +233,13 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		@Override
 		public void run()
 		{
-			System.out.println("Listening for responses from the replicas on port " + UDPPortNumbers.RE_FE + "...");
+			System.out.println("Listening for responses from the replicas on port " + PortNumbers.RE_FE + "...");
 						
 			DatagramSocket datagramSocket = null;
 			
 			try
 			{
-				datagramSocket = new DatagramSocket(UDPPortNumbers.RE_FE);
+				datagramSocket = new DatagramSocket(PortNumbers.RE_FE);
 				datagramSocket.setSoTimeout(1000);
 
 	        	while (listeningForResponses.get())

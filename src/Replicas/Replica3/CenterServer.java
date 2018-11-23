@@ -1,5 +1,6 @@
 package Replicas.Replica3;
 
+import DEMS.Config;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,9 +30,9 @@ public class CenterServer implements Runnable {
 	public static final HashMap<String, Integer> UDPPortMap;
 	static {
 		UDPPortMap = new HashMap<String, Integer>();
-		UDPPortMap.put("CA", 7000);
-		UDPPortMap.put("US", 7001);
-		UDPPortMap.put("UK", 7002);
+		UDPPortMap.put("CA", Config.Replica3.CA_PORT);
+		UDPPortMap.put("US", Config.Replica3.US_PORT);
+		UDPPortMap.put("UK", Config.Replica3.UK_PORT);
 	}
 
 	class UdpServer implements Runnable {
@@ -40,11 +41,11 @@ public class CenterServer implements Runnable {
 			try {
 				int localPort = 0;
 				if (location.equals("CA")) {
-					localPort = DEMS.Config.Replica3.caPort;
+					localPort = Config.Replica3.CA_PORT;
 				} else if (location.equals("UK")) {
-					localPort = DEMS.Config.Replica3.ukPort;
+					localPort = Config.Replica3.UK_PORT;
 				} else if (location.equals("US")) {
-					localPort = DEMS.Config.Replica3.usPort;
+					localPort = Config.Replica3.US_PORT;
 				}
 
 				DatagramSocket serverSocket = new DatagramSocket(localPort);
@@ -139,11 +140,11 @@ public class CenterServer implements Runnable {
 		for (String location : new String[]{"CA", "UK", "US"}) {
 			int port = 0;
 			if (location.equals("CA")) {
-				port = DEMS.Config.Replica3.caPort;
+				port = Config.Replica3.CA_PORT;
 			} else if (location.equals("UK")) {
-				port = DEMS.Config.Replica3.ukPort;
+				port = Config.Replica3.UK_PORT;
 			} else if (location.equals("US")) {
-				port = DEMS.Config.Replica3.usPort;
+				port = Config.Replica3.US_PORT;
 			}
 
 			String response;
@@ -234,11 +235,11 @@ public class CenterServer implements Runnable {
 
 		int remoteCenterServerPort = 0;
 		if (remoteCenterServerName.equals("CA")) {
-			remoteCenterServerPort = DEMS.Config.Replica3.caPort;
+			remoteCenterServerPort = Config.Replica3.CA_PORT;
 		} else if (remoteCenterServerName.equals("UK")) {
-			remoteCenterServerPort = DEMS.Config.Replica3.ukPort;
+			remoteCenterServerPort = Config.Replica3.UK_PORT;
 		} else if (remoteCenterServerName.equals("US")) {
-			remoteCenterServerPort = DEMS.Config.Replica3.usPort;
+			remoteCenterServerPort = Config.Replica3.US_PORT;
 		}
 
 		Record recordToTransfer = null;
