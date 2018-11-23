@@ -17,7 +17,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import DEMS.UDPPortNumbers;
-import Replicas.Replica2.ServerThread;
 
 public class Server implements Replica
 {
@@ -87,7 +86,7 @@ public class Server implements Replica
     private void setupMulticastSocket() throws Exception
     {
         InetAddress group = InetAddress.getByName("228.5.6.7");
-        socket = new MulticastSocket(UDPPortNumbers.SEQ_RM);
+        socket = new MulticastSocket(UDPPortNumbers.SEQ_RE);
         socket.joinGroup(group);
     }
 

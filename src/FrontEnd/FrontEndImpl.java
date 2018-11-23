@@ -233,13 +233,13 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		@Override
 		public void run()
 		{
-			System.out.println("Listening for responses from the replicas on port " + UDPPortNumbers.RM_FE + "...");
+			System.out.println("Listening for responses from the replicas on port " + UDPPortNumbers.RE_FE + "...");
 						
 			DatagramSocket datagramSocket = null;
 			
 			try
 			{
-				datagramSocket = new DatagramSocket(UDPPortNumbers.RM_FE);
+				datagramSocket = new DatagramSocket(UDPPortNumbers.RE_FE);
 				datagramSocket.setSoTimeout(1000);
 
 	        	while (listeningForResponses.get())

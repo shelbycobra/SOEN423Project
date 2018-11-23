@@ -64,24 +64,22 @@ public class Sequencer {
                     // Check if received message is an ACK message
                     try {
                         if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals("ACK")) {
-                            // Will throw NumberFormatException if the message is coming from the FE
                             int ackSeqNum = Integer.parseInt("" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
-
                             System.out.println("\n*** Receiving ACK " + ackSeqNum + " from port " + message.getPort() + " ***\n");
-                            // If no exception is thrown, then Process Ack
                             processAck(ackSeqNum);
                         } else throw new NullPointerException();
                     } catch (NullPointerException e) {
-                        // Add FE message to queue
+                        // Add message to queue
                         mutex.acquire();
                         deliveryQueue.add(jsonMessage);
 
-                        sendAckToFE((String) jsonMessage.get(MessageKeys.MESSAGE_ID));
-                        // Signal to Sequencer to start processing the message
+                        // Tells Sequencer to start processing message
                         processMessageSem.release();
                         mutex.release();
-                    }
 
+                        // Send ACK to FE
+                        sendAckToFE((String) jsonMessage.get(MessageKeys.MESSAGE_ID));
+                    }
                 }
             } catch (ParseException | InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -116,7 +114,7 @@ public class Sequencer {
         private void resend(JSONObject message) throws IOException {
             System.out.println("Resending message: " + message.toString()+"\n");
             byte[] buffer = message.toString().getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RM);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RE);
             multicastSocket.send(packet);
         }
 
@@ -127,7 +125,7 @@ public class Sequencer {
                 message.put(MessageKeys.MESSAGE_ID, messageID);
                 message.put(MessageKeys.COMMAND_TYPE, "ACK");
                 byte[] buffer = message.toString().getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), UDPPortNumbers.FE_SEQ);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), UDPPortNumbers.RE_FE);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -145,17 +143,15 @@ public class Sequencer {
             processMessage();
         } catch (IOException e) {
             System.out.println("Socket already bound.");
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
     private  void setupSockets() throws IOException{
         System.out.println("Setting up sockets\n");
         group = InetAddress.getByName("228.5.6.7");
-        multicastSocket = new MulticastSocket(UDPPortNumbers.SEQ_RM);
+        multicastSocket = new MulticastSocket(UDPPortNumbers.SEQ_RE);
         multicastSocket.joinGroup(group);
         datagramSocket = new DatagramSocket(8000);
     }
@@ -176,7 +172,7 @@ public class Sequencer {
             mutex.release();
 
             byte[] buffer = jsonMessage.toString().getBytes();
-            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RM);
+            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RE);
             multicastSocket.send(message);
 
             // Increment sequence number

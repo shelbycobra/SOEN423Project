@@ -166,7 +166,7 @@ public class FrontEndTest
 	
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
-	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, UDPPortNumbers.SEQ_RM);
+	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, UDPPortNumbers.SEQ_RE);
 	    				datagramSocket.send(request);
 	    				System.out.println("Sequencer: Sending request to Replica Manager...");
                 	}
@@ -204,11 +204,11 @@ public class FrontEndTest
 		@Override
 		public void run()
 		{
-			System.out.println("Mock Replica Manager up and running on port " + UDPPortNumbers.SEQ_RM);
+			System.out.println("Mock Replica Manager up and running on port " + UDPPortNumbers.SEQ_RE);
 			
 			try
 			{
-				datagramSocket = new DatagramSocket(UDPPortNumbers.SEQ_RM);
+				datagramSocket = new DatagramSocket(UDPPortNumbers.SEQ_RE);
 				datagramSocket.setSoTimeout(1000);
 				
                 while (running.get())
@@ -227,7 +227,7 @@ public class FrontEndTest
 	                    
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
-	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, UDPPortNumbers.RM_FE);
+	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, UDPPortNumbers.RE_FE);
 	    				datagramSocket.send(request);
 	    				System.out.println("Replica Manager: Sending response to Front End...");
 	    				
@@ -239,7 +239,7 @@ public class FrontEndTest
 		    				jsonMessage2.put(MessageKeys.MESSAGE_ID, jsonMessage.get(MessageKeys.MESSAGE_ID));
 		                    jsonMessage2.put(MessageKeys.MESSAGE, "Bad message!");
 		                    byte[] messageBuffer2 = jsonMessage2.toString().getBytes();
-		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, UDPPortNumbers.RM_FE);
+		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, UDPPortNumbers.RE_FE);
 		    				datagramSocket.send(request2);
 		    				System.out.println("Replica Manager: Sending response to Front End...");
 	    				}
