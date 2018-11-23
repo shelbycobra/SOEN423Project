@@ -19,6 +19,7 @@ public class UDPServerThread extends Thread {
     private DatagramSocket aSocket = null;
     private DatagramPacket request = null;
     private int port;
+    private String msgID;
     private String location;
 
     UDPServerThread (DEMSImpl demsImpl, int port, String location) {
@@ -59,6 +60,8 @@ public class UDPServerThread extends Thread {
                     JSONParser parser = new JSONParser();
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(request.getData()).trim());
 
+                    msgID = (String) jsonMessage.get(MessageKeys.MESSAGE_ID);
+
                     // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
@@ -78,27 +81,27 @@ public class UDPServerThread extends Thread {
                                     (String) jsonMessage.get(MessageKeys.MAIL_ID),
                                     projects,
                                     (String) jsonMessage.get(MessageKeys.LOCATION));
-                            System.out.println(msg);
+                            replyToFE(msg, Config.statusCode.SUCCESS);
                             continue;
                         } case Config.CREATE_EMPLOYEE_RECORD: {
                             // Create Employee Record
                             String msg = demsImpl.createERecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.FIRST_NAME), (String) jsonMessage.get(MessageKeys.LAST_NAME), Integer.parseInt( (String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)), (String) jsonMessage.get(MessageKeys.MAIL_ID), (String) jsonMessage.get(MessageKeys.PROJECT_ID));
-                            System.out.println(msg);
+                            replyToFE(msg, Config.statusCode.SUCCESS);
                             continue;
                         } case Config.GET_RECORD_COUNT: {
                             // Get Record Count
                             String counts = demsImpl.getRecordCounts((String) jsonMessage.get(MessageKeys.MANAGER_ID));
-                            System.out.println("Record count: " + counts);
+                            replyToFE("Record count: " + counts, Config.statusCode.SUCCESS);
                             continue;
                         } case Config.EDIT_RECORD: {
                             // Edit Record
                             String output = demsImpl.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
-                            System.out.println("\n" + output);
+                            replyToFE(output, Config.statusCode.SUCCESS);
                             continue;
                         } case Config.TRANSFER_RECORD: {
                             // Transfer Record
                             String output = demsImpl.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
-                            System.out.println(output);
+                            replyToFE(output, Config.statusCode.SUCCESS);
                             continue;
                         } case Config.EXIT: {
                             // Exit System
@@ -106,7 +109,7 @@ public class UDPServerThread extends Thread {
                             continue;
                         } default: {
                             System.out.println("Invalid request type");
-                            continue;
+                            replyToFE("Invalid request type", Config.statusCode.SUCCESS);
                         }
                     }
                 }
@@ -190,10 +193,23 @@ public class UDPServerThread extends Thread {
         aSocket.send(reply);
      }
 
+     private void replyToFE(String msg, Config.statusCode status) throws IOException {
+
+         DatagramSocket socket = new DatagramSocket();
+         JSONObject message = new JSONObject();
+         message.put(MessageKeys.MESSAGE, msg);
+         message.put(MessageKeys.MESSAGE_ID, msgID);
+         message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+         message.put(MessageKeys.STATUS_CODE, status);
+
+         byte[] buffer = message.toString().getBytes();
+         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
+
+         socket.send(packet);
+     }
+
      private Project[] getProjectArray(JSONArray recordData) {
          ArrayList<Project> projects =  new ArrayList<>();
-
-         System.out.println("Getting Project Array: " + recordData.toJSONString());
 
          // Add projects to list
          for (Object obj : recordData) {
