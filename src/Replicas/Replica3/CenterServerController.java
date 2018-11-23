@@ -9,13 +9,14 @@ import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import DEMS.MessageKeys;
 
-public class CenterServerController {
+public class CenterServerController implements DEMS.Replica {
 
 	private Logger logger;
 
@@ -124,7 +125,14 @@ public class CenterServerController {
 			}
 
 			String location = ((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2);
-			int port = CenterServer.UDPPortMap.get(location);
+			int port = 0;
+			if (location.equals("CA")) {
+				port = DEMS.Config.Replica3.caPort;
+			} else if (location.equals("UK")) {
+				port = DEMS.Config.Replica3.ukPort;
+			} else if (location.equals("US")) {
+				port = DEMS.Config.Replica3.usPort;
+			}
 
 			try {
 				// Remove msg from delivery queue
@@ -168,6 +176,7 @@ public class CenterServerController {
 		deliveryQueue = new PriorityQueue<>(msgComp);
 	}
 
+	@Override
 	public void runServers() {
 		try {
 
@@ -202,6 +211,7 @@ public class CenterServerController {
 		return deliveryQueue;
 	}
 
+	@Override
 	public void shutdownServers() {
 		this.logger.log("\nShutting down servers...\n");
 
@@ -216,4 +226,16 @@ public class CenterServerController {
 			multicastSocket.close();
 		}
 	}
+
+	@Override
+	public JSONArray getData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setData(JSONArray array) {
+		// TODO Auto-generated method stub
+	}
+
 }
