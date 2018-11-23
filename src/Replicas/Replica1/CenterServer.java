@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.net.*;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import DEMS.UDPPortNumbers;
 
 public class CenterServer implements Replica {
-
-    private static final int CA_PORT = 3500, UK_PORT = 4500, US_PORT = 5500;
 
     private ServerThread CA_DEMS_server;
     private ServerThread UK_DEMS_server;
@@ -27,13 +27,14 @@ public class CenterServer implements Replica {
     private Semaphore mutex; // Used to ensure that the delivery queue is thread safe
     private Semaphore deliveryQueueMutex; // Used to signal the Process Messages Thread to start processing a message
     private JSONParser parser = new JSONParser();
+    private AtomicBoolean keepRunning = new AtomicBoolean(true);
 
     private class ListenForPacketsThread extends Thread {
 
         @Override
         public void run() {
             try {
-                while (true) {
+                while (keepRunning.get()) {
                     byte[] buffer = new byte[1000];
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     socket.receive(message);
@@ -78,7 +79,7 @@ public class CenterServer implements Replica {
         public void run() {
             System.out.println("CenterServer: Processing messages\n");
             try {
-                while (true) {
+                while (keepRunning.get()) {
 
                     // Sleep a bit so that the message can be added to the queue
                     Thread.sleep(300);
@@ -101,8 +102,6 @@ public class CenterServer implements Replica {
                 }
             } catch (InterruptedException e) {
                 System.out.println("ProcessMessageThread is shutting down.");
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
 
@@ -129,23 +128,18 @@ public class CenterServer implements Replica {
                 // Send packet
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
                 serverSocket.send(packet);
-            } catch (SocketException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
 
         private int setPortNumber(String location) {
             if ("CA".equals(location))
-                return CA_PORT;
+                return UDPPortNumbers.R1_CA_PORT;
             if ("UK".equals(location))
-                return UK_PORT;
+                return UDPPortNumbers.R1_UK_PORT;
             if ("US".equals(location))
-                return US_PORT;
+                return UDPPortNumbers.R1_US_PORT;
             return 0;
         }
     }
@@ -164,9 +158,9 @@ public class CenterServer implements Replica {
     public void runServers() {
 
         // Start up servers
-        CA_DEMS_server = new ServerThread("CA", CA_PORT);
-        UK_DEMS_server = new ServerThread("UK", UK_PORT);
-        US_DEMS_server = new ServerThread("US", US_PORT);
+        CA_DEMS_server = new ServerThread("CA", UDPPortNumbers.R1_CA_PORT);
+        UK_DEMS_server = new ServerThread("UK", UDPPortNumbers.R1_UK_PORT);
+        US_DEMS_server = new ServerThread("US", UDPPortNumbers.R1_US_PORT);
 
         CA_DEMS_server.start();
         UK_DEMS_server.start();
@@ -204,6 +198,7 @@ public class CenterServer implements Replica {
     @Override
     public void shutdownServers() {
         System.out.println("\nShutting down servers...\n");
+        keepRunning.set(false);
         CA_DEMS_server.interrupt();
         UK_DEMS_server.interrupt();
         US_DEMS_server.interrupt();

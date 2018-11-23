@@ -13,7 +13,7 @@ import java.util.concurrent.Semaphore;
 
 public class Sequencer {
 
-    private final static int MAX_NUM_ACKS = 3, MULTICAST_PORT = 6789;
+    private final static int MAX_NUM_ACKS = 3;
 
     private int sequenceNumber = 1;
     private ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
@@ -113,7 +113,7 @@ public class Sequencer {
         private void resend(JSONObject message) throws IOException {
             System.out.println("Resending message: " + message.toString()+"\n");
             byte[] buffer = message.toString().getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RM);
             multicastSocket.send(packet);
         }
     }
@@ -138,7 +138,7 @@ public class Sequencer {
     private  void setupSockets() throws IOException{
         System.out.println("Setting up sockets\n");
         group = InetAddress.getByName("228.5.6.7");
-        multicastSocket = new MulticastSocket(MULTICAST_PORT);
+        multicastSocket = new MulticastSocket(UDPPortNumbers.SEQ_RM);
         multicastSocket.joinGroup(group);
         datagramSocket = new DatagramSocket(8000);
     }
@@ -159,7 +159,7 @@ public class Sequencer {
             mutex.release();
 
             byte[] buffer = jsonMessage.toString().getBytes();
-            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
+            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RM);
             multicastSocket.send(message);
 
             // Increment sequence number
