@@ -4,11 +4,23 @@ import org.omg.CORBA.*;
 import org.omg.CosNaming.*;
 import org.omg.PortableServer.*;
 
-public class FrontEndServer
+public class FrontEndServerThread implements Runnable
 {
 	FrontEndImpl frontEndImpl;
+	String orbArguments[];
 	
-	public FrontEndServer(String orbArguments[])
+	public FrontEndServerThread(String orbArguments[])
+	{
+		this.orbArguments = orbArguments;
+	}
+	
+	public void shutdown()
+	{
+		frontEndImpl.shutdown();
+	}
+
+	@Override
+	public void run()
 	{
 		try
 		{
@@ -50,10 +62,5 @@ public class FrontEndServer
 		}
 		
 		System.out.println("DEMS Server Exiting...");
-	}
-	
-	public void shutdown()
-	{
-		frontEndImpl.shutdown();
 	}
 }
