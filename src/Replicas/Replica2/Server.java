@@ -13,6 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import DEMS.UDPPortNumbers;
 import Replicas.Replica2.ServerThread;
 
 public class Server
@@ -82,7 +83,7 @@ public class Server
     private void setupMulticastSocket() throws Exception
     {
         InetAddress group = InetAddress.getByName("228.5.6.7");
-        socket = new MulticastSocket(6789);
+        socket = new MulticastSocket(UDPPortNumbers.SEQ_RM);
         socket.joinGroup(group);
     }
 
