@@ -9,13 +9,14 @@ import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import DEMS.MessageKeys;
 
-public class CenterServerController {
+public class CenterServerController implements DEMS.Replica {
 
 	private Logger logger;
 
@@ -164,6 +165,7 @@ public class CenterServerController {
 		deliveryQueue = new PriorityQueue<>(msgComp);
 	}
 
+	@Override
 	public void runServers() {
 		centerServerCA.start();
 		centerServerUS.start();
@@ -197,6 +199,7 @@ public class CenterServerController {
 		return deliveryQueue;
 	}
 
+	@Override
 	public void shutdownServers() {
 		this.logger.log("\nShutting down servers...\n");
 
@@ -211,4 +214,16 @@ public class CenterServerController {
 			multicastSocket.close();
 		}
 	}
+
+	@Override
+	public JSONArray getData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setData(JSONArray array) {
+		// TODO Auto-generated method stub
+	}
+
 }
