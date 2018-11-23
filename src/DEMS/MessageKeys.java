@@ -12,5 +12,6 @@ public class MessageKeys
 			PROJECT_CLIENT = "project_client", 	PROJECT_NAME = "project_name",
 			COMMAND_TYPE = "command_type", 		SEQUENCE_NUMBER = "sequence_number",
 			MESSAGE = "message", 				SERVER_LOCATION = "server_location",
-			STATUS_CODE = "status_code", 		RM_PORT_NUMBER = "rm_port_num";
+			STATUS_CODE = "status_code", 		RM_PORT_NUMBER = "rm_port_num",
+			REPLICA_NUMBER = "replica_number";
 }
