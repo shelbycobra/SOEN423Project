@@ -1,10 +1,8 @@
 package DEMS;
 
-import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayDeque;
@@ -60,9 +58,6 @@ public class Sequencer {
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(message);
                     String data = new String(message.getData()).trim();
-
-                    System.out.println("SEQUENCER RECEIVED MSG = " + data);
-
                     JSONObject jsonMessage;
                     jsonMessage = (JSONObject) parser.parse(data);
 
@@ -77,11 +72,11 @@ public class Sequencer {
                             processAck(ackSeqNum);
                         } else throw new NullPointerException();
                     } catch (NullPointerException e) {
-                        System.out.println("ADDING TO Q: " + data);
                         // Add FE message to queue
                         mutex.acquire();
                         deliveryQueue.add(jsonMessage);
 
+                        sendAckToFE((String) jsonMessage.get(MessageKeys.MESSAGE_ID));
                         // Signal to Sequencer to start processing the message
                         processMessageSem.release();
                         mutex.release();
@@ -101,7 +96,6 @@ public class Sequencer {
             }
 
             long currentTime = System.currentTimeMillis();
-
             SentMessage msg = sentMessagesHashMap.get(ackSeqNum);
 
             long difference = currentTime - msg.getCreationTime();
@@ -124,6 +118,20 @@ public class Sequencer {
             byte[] buffer = message.toString().getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RM);
             multicastSocket.send(packet);
+        }
+
+        private void sendAckToFE(String messageID) {
+            try {
+                DatagramSocket socket = new DatagramSocket();
+                JSONObject message = new JSONObject();
+                message.put(MessageKeys.MESSAGE_ID, messageID);
+                message.put(MessageKeys.COMMAND_TYPE, "ACK");
+                byte[] buffer = message.toString().getBytes();
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), UDPPortNumbers.FE_SEQ);
+                socket.send(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
