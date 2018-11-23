@@ -1,8 +1,6 @@
 package Replicas.Replica2;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -46,17 +44,6 @@ public class ServerThread extends Thread
     @Override
     public void run()
     {
-
-//		Thread recordCheckThread = new UDPRecordCheckThread(location, port+10, records);
-//		Thread recordTransferThread = new UDPRecordTransferThread(location, port+20, records);
-//		Thread recordCountThread = new UDPRecordCountThread(location, port+30, records);
-////		Thread serverThread = new UDPServerThread(server, port, location);
-//
-//		recordCountThread.start();
-//		recordCheckThread.start();
-//		recordTransferThread.start();
-////		serverThread.start();
-
 		try
 		{
 			aSocket = new DatagramSocket(port);
@@ -104,7 +91,6 @@ public class ServerThread extends Thread
 							// Get projects
 							JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
 							Project[] projects = getProjectArray(jsonProjects);
-//							System.out.println("Creating Record: " + jsonMessage.toJSONString());
 
 							// Create Manager Record
 							String msg = server.createMRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID),
