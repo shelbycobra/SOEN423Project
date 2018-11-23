@@ -43,6 +43,7 @@ public class CenterServer implements Replica {
                     // Get message string
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
+                    System.out.println("RECEIVED MSG = " + jsonMessage.toString());
                     // Immediately send "SeqNum:ACK" after receiving a message
                     int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
                     sendACK(seqNum);
@@ -56,6 +57,7 @@ public class CenterServer implements Replica {
                     deliveryQueueMutex.release();
                 }
             } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
                 System.out.println("ListenForPacketsThread is shutting down");
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -87,18 +89,24 @@ public class CenterServer implements Replica {
                     int seqNum;
                     int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
+                    JSONObject obj = deliveryQueue.peek();
+
+                    System.out.println("OBJECT = " + obj.toString());
+                    while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
 
                         System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
 
                         mutex.acquire();
-                        deliveryQueue.remove(deliveryQueue.peek());
+                        deliveryQueue.remove(obj);
+                        obj = deliveryQueue.peek();
+                        System.out.println("Delivery Queue peek = " + obj.toString());
                         mutex.release();
                     }
+
                     lastSequenceNumber = seqNum;
-                    sendMessageToServer(deliveryQueue.peek());
+                    sendMessageToServer(obj);
                 }
             } catch (InterruptedException e) {
                 System.out.println("ProcessMessageThread is shutting down.");

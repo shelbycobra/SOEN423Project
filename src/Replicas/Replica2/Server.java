@@ -153,6 +153,7 @@ public class Server implements Replica
             }
             catch (InterruptedException | IOException e)
             {
+                e.printStackTrace();
                 System.out.println("ListenForPacketsThread is shutting down");
             }
             catch (ParseException e)
@@ -190,19 +191,21 @@ public class Server implements Replica
                     int seqNum;
                     int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
+                    JSONObject obj = deliveryQueue.peek();
+                    while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
 
                         System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
 
                         mutex.acquire();
-                        deliveryQueue.remove(deliveryQueue.peek());
+                        deliveryQueue.remove(obj);
+                        obj = deliveryQueue.peek();
                         mutex.release();
                     }
-                    
+
                     lastSequenceNumber = seqNum;
-                    sendMessageToServer(deliveryQueue.peek());
+                    sendMessageToServer(obj);
                 }
             }
             catch (InterruptedException e)

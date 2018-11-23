@@ -1,5 +1,6 @@
 package DEMS;
 
+import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -13,7 +14,7 @@ import java.util.concurrent.Semaphore;
 
 public class Sequencer {
 
-    private final static int MAX_NUM_ACKS = 3;
+    private final static int MAX_NUM_ACKS = 3, TIME_LIMIT = 10;
 
     private int sequenceNumber = 1;
     private ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
@@ -59,17 +60,24 @@ public class Sequencer {
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(message);
                     String data = new String(message.getData()).trim();
+
+                    System.out.println("SEQUENCER RECEIVED MSG = " + data);
+
                     JSONObject jsonMessage;
                     jsonMessage = (JSONObject) parser.parse(data);
 
                     // Check if received message is an ACK message
                     try {
-                        // Will throw NumberFormatException if the message is coming from the FE
-                        int ackSeqNum = Integer.parseInt( "" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
+                        if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals("ACK")) {
+                            // Will throw NumberFormatException if the message is coming from the FE
+                            int ackSeqNum = Integer.parseInt("" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
 
-                        // If no exception is thrown, then Process Ack
-                        processAck(ackSeqNum);
-                    } catch (NullPointerException | NumberFormatException e) {
+                            System.out.println("\n*** Receiving ACK " + ackSeqNum + " from port " + message.getPort() + " ***\n");
+                            // If no exception is thrown, then Process Ack
+                            processAck(ackSeqNum);
+                        } else throw new NullPointerException();
+                    } catch (NullPointerException e) {
+                        System.out.println("ADDING TO Q: " + data);
                         // Add FE message to queue
                         mutex.acquire();
                         deliveryQueue.add(jsonMessage);
@@ -78,6 +86,7 @@ public class Sequencer {
                         processMessageSem.release();
                         mutex.release();
                     }
+
                 }
             } catch (ParseException | InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -102,7 +111,7 @@ public class Sequencer {
             } else {
                 for (Map.Entry<Integer, SentMessage> entry : sentMessagesHashMap.entrySet()) {
                     difference = currentTime - entry.getValue().getCreationTime();
-                    if (difference >= 10){
+                    if (difference >= TIME_LIMIT){
                         System.out.println("\nSequence Number " + entry.getKey() + " - One or more replicas have not received the message in time. Time difference = " + difference);
                         resend(entry.getValue().getMessage());
                     }

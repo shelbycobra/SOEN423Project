@@ -49,7 +49,7 @@ public class CenterServerController {
 					JSONObject jsonMessage = (JSONObject) jsonParser.parse(new String(message.getData()).trim());
 
 					// Immediately send "SeqNum:ACK" after receiving a message
-					int seqNum =  Integer.parseInt( (String) jsonMessage.get("sequenceNumber"));
+					int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
 					sendACK(seqNum);
 
 					// Add message to delivery queue
@@ -61,6 +61,7 @@ public class CenterServerController {
 					deliveryQueueMutex.release();
 				}
 			} catch (InterruptedException | IOException e) {
+			    e.printStackTrace();
 				logger.log("ListenForPacketsThread is shutting down");
 			} catch (ParseException e) {
 				e.printStackTrace();
@@ -69,8 +70,8 @@ public class CenterServerController {
 
 		private void sendACK(Integer num) throws IOException {
 			JSONObject jsonAck = new JSONObject();
-			jsonAck.put("sequenceNumber", num);
-			jsonAck.put("commandType", "ACK");
+			jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
+			jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
 			byte[] ack = jsonAck.toString().getBytes();
 			DatagramSocket socket = new DatagramSocket();
 			DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
@@ -92,18 +93,21 @@ public class CenterServerController {
 					int seqNum;
 					int nextSequenceNumber = lastSequenceNumber + 1;
 
-					while ((seqNum = Integer.parseInt( (String) deliveryQueue.peek().get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
-					{
-						deliveryQueueMutex.acquire();
+                    JSONObject obj = deliveryQueue.peek();
+                    while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
+                    {
+                        deliveryQueueMutex.acquire();
 
-						logger.log("\n*** Removing duplicate [" + seqNum + "] ***\n");
+                        System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
 
-						mutex.acquire();
-						deliveryQueue.remove(deliveryQueue.peek());
-						mutex.release();
-					}
-					lastSequenceNumber = seqNum;
-					sendMessageToServer(deliveryQueue.peek());
+                        mutex.acquire();
+                        deliveryQueue.remove(obj);
+                        obj = deliveryQueue.peek();
+                        mutex.release();
+                    }
+
+                    lastSequenceNumber = seqNum;
+                    sendMessageToServer(obj);
 				}
 			} catch (InterruptedException e) {
 				logger.log("ProcessMessageThread is shutting down.");
@@ -165,18 +169,19 @@ public class CenterServerController {
 	}
 
 	public void runServers() {
-		centerServerCA.start();
-		centerServerUS.start();
-		centerServerUK.start();
-
 		try {
-			if (centerServerCA.isAlive() && centerServerUS.isAlive() && centerServerUK.isAlive()) {
-				setupMulticastSocket();
-				listenForPackets = new ListenForPacketsThread();
-				processMessages = new ProcessMessagesThread();
-				listenForPackets.start();
-				processMessages.start();
-			}
+
+            setupMulticastSocket();
+
+            centerServerCA.start();
+            centerServerUS.start();
+            centerServerUK.start();
+
+            listenForPackets = new ListenForPacketsThread();
+            processMessages = new ProcessMessagesThread();
+            listenForPackets.start();
+            processMessages.start();
+
 		} catch (SocketException e) {
 			this.logger.log("CenterServerController Multicast Socket is closed.");
 		} catch (InterruptedException e ) {

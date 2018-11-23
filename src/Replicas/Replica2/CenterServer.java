@@ -47,7 +47,8 @@ public class CenterServer implements CenterServerInterface
 		{
 			message = "Manager Record creation failed.";
 		}
-		
+
+		System.out.println(message);
 		log(message);
 		return message;
 	}
@@ -66,7 +67,8 @@ public class CenterServer implements CenterServerInterface
 		{
 			message = "Employee Record creation failed.";
 		}
-		
+
+		System.out.println(message);
 		log(message);
 		return message;
 	}
@@ -238,7 +240,8 @@ public class CenterServer implements CenterServerInterface
         		message = "Invalid field.";
 			}
 		}
-		
+
+		System.out.println(message);
         log("Changed " + fieldName + " for " + recordID + " to " + newValue);
 		return message;
 	}
@@ -291,7 +294,8 @@ public class CenterServer implements CenterServerInterface
 		{
 			message = "Record transfer failed to " + remoteCenterServerName;
 		}
-		
+
+		System.out.println(message);
 		log(message);
 		return message;
 	}
