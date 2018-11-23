@@ -73,9 +73,10 @@ public class CenterServerController implements DEMS.Replica {
 			jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
 			jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
 			byte[] ack = jsonAck.toString().getBytes();
-			DatagramSocket socket = new DatagramSocket();
-			DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
+			DatagramSocket socket = new DatagramSocket(12000);
+			DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), Config.PortNumbers.FE_SEQ);
 			socket.send(packet);
+			socket.close();
 		}
 	}
 

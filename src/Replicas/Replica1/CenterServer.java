@@ -43,7 +43,6 @@ public class CenterServer implements Replica {
                     // Get message string
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
 
-                    System.out.println("RECEIVED MSG = " + jsonMessage.toString());
                     // Immediately send "SeqNum:ACK" after receiving a message
                     int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
                     sendACK(seqNum);
@@ -69,9 +68,10 @@ public class CenterServer implements Replica {
             jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
             jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
             byte[] ack = jsonAck.toString().getBytes();
-            DatagramSocket socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), 8000);
+            DatagramSocket socket = new DatagramSocket(10000);
+            DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), Config.PortNumbers.FE_SEQ);
             socket.send(packet);
+            socket.close();
         }
     }
 
@@ -91,7 +91,6 @@ public class CenterServer implements Replica {
 
                     JSONObject obj = deliveryQueue.peek();
 
-                    System.out.println("OBJECT = " + obj.toString());
                     while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
                     {
                         deliveryQueueMutex.acquire();
@@ -101,7 +100,6 @@ public class CenterServer implements Replica {
                         mutex.acquire();
                         deliveryQueue.remove(obj);
                         obj = deliveryQueue.peek();
-                        System.out.println("Delivery Queue peek = " + obj.toString());
                         mutex.release();
                     }
 
