@@ -121,7 +121,14 @@ public class CenterServerController implements DEMS.Replica {
 			}
 
 			String location = ((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2);
-			int port = CenterServer.UDPPortMap.get(location);
+			int port = 0;
+			if (location.equals("CA")) {
+				port = DEMS.Config.Replica3.caPort;
+			} else if (location.equals("UK")) {
+				port = DEMS.Config.Replica3.ukPort;
+			} else if (location.equals("US")) {
+				port = DEMS.Config.Replica3.usPort;
+			}
 
 			try {
 				// Remove msg from delivery queue

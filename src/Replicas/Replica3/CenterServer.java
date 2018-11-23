@@ -26,19 +26,20 @@ public class CenterServer implements Runnable {
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
 
-	public static final HashMap<String, Integer> UDPPortMap;
-	static {
-		UDPPortMap = new HashMap<String, Integer>();
-		UDPPortMap.put("CA", 6000);
-		UDPPortMap.put("US", 6001);
-		UDPPortMap.put("UK", 6002);
-	}
-
 	class UdpServer implements Runnable {
 		@Override
 		public void run() {
 			try {
-				DatagramSocket serverSocket = new DatagramSocket(UDPPortMap.get(location));
+				int localPort = 0;
+				if (location.equals("CA")) {
+					localPort = DEMS.Config.Replica3.caPort;
+				} else if (location.equals("UK")) {
+					localPort = DEMS.Config.Replica3.ukPort;
+				} else if (location.equals("US")) {
+					localPort = DEMS.Config.Replica3.usPort;
+				}
+
+				DatagramSocket serverSocket = new DatagramSocket(localPort);
 				byte[] receiveData = new byte[1024];
 				byte[] sendData = new byte[1024];
 				while (true) {
@@ -127,7 +128,16 @@ public class CenterServer implements Runnable {
 		this.logger.log(String.format("getRecordCounts(%s)", managerID));
 
 		String result = "";
-		for (String key : UDPPortMap.keySet()) {
+		for (String location : new String[]{"CA", "UK", "US"}) {
+			int port = 0;
+			if (location.equals("CA")) {
+				port = DEMS.Config.Replica3.caPort;
+			} else if (location.equals("UK")) {
+				port = DEMS.Config.Replica3.ukPort;
+			} else if (location.equals("US")) {
+				port = DEMS.Config.Replica3.usPort;
+			}
+
 			String response;
 
 			try {
@@ -144,13 +154,13 @@ public class CenterServer implements Runnable {
 				out.close();
 				bos.close();
 
-				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, UDPPortMap.get(key));
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 				clientSocket.send(sendPacket);
 				clientSocket.setSoTimeout(2000);
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				clientSocket.receive(receivePacket);
 				response = (new String(receivePacket.getData())).trim();
-				this.logger.log(String.format("record count from %s: %s", key, response));
+				this.logger.log(String.format("record count from %s: %s", location, response));
 				clientSocket.close();
 			} catch (SocketTimeoutException e) {
 				e.printStackTrace();
@@ -160,7 +170,7 @@ public class CenterServer implements Runnable {
 				response = "IOException";
 			}
 
-			result += String.format("%s: %s, ", key, response);
+			result += String.format("%s: %s, ", location, response);
 		}
 
 		// remove comma at end of string
@@ -214,6 +224,15 @@ public class CenterServer implements Runnable {
 	public synchronized int transferRecord(String managerID, String recordID, String remoteCenterServerName) {
 		this.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
 
+		int remoteCenterServerPort = 0;
+		if (remoteCenterServerName.equals("CA")) {
+			remoteCenterServerPort = DEMS.Config.Replica3.caPort;
+		} else if (remoteCenterServerName.equals("UK")) {
+			remoteCenterServerPort = DEMS.Config.Replica3.ukPort;
+		} else if (remoteCenterServerName.equals("US")) {
+			remoteCenterServerPort = DEMS.Config.Replica3.usPort;
+		}
+
 		Record recordToTransfer = null;
 
 		for (char key : records.keySet()) {
@@ -246,7 +265,7 @@ public class CenterServer implements Runnable {
 			out.close();
 			bos.close();
 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, UDPPortMap.get(remoteCenterServerName));
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
 			clientSocket.setSoTimeout(2000);
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -285,7 +304,7 @@ public class CenterServer implements Runnable {
 			out.close();
 			bos.close();
 
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, UDPPortMap.get(remoteCenterServerName));
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
 			clientSocket.setSoTimeout(2000);
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
