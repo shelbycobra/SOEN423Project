@@ -232,8 +232,27 @@ public class CenterServer implements Replica {
     }
 
     @Override
-    public void setData(JSONArray array) {
+    public void setData(JSONArray recordArray) {
+        JSONArray CAServerArray = new JSONArray();
+        JSONArray UKServerArray = new JSONArray();
+        JSONArray USServerArray = new JSONArray();
 
+        JSONObject record;
+        for (int i = 0; i < recordArray.size(); i++){
+             record = (JSONObject) recordArray.get(i);
+
+             String location = (String) record.get(MessageKeys.SERVER_LOCATION);
+            if (("CA").equals(location))
+                CAServerArray.add(record);
+            else if (("UK").equals(location))
+                UKServerArray.add(record);
+            else if (("US").equals(location))
+                USServerArray.add(record);
+        }
+
+        CA_DEMS_server.setData(CAServerArray);
+        UK_DEMS_server.setData(UKServerArray);
+        US_DEMS_server.setData(USServerArray);
     }
 }
 

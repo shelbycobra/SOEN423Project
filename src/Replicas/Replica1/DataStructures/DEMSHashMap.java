@@ -6,21 +6,6 @@ import org.json.simple.JSONObject;
 
 public class DEMSHashMap {
 
-    public JSONArray getData() {
-        JSONArray recordArray = new JSONArray();
-        JSONObject record;
-        for (HashNode currentNode : map) {
-            //Cycles through linked list at map[i]
-            while (currentNode != null) {
-                record = currentNode.getRecord().getJSONObject();
-                record.put(MessageKeys.SERVER_LOCATION, location);
-                recordArray.add(record);
-                currentNode = currentNode.getNext();
-            }
-        }
-        return recordArray;
-    }
-
     private class HashNode {
 		
 		private int key;
@@ -127,7 +112,60 @@ public class DEMSHashMap {
         }
 		return false;
 	}
-	
+
+    public JSONArray getData() {
+        JSONArray recordArray = new JSONArray();
+        JSONObject record;
+        for (HashNode currentNode : map) {
+            //Cycles through linked list at map[i]
+            while (currentNode != null) {
+                record = currentNode.getRecord().getJSONObject();
+                record.put(MessageKeys.SERVER_LOCATION, location);
+                record.put(MessageKeys.RECORD_ID, currentNode.getRecordID());
+                recordArray.add(record);
+                currentNode = currentNode.getNext();
+            }
+        }
+        return recordArray;
+    }
+
+    public void setData(JSONArray array) {
+        Record record = null;
+        JSONObject obj;
+        String recordType;
+        String recordID;
+	    for (int i = 0; i < array.size(); i++) {
+	        obj = (JSONObject) array.get(i);
+	        recordID = (String) obj.get(MessageKeys.RECORD_ID);
+	        recordType = ((String) obj.get(MessageKeys.RECORD_ID)).substring(0, 2);
+
+	        if ("ER".equals(recordType))
+	            record = new EmployeeRecord((String) obj.get(MessageKeys.FIRST_NAME), (String) obj.get(MessageKeys.LAST_NAME),
+                        Integer.parseInt((String) obj.get(MessageKeys.EMPLOYEE_ID)), (String) obj.get(MessageKeys.MAIL_ID),
+                        (String) obj.get(MessageKeys.PROJECT_ID));
+            else if ("MR".equals(recordType)) {
+                Project[] projs = JSONArrayToProjectArray((JSONArray) obj.get(MessageKeys.PROJECTS));
+                record = new ManagerRecord((String) obj.get(MessageKeys.FIRST_NAME), (String) obj.get(MessageKeys.LAST_NAME),
+                        Integer.parseInt((String) obj.get(MessageKeys.EMPLOYEE_ID)), (String) obj.get(MessageKeys.MAIL_ID),
+                        projs, (String) obj.get(MessageKeys.LOCATION));
+            }
+
+            addRecord(recordID, record);
+	    }
+    }
+
+    private Project[] JSONArrayToProjectArray(JSONArray projectArray) {
+	    Project[] projects = new Project[projectArray.size()];
+	    JSONObject obj;
+
+	    for (int i = 0; i < projects.length; i++) {
+	        obj = (JSONObject) projectArray.get(i);
+	        projects[i] = new Project((String) obj.get(MessageKeys.PROJECT_ID), (String) obj.get(MessageKeys.PROJECT_CLIENT), (String) obj.get(MessageKeys.PROJECT_NAME));
+        }
+
+        return projects;
+    }
+
 	public synchronized int getRecordCount() {
 		return recordCount;
 	}

@@ -55,6 +55,10 @@ public class ServerThread extends Thread {
         return demsImpl.getMap().getData();
     }
 
+    void setData(JSONArray array) {
+        demsImpl.getMap().setData(array);
+    }
+
     /*
      *  WRITE TO LOG FILE
      */
