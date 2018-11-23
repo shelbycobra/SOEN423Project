@@ -1,5 +1,6 @@
 package Test;
 
+import DEMS.Config;
 import DEMS.Sequencer;
 import Replicas.Replica1.CenterServer;
 import Replicas.Replica2.Server;
@@ -71,7 +72,7 @@ public class SequencerTest {
         eRecord1.put(MessageKeys.MAIL_ID, "john@gmail.com");
         eRecord1.put(MessageKeys.PROJECT_ID, "P12345");
         eRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
-        eRecord1.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord1.put(MessageKeys.COMMAND_TYPE, Config.CREATE_EMPLOYEE_RECORD);
         eRecord1.put(MessageKeys.MESSAGE_ID,"1");
 
         JSONObject eRecord2 = new JSONObject();
@@ -81,7 +82,7 @@ public class SequencerTest {
         eRecord2.put(MessageKeys.MAIL_ID, "john@gmail.com");
         eRecord2.put(MessageKeys.PROJECT_ID, "P12345");
         eRecord2.put(MessageKeys.MANAGER_ID, "CA1234");
-        eRecord2.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord2.put(MessageKeys.COMMAND_TYPE, Config.CREATE_EMPLOYEE_RECORD);
         eRecord2.put(MessageKeys.MESSAGE_ID,"2");
 
         JSONObject eRecord3 = new JSONObject();
@@ -91,7 +92,7 @@ public class SequencerTest {
         eRecord3.put(MessageKeys.MAIL_ID, "john@gmail.com");
         eRecord3.put(MessageKeys.PROJECT_ID, "P12345");
         eRecord3.put(MessageKeys.MANAGER_ID, "CA1234");
-        eRecord3.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord3.put(MessageKeys.COMMAND_TYPE, Config.CREATE_EMPLOYEE_RECORD);
         eRecord3.put(MessageKeys.MESSAGE_ID,"3");
 
         JSONObject eRecord4 = new JSONObject();
@@ -101,7 +102,7 @@ public class SequencerTest {
         eRecord4.put(MessageKeys.MAIL_ID, "john@gmail.com");
         eRecord4.put(MessageKeys.PROJECT_ID, "P12345");
         eRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
-        eRecord4.put(MessageKeys.COMMAND_TYPE,"2");
+        eRecord4.put(MessageKeys.COMMAND_TYPE, Config.CREATE_EMPLOYEE_RECORD);
         eRecord4.put(MessageKeys.MESSAGE_ID,"4");
 
         byte[] msg1 = eRecord1.toString().getBytes();
@@ -129,7 +130,7 @@ public class SequencerTest {
         mRecord1.put(MessageKeys.EMPLOYEE_ID,"123");
         mRecord1.put(MessageKeys.MAIL_ID, "john@gmail.com");
         mRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
-        mRecord1.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord1.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
         mRecord1.put(MessageKeys.MESSAGE_ID,"5");
         mRecord1.put(MessageKeys.PROJECTS, projects);
         mRecord1.put(MessageKeys.LOCATION, "CA");
@@ -140,7 +141,7 @@ public class SequencerTest {
         mRecord2.put(MessageKeys.EMPLOYEE_ID,"123");
         mRecord2.put(MessageKeys.MAIL_ID, "john@gmail.com");
         mRecord2.put(MessageKeys.MANAGER_ID, "US1234");
-        mRecord2.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord2.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
         mRecord2.put(MessageKeys.MESSAGE_ID,"5");
         mRecord2.put(MessageKeys.PROJECTS, projects);
         mRecord2.put(MessageKeys.LOCATION, "US");
@@ -151,7 +152,7 @@ public class SequencerTest {
         mRecord3.put(MessageKeys.EMPLOYEE_ID,"123");
         mRecord3.put(MessageKeys.MAIL_ID, "john@gmail.com");
         mRecord3.put(MessageKeys.MANAGER_ID, "UK1234");
-        mRecord3.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord3.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
         mRecord3.put(MessageKeys.MESSAGE_ID,"6");
         mRecord3.put(MessageKeys.PROJECTS, projects);
         mRecord3.put(MessageKeys.LOCATION, "UK");
@@ -162,7 +163,7 @@ public class SequencerTest {
         mRecord4.put(MessageKeys.EMPLOYEE_ID,"123");
         mRecord4.put(MessageKeys.MAIL_ID, "john@gmail.com");
         mRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
-        mRecord4.put(MessageKeys.COMMAND_TYPE,"1");
+        mRecord4.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
         mRecord4.put(MessageKeys.MESSAGE_ID,"7");
         mRecord4.put(MessageKeys.PROJECTS, projects);
         mRecord4.put(MessageKeys.LOCATION, "CA");
@@ -183,12 +184,12 @@ public class SequencerTest {
         JSONObject getRecords1 = new JSONObject();
         getRecords1.put(MessageKeys.MANAGER_ID, "CA1234");
         getRecords1.put(MessageKeys.MESSAGE_ID,"9");
-        getRecords1.put(MessageKeys.COMMAND_TYPE,"3");
+        getRecords1.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 
         JSONObject editRecord1 = new JSONObject();
         editRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
         editRecord1.put(MessageKeys.MESSAGE_ID,"10");
-        editRecord1.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord1.put(MessageKeys.COMMAND_TYPE, Config.EDIT_RECORD);
         editRecord1.put(MessageKeys.RECORD_ID, "ER00000");
         editRecord1.put(MessageKeys.FIELD_NAME, MessageKeys.MAIL_ID);
         editRecord1.put(MessageKeys.NEW_VALUE, "mail@mail.com");
@@ -196,7 +197,7 @@ public class SequencerTest {
         JSONObject editRecord2 = new JSONObject();
         editRecord2.put(MessageKeys.MANAGER_ID, "UK1234");
         editRecord2.put(MessageKeys.MESSAGE_ID,"11");
-        editRecord2.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord2.put(MessageKeys.COMMAND_TYPE, Config.EDIT_RECORD);
         editRecord2.put(MessageKeys.RECORD_ID, "MR00001");
         editRecord2.put(MessageKeys.FIELD_NAME, MessageKeys.PROJECT_ID);
         editRecord2.put(MessageKeys.NEW_VALUE, "P99999");
@@ -204,7 +205,7 @@ public class SequencerTest {
         JSONObject editRecord3 = new JSONObject();
         editRecord3.put(MessageKeys.MANAGER_ID, "US1234");
         editRecord3.put(MessageKeys.MESSAGE_ID,"12");
-        editRecord3.put(MessageKeys.COMMAND_TYPE,"4");
+        editRecord3.put(MessageKeys.COMMAND_TYPE, Config.EDIT_RECORD);
         editRecord3.put(MessageKeys.RECORD_ID, "MR00001");
         editRecord3.put(MessageKeys.FIELD_NAME, MessageKeys.PROJECT_CLIENT);
         editRecord3.put(MessageKeys.NEW_VALUE, "Another Corp.");
@@ -223,26 +224,26 @@ public class SequencerTest {
         JSONObject transferRecord1 = new JSONObject();
         transferRecord1.put(MessageKeys.MANAGER_ID, "CA1234");
         transferRecord1.put(MessageKeys.MESSAGE_ID,"13");
-        transferRecord1.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord1.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord1.put(MessageKeys.RECORD_ID, "ER00000");
         transferRecord1.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords2 = new JSONObject();
         getRecords2.put(MessageKeys.MANAGER_ID, "UK1234");
         getRecords2.put(MessageKeys.MESSAGE_ID,"14");
-        getRecords2.put(MessageKeys.COMMAND_TYPE,"3");
+        getRecords2.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 
         JSONObject transferRecord2 = new JSONObject();
         transferRecord2.put(MessageKeys.MANAGER_ID, "CA1234");
         transferRecord2.put(MessageKeys.MESSAGE_ID,"15");
-        transferRecord2.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord2.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord2.put(MessageKeys.RECORD_ID, "ER00001");
         transferRecord2.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords3 = new JSONObject();
         getRecords3.put(MessageKeys.MANAGER_ID, "UK1234");
         getRecords3.put(MessageKeys.MESSAGE_ID,"16");
-        getRecords3.put(MessageKeys.COMMAND_TYPE,"3");
+        getRecords3.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 
         byte[] msg13 = transferRecord1.toString().getBytes();
         byte[] msg14 = getRecords2.toString().getBytes();
@@ -252,26 +253,26 @@ public class SequencerTest {
         JSONObject transferRecord3 = new JSONObject();
         transferRecord3.put(MessageKeys.MANAGER_ID, "CA1234");
         transferRecord3.put(MessageKeys.MESSAGE_ID,"17");
-        transferRecord3.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord3.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord3.put(MessageKeys.RECORD_ID, "MR00002");
         transferRecord3.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords4 = new JSONObject();
         getRecords4.put(MessageKeys.MANAGER_ID, "US1234");
         getRecords4.put(MessageKeys.MESSAGE_ID,"18");
-        getRecords4.put(MessageKeys.COMMAND_TYPE,"3");
+        getRecords4.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 
         JSONObject transferRecord4 = new JSONObject();
         transferRecord4.put(MessageKeys.MANAGER_ID, "CA1234");
         transferRecord4.put(MessageKeys.MESSAGE_ID,"19");
-        transferRecord4.put(MessageKeys.COMMAND_TYPE,"5");
+        transferRecord4.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord4.put(MessageKeys.RECORD_ID, "ER00002");
         transferRecord4.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
 
         JSONObject getRecords5 = new JSONObject();
         getRecords5.put(MessageKeys.MANAGER_ID, "US1234");
         getRecords5.put(MessageKeys.MESSAGE_ID,"20");
-        getRecords5.put(MessageKeys.COMMAND_TYPE,"3");
+        getRecords5.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 
         byte[] msg17 = transferRecord3.toString().getBytes();
         byte[] msg18 = getRecords4.toString().getBytes();
@@ -311,7 +312,7 @@ public class SequencerTest {
         }
     }
 
-    @After
+//    @After
     public void shutdown() {
         replica1Servers.shutdownServers();
     }

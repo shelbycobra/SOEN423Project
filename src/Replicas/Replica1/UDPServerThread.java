@@ -1,6 +1,8 @@
 package Replicas.Replica1;
 
 import java.net.*;
+
+import DEMS.Config;
 import Replicas.Replica1.DataStructures.*;
 import org.json.simple.*;
 import org.json.simple.parser.*;
@@ -61,8 +63,8 @@ public class UDPServerThread extends Thread {
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-                    switch (Integer.parseInt( (String) jsonMessage.get(MessageKeys.COMMAND_TYPE))) {
-                        case 1: {
+                    switch (Integer.parseInt( jsonMessage.get(MessageKeys.COMMAND_TYPE).toString())) {
+                        case Config.CREATE_MANAGER_RECORD: {
                             // Get projects
                             JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
                             Project[] projects = getProjectArray(jsonProjects);
@@ -78,27 +80,27 @@ public class UDPServerThread extends Thread {
                                     (String) jsonMessage.get(MessageKeys.LOCATION));
                             System.out.println(msg);
                             continue;
-                        } case 2: {
+                        } case Config.CREATE_EMPLOYEE_RECORD: {
                             // Create Employee Record
                             String msg = demsImpl.createERecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.FIRST_NAME), (String) jsonMessage.get(MessageKeys.LAST_NAME), Integer.parseInt( (String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)), (String) jsonMessage.get(MessageKeys.MAIL_ID), (String) jsonMessage.get(MessageKeys.PROJECT_ID));
                             System.out.println(msg);
                             continue;
-                        } case 3: {
+                        } case Config.GET_RECORD_COUNT: {
                             // Get Record Count
                             String counts = demsImpl.getRecordCounts((String) jsonMessage.get(MessageKeys.MANAGER_ID));
                             System.out.println("Record count: " + counts);
                             continue;
-                        } case 4: {
+                        } case Config.EDIT_RECORD: {
                             // Edit Record
                             String output = demsImpl.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
                             System.out.println("\n" + output);
                             continue;
-                        } case 5: {
+                        } case Config.TRANSFER_RECORD: {
                             // Transfer Record
                             String output = demsImpl.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
                             System.out.println(output);
                             continue;
-                        } case 6: {
+                        } case Config.EXIT: {
                             // Exit System
                             System.out.println("\nLogging out and exiting system...\n");
                             continue;

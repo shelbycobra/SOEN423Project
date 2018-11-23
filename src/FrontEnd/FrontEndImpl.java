@@ -14,14 +14,13 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import DEMS.Config;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.omg.CORBA.*;
 
-import DEMS.Command;
 import DEMS.MessageKeys;
-import DEMS.PortNumbers;
 
 /*
  * 1) Receives a client request as a CORBA invocation. 
@@ -84,7 +83,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				socket = new DatagramSocket();
 				byte[] messageBuffer = payload.toString().getBytes();
 				InetAddress host = InetAddress.getByName("localhost");
-				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, PortNumbers.FE_SEQ);
+				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.FE_SEQ);
 
 				System.out.println("Sending message to sequencer...");
 				socket.send(request);
@@ -97,7 +96,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			}
 			catch (SocketTimeoutException e)
 			{
-				System.out.println("Server on port " + PortNumbers.FE_SEQ + " is not responding.");
+				System.out.println("Server on port " + Config.PortNumbers.FE_SEQ + " is not responding.");
 			}
 			catch (SocketException e)
 			{
@@ -233,13 +232,13 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		@Override
 		public void run()
 		{
-			System.out.println("Listening for responses from the replicas on port " + PortNumbers.RE_FE + "...");
+			System.out.println("Listening for responses from the replicas on port " + Config.PortNumbers.RE_FE + "...");
 						
 			DatagramSocket datagramSocket = null;
 			
 			try
 			{
-				datagramSocket = new DatagramSocket(PortNumbers.RE_FE);
+				datagramSocket = new DatagramSocket(Config.PortNumbers.RE_FE);
 				datagramSocket.setSoTimeout(1000);
 
 	        	while (listeningForResponses.get())
@@ -338,7 +337,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		payload.put(MessageKeys.EMPLOYEE_ID, employeeID);
 		payload.put(MessageKeys.PROJECTS, projects);
 		payload.put(MessageKeys.LOCATION, location);
-		payload.put(MessageKeys.COMMAND_TYPE, Command.CREATE_MANAGER_RECORD.toString());
+		payload.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
 		
 		try
 		{
@@ -363,7 +362,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		payload.put(MessageKeys.EMPLOYEE_ID, employeeID);
 		payload.put(MessageKeys.MAIL_ID, mailID);
 		payload.put(MessageKeys.PROJECT_ID, projectID);
-		payload.put(MessageKeys.COMMAND_TYPE, Command.CREATE_EMPLOYEE_RECORD.toString());
+		payload.put(MessageKeys.COMMAND_TYPE, Config.CREATE_EMPLOYEE_RECORD);
 		
 		try
 		{
@@ -383,7 +382,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		JSONObject payload = new JSONObject();
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
-		payload.put(MessageKeys.COMMAND_TYPE, Command.GET_RECORD_COUNT.toString());
+		payload.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 		
 		try
 		{
@@ -406,7 +405,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		payload.put(MessageKeys.RECORD_ID, recordID);
 		payload.put(MessageKeys.FIELD_NAME, fieldName);
 		payload.put(MessageKeys.NEW_VALUE, newValue);
-		payload.put(MessageKeys.COMMAND_TYPE, Command.EDIT_RECORD.toString());
+		payload.put(MessageKeys.COMMAND_TYPE, Config.EDIT_RECORD);
 		
 		try
 		{
@@ -428,7 +427,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.RECORD_ID, recordID);
 		payload.put(MessageKeys.REMOTE_SERVER_NAME, remoteCenterServerName);
-		payload.put(MessageKeys.COMMAND_TYPE, Command.TRANSFER_RECORD.toString());
+		payload.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
 		
 		try
 		{

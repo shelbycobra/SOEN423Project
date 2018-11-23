@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import DEMS.Config;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -20,7 +21,6 @@ import org.junit.Test;
 
 import Client.ClientThread;
 import DEMS.MessageKeys;
-import DEMS.PortNumbers;
 import FrontEnd.FrontEndServerThread;
 
 import static org.junit.Assert.assertEquals;
@@ -145,10 +145,10 @@ public class FrontEndTest
 		@Override
 		public void run()
 		{
-			System.out.println("Mock Sequencer up and running on port " + PortNumbers.FE_SEQ);
+			System.out.println("Mock Sequencer up and running on port " + Config.PortNumbers.FE_SEQ);
 			try
 			{
-				datagramSocket = new DatagramSocket(PortNumbers.FE_SEQ);
+				datagramSocket = new DatagramSocket(Config.PortNumbers.FE_SEQ);
 				datagramSocket.setSoTimeout(1000);
 				
                 while (running.get())
@@ -166,7 +166,7 @@ public class FrontEndTest
 	
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
-	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, PortNumbers.SEQ_RE);
+	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.SEQ_RE);
 	    				datagramSocket.send(request);
 	    				System.out.println("Sequencer: Sending request to Replica Manager...");
                 	}
@@ -204,11 +204,11 @@ public class FrontEndTest
 		@Override
 		public void run()
 		{
-			System.out.println("Mock Replica Manager up and running on port " + PortNumbers.SEQ_RE);
+			System.out.println("Mock Replica Manager up and running on port " + Config.PortNumbers.SEQ_RE);
 			
 			try
 			{
-				datagramSocket = new DatagramSocket(PortNumbers.SEQ_RE);
+				datagramSocket = new DatagramSocket(Config.PortNumbers.SEQ_RE);
 				datagramSocket.setSoTimeout(1000);
 				
                 while (running.get())
@@ -227,7 +227,7 @@ public class FrontEndTest
 	                    
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
-	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, PortNumbers.RE_FE);
+	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.RE_FE);
 	    				datagramSocket.send(request);
 	    				System.out.println("Replica Manager: Sending response to Front End...");
 	    				
@@ -239,7 +239,7 @@ public class FrontEndTest
 		    				jsonMessage2.put(MessageKeys.MESSAGE_ID, jsonMessage.get(MessageKeys.MESSAGE_ID));
 		                    jsonMessage2.put(MessageKeys.MESSAGE, "Bad message!");
 		                    byte[] messageBuffer2 = jsonMessage2.toString().getBytes();
-		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, PortNumbers.RE_FE);
+		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, Config.PortNumbers.RE_FE);
 		    				datagramSocket.send(request2);
 		    				System.out.println("Replica Manager: Sending response to Front End...");
 	    				}

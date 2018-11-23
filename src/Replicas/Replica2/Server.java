@@ -69,11 +69,11 @@ public class Server implements Replica
         }
         catch (SocketException e)
         {
-            System.out.println("CenterServer Multicast Socket is closed.");
+            System.out.println("Server Multicast Socket is closed.");
         }
         catch (InterruptedException e )
         {
-            System.out.println("CenterServer is shutting down.");
+            System.out.println("Server is shutting down.");
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -235,7 +235,7 @@ public class Server implements Replica
                 InetAddress address = InetAddress.getByName("localhost");
                 DatagramSocket serverSocket = new DatagramSocket();
                 byte[] buffer = message.toString().getBytes();
-                System.out.println("CenterServer msg to server = " + message.toString());
+
                 // Send packet
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
                 serverSocket.send(packet);
