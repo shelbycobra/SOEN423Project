@@ -1,8 +1,5 @@
 package Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -19,12 +16,14 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import Client.ClientThread;
 import DEMS.MessageKeys;
 import DEMS.UDPPortNumbers;
 import FrontEnd.FrontEndServerThread;
+
+import static org.junit.Assert.assertEquals;
 
 public class FrontEndTest
 {
