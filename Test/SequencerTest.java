@@ -226,7 +226,7 @@ public class SequencerTest {
         transferRecord1.put(MessageKeys.MESSAGE_ID,"13");
         transferRecord1.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord1.put(MessageKeys.RECORD_ID, "ER00000");
-        transferRecord1.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
+        transferRecord1.put(MessageKeys.REMOTE_SERVER_NAME, "US");
 
         JSONObject getRecords2 = new JSONObject();
         getRecords2.put(MessageKeys.MANAGER_ID, "UK1234");
@@ -238,7 +238,7 @@ public class SequencerTest {
         transferRecord2.put(MessageKeys.MESSAGE_ID,"15");
         transferRecord2.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord2.put(MessageKeys.RECORD_ID, "ER00001");
-        transferRecord2.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
+        transferRecord2.put(MessageKeys.REMOTE_SERVER_NAME, "US");
 
         JSONObject getRecords3 = new JSONObject();
         getRecords3.put(MessageKeys.MANAGER_ID, "UK1234");
@@ -255,7 +255,7 @@ public class SequencerTest {
         transferRecord3.put(MessageKeys.MESSAGE_ID,"17");
         transferRecord3.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord3.put(MessageKeys.RECORD_ID, "MR00002");
-        transferRecord3.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
+        transferRecord3.put(MessageKeys.REMOTE_SERVER_NAME, "US");
 
         JSONObject getRecords4 = new JSONObject();
         getRecords4.put(MessageKeys.MANAGER_ID, "US1234");
@@ -267,7 +267,7 @@ public class SequencerTest {
         transferRecord4.put(MessageKeys.MESSAGE_ID,"19");
         transferRecord4.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
         transferRecord4.put(MessageKeys.RECORD_ID, "ER00002");
-        transferRecord4.put(MessageKeys.REMOTE_SERVER_NAME, "UK");
+        transferRecord4.put(MessageKeys.REMOTE_SERVER_NAME, "US");
 
         JSONObject getRecords5 = new JSONObject();
         getRecords5.put(MessageKeys.MANAGER_ID, "US1234");

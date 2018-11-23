@@ -12,8 +12,6 @@ public class ManagerRecord extends Record
 	public ManagerRecord(String pFirstName, String pLastName, int pEmployeeID, String pMailID, Project[] pProjects, String pLocation)
 	{
 		super(pFirstName, pLastName, pEmployeeID, pMailID);
-		
-		mRecordID = "MR" + ServerManager.getNextID();
 		mProjects = new ArrayList<Project>(Arrays.asList(pProjects));
 		mLocation = pLocation;
 	}

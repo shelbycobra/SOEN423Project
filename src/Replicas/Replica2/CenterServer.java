@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import DEMS.Config;
-import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 
 import Replicas.Replica2.DataStructures.EmployeeRecord;
 import Replicas.Replica2.DataStructures.ManagerRecord;
@@ -23,14 +22,18 @@ import Replicas.Replica2.DataStructures.ServerManager;
 
 public class CenterServer implements CenterServerInterface
 {
-	int port;
-	String location;
+    private static final byte GET_COUNTS = 0x01, CHECK_RECORD = 0x02, ADD_RECORD = 0x03;
+
+    private ServerManager serverManager;
+	private int port;
+	private String location;
 	public HashMap<Character, ArrayList<Record>> records;
 	
 	public CenterServer(String location, HashMap<Character, ArrayList<Record>> records)
 	{
+	    serverManager = new ServerManager();
 		this.location = location;
-		port = Config.Replica2.CA_PORT;
+		port = setPortNumber(location);
 		this.records = records;
 	}
 	
@@ -38,43 +41,43 @@ public class CenterServer implements CenterServerInterface
 	public String createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location)
 	{
 		ManagerRecord managerRecord = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
-		String message = "";
+		managerRecord.mRecordID = "MR" + serverManager.getNextID();
+		String message = location + " Server ";
 		
 		if (createRecord(managerRecord))
 		{
-			message = "Manager Record Created " + managerRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + location.toString();
+			message += "manager Record Created " + managerRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + location.toString();
 		}
 		else
 		{
-			message = "Manager Record creation failed.";
+			message += "manager Record creation failed.";
 		}
 
-		System.out.println(message);
-		log(message);
-		return message;
+		log(message+ "\n");
+		return message + "\n";
 	}
 
 	@Override
 	public String createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, String projectID)
 	{
 		EmployeeRecord employeeRecord = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
-		String message = "";
+		employeeRecord.mRecordID = "ER" + serverManager.getNextID();
+		String message = location + " Server ";
 		
 		if (createRecord(employeeRecord))
 		{
-			message = "Employee Record Created " + employeeRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + projectID;
+			message += "employee Record Created " + employeeRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + projectID;
 		}
 		else
 		{
-			message = "Employee Record creation failed.";
+			message += "employee Record creation failed.";
 		}
 
-		System.out.println(message);
-		log(message);
-		return message;
+		log(message+ "\n");
+		return message+ "\n";
 	}
 	
-	private boolean createRecord(Record record)
+	public synchronized boolean createRecord(Record record)
 	{
 		Character key = record.mLastName.charAt(0);
 		ArrayList<Record> value;
@@ -103,22 +106,45 @@ public class CenterServer implements CenterServerInterface
 		return false;
 	}
 
+	private synchronized boolean removeRecord(Character key, Record record) {
+
+        ArrayList<Record> value;
+
+        try
+        {
+            if (records.containsKey(key))
+            {
+                value = records.get(key);
+                value.remove(record);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
+
+    }
+
 	@Override
 	public String getRecordCount(String managerID)
 	{
 		String response = "";
 		DatagramSocket socket = null;
 		
-		System.out.println("Attempting to get record counts from other servers...");
-		
 		try
 		{
-			socket = new DatagramSocket();
-			String message = "Count";
-			byte[] messageBuffer = message.getBytes();
+			socket = new DatagramSocket(port+10000);
+			byte[] messageBuffer = {GET_COUNTS};
 			InetAddress host = InetAddress.getByName("localhost");
 			
-			for (int i = Config.Replica2.CA_PORT; i < 6003; i++)
+			for (int i = 6000; i < 6003; i++)
 			{
 				if (i != this.port)
 				{
@@ -128,11 +154,10 @@ public class CenterServer implements CenterServerInterface
 					
 					try
 					{
-						byte[] buffer = new byte[1000];
+						byte[] buffer = new byte[100];
 						DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 						socket.receive(reply);
-						System.out.println("Reply: " + new String(reply.getData(), reply.getOffset(), reply.getLength()));
-						response += new String(reply.getData(), reply.getOffset(), reply.getLength()) + "\n";
+						response += new String(reply.getData()).trim() + ", ";
 					}
 					catch (SocketTimeoutException e)
 					{
@@ -142,7 +167,7 @@ public class CenterServer implements CenterServerInterface
 				}
 			}
 			
-			response += location + ": " + records.size();
+			response += location + ": " + serverManager.getRecordCount(records) + "\n";
 		}
 		catch (SocketException e)
 		{
@@ -160,7 +185,7 @@ public class CenterServer implements CenterServerInterface
 			}
 		}
 		
-		return response;
+		return response+ "\n";
 	}
 
 	@Override
@@ -168,7 +193,7 @@ public class CenterServer implements CenterServerInterface
 	{
 		String message = "";
 		
-		if (recordID.length() == 8)
+		if (recordID.length() == 7)
 		{
 			if (!recordID.substring(0, 2).matches("MR") && !recordID.substring(0, 2).matches("ER"))
 			{
@@ -188,63 +213,48 @@ public class CenterServer implements CenterServerInterface
 		
 		if (recordID.substring(0, 2).matches("MR"))
 		{
-			ManagerRecord recordToEdit = (ManagerRecord) ServerManager.findRecordByID(recordID, records);
+			ManagerRecord recordToEdit = (ManagerRecord) serverManager.findRecordByID(recordID, records);
 			
 			if (recordToEdit == null)
 			{
-				message = "Couldn't find record with ID: " + recordID;
-			}
-			
-			if (fieldName.matches("mailID"))
-        	{
-				recordToEdit.mMailID = newValue;
-        	}
-        	else if (fieldName.matches("project"))
-        	{
-        		// TODO: Do something about project...
-        	}
-        	else if (fieldName.matches("location"))
-        	{
-        		if (newValue.matches("CA") || newValue.matches("US") || newValue.matches("UK"))
-        		{
-        			recordToEdit.mLocation = newValue;
-        		}
-        		else
-        		{
-        			message = "Invalid location. Must be CA, US, or UK.";
-				}
-        	}
-        	else
-        	{
-        		message = "Invalid field.";
-			}
+				message = location + " Server Couldn't find manager record with ID: " + recordID;
+			} else {
+                if (fieldName.matches("mail_id")) {
+                    recordToEdit.mMailID = newValue;
+                } else if (fieldName.matches("project_id")) {
+                    // TODO: Do something about project...
+                } else if (fieldName.matches("location")) {
+                    if (newValue.matches("CA") || newValue.matches("US") || newValue.matches("UK")) {
+                        recordToEdit.mLocation = newValue;
+                    } else {
+                        message = "Invalid location. Must be CA, US, or UK.";
+                    }
+                } else {
+                    message = "Invalid field.";
+                }
+            }
 		}
 		else
 		{
-			EmployeeRecord recordToEdit = (EmployeeRecord) ServerManager.findRecordByID(recordID, records);
+			EmployeeRecord recordToEdit = (EmployeeRecord) serverManager.findRecordByID(recordID, records);
 			
 			if (recordToEdit == null)
 			{
-				message = "Couldn't find record with ID: " + recordID;
-			}
-			
-			if (fieldName.matches("mailID"))
-        	{
-				recordToEdit.mMailID = newValue;
-        	}
-        	else if (fieldName.matches("projectID"))
-        	{
-        		recordToEdit.mProjectID = newValue;
-        	}
-        	else
-        	{
-        		message = "Invalid field.";
-			}
+				message = location + " Server couldn't find record employee with ID: " + recordID;
+			} else {
+
+                if (fieldName.matches("mail_id")) {
+                    recordToEdit.mMailID = newValue;
+                } else if (fieldName.matches("project_id")) {
+                    recordToEdit.mProjectID = newValue;
+                } else {
+                    message = "Invalid field.";
+                }
+            }
 		}
 
-		System.out.println(message);
-        log("Changed " + fieldName + " for " + recordID + " to " + newValue);
-		return message;
+        log(location + " Server Changed " + fieldName + " for " + recordID + " to " + newValue);
+		return message+ "\n";
 	}
 
 	@Override
@@ -256,75 +266,59 @@ public class CenterServer implements CenterServerInterface
 		// These checking and transfer requires server to server communication which should be implemented using UDP/IP.
 		// Note that the record should be removed from the hash map of the initial server and should be added to the hash map of the remoteCenterServer atomically.
 		// The server informs the manager whether the operation was successful or not and both the server and the manager store this information in their logs
-		
-		Record recordToTransfer = ServerManager.findRecordByID(recordID, records);
-		String message = "";
+
+        System.out.println(location + " Server attempting to check if record exists in the " + remoteCenterServerName + " server...");
+
+        Record recordToTransfer = serverManager.findRecordByID(recordID, records);
+		String message = location + " Server ";
 		
 		if (recordToTransfer == null)
 		{
-			message = "Couldn't find record with ID: " + recordID;
+			message += "Couldn't find record with ID: " + recordID + " in " + location + " database.";
 			log(message);
 			return message;
 		}
 		
 		if (!remoteCenterServerName.matches("CA") && !remoteCenterServerName.matches("US") && !remoteCenterServerName.matches("UK"))
 		{
-			message = "Invalid location. Must be CA, US, or UK.";
+			message += "Invalid location. Must be CA, US, or UK.";
 			log(message);
 			return message;
 		}
 		
-		if (doesRecordExistInRemoteCenterServer(recordID, remoteCenterServerName))
+		if (!doesRecordExistInRemoteCenterServer(recordID, remoteCenterServerName))
 		{
-			message = "Record already exists on remote server with ID: " + recordID;
+			message += "Record already exists on remote server with ID: " + recordID + ".";
 			log(message);
 			return message;
 		}
-		else
-		{
-			message = "Record does not exist on remote server";
-		}
-		
-		if (transferRecordToRemoteCenterServer(recordID, remoteCenterServerName))
-		{
-			records.get(recordToTransfer.mLastName.charAt(0)).remove(recordToTransfer);
-			
-			message = "Record was successfully transferred to " + remoteCenterServerName;
-		}
-		else
-		{
-			message = "Record transfer failed to " + remoteCenterServerName;
-		}
+		else {
+            message += "Record does not exist on remote server.";
 
-		System.out.println(message);
-		log(message);
-		return message;
+            if (transferRecordToRemoteCenterServer(recordID, remoteCenterServerName)) {
+                message += "Record was successfully transferred to " + remoteCenterServerName + " server.";
+            } else {
+                message += "Record transfer failed to " + remoteCenterServerName + " server.";
+            }
+        }
+
+		log(message+ "\n");
+		return message+ "\n";
 	}
 
 	private boolean doesRecordExistInRemoteCenterServer(String recordID, String remoteCenterServerName)
 	{
 		DatagramSocket socket = null;
-		int port = Config.Replica2.CA_PORT;
-		
-		System.out.println("Attempting to check if record exists at " + remoteCenterServerName + "...");
-		
-		switch (remoteCenterServerName)
-		{
-			case "CA":	port = Config.Replica2.CA_PORT+10;
-						break;
-			case "US":	port = Config.Replica2.US_PORT+10;
-						break;
-			case "UK":	port = Config.Replica2.UK_PORT+10;
-						break;
-		}
-		
+		int remotePort = setPortNumber(remoteCenterServerName);
+
 		try
 		{
 			socket = new DatagramSocket();
-			String message = recordID;
-			byte[] messageBuffer = message.getBytes();
+			byte[] messageBuffer = new byte[1000];
+			messageBuffer[0] = CHECK_RECORD;
+            System.arraycopy(recordID.getBytes(), 0, messageBuffer, 1, recordID.getBytes().length);
 			InetAddress host = InetAddress.getByName("localhost");
-			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port);
+			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, remotePort);
 			
 			socket.send(request);
 			socket.setSoTimeout(2000); // Set timeout if other servers aren't responding.
@@ -334,13 +328,12 @@ public class CenterServer implements CenterServerInterface
 				byte[] buffer = new byte[1000];
 				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 				socket.receive(reply);
-				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
-				
-				return replyString.matches("success");
+				String replyString = new String(reply.getData()).trim();
+				return replyString.equals("Y");
 			}
 			catch (SocketTimeoutException e)
 			{
-				System.out.println("Server on port " + port + " is not responding.");
+				System.out.println("Server on port " + remotePort + " is not responding.");
 			}
 		}
 		catch (SocketException e)
@@ -365,30 +358,23 @@ public class CenterServer implements CenterServerInterface
 	private boolean transferRecordToRemoteCenterServer(String recordID, String remoteCenterServerName)
 	{
 		DatagramSocket socket = null;
-		int port = Config.Replica2.CA_PORT;
+		int remotePort = setPortNumber(remoteCenterServerName);
 		
-		System.out.println("Attempting to transfer record to " + remoteCenterServerName + "...");
-		
-		switch (remoteCenterServerName)
-		{
-			case "CA":	port = Config.Replica2.CA_PORT+20;
-						break;
-			case "US":	port = Config.Replica2.US_PORT+20;
-						break;
-			case "UK":	port = Config.Replica2.UK_PORT+20;
-						break;
-		}
+		System.out.println("Attempting to transfer record to " + remoteCenterServerName + " server...");
 		
 		try
 		{
 			socket = new DatagramSocket();
-			Record message = ServerManager.findRecordByID(recordID, records);
-			byte[] messageBuffer = ServerManager.RecordToByte(message);
+			Record message = serverManager.findRecordByID(recordID, records);
+			byte[] messageBuffer = new byte[1000];
+			messageBuffer[0] = ADD_RECORD;
+			System.arraycopy(serverManager.RecordToByte(message), 0, messageBuffer, 1, serverManager.RecordToByte(message).length);
+
 			InetAddress host = InetAddress.getByName("localhost");
-			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port);
+			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, remotePort);
 			
 			socket.send(request);
-			socket.setSoTimeout(2000); // Set timeout if other servers aren't responding.
+			socket.setSoTimeout(1000); // Set timeout if other servers aren't responding.
 			
 			try
 			{
@@ -396,12 +382,15 @@ public class CenterServer implements CenterServerInterface
 				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 				socket.receive(reply);
 				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
-				
-				return replyString.matches("success");
+				if (replyString.equals("success")) {
+                    removeRecord(message.mLastName.charAt(0), message);
+                    return true;
+                }
+                return false;
 			}
 			catch (SocketTimeoutException e)
 			{
-				System.out.println("Server on port " + port + " is not responding.");
+				System.out.println("Server on port " + remotePort + " is not responding.");
 			}
 		}
 		catch (SocketException e)
@@ -460,4 +449,16 @@ public class CenterServer implements CenterServerInterface
 		
 		System.out.println(input);
 	}
+
+    private static int setPortNumber(String loc) {
+
+        if ("CA".equals(loc))
+            return Config.Replica2.CA_PORT;
+        else if ("UK".equals(loc))
+            return Config.Replica2.UK_PORT;
+        else if ("US".equals(loc))
+            return Config.Replica2.US_PORT;
+        else
+            return 6000;
+    }
 }

@@ -10,19 +10,23 @@ import java.util.HashMap;
 
 public class ServerManager
 {
-	private static int currentRecordID = 10000;
+	private int currentRecordID = 0;
 
-	public static void example()
+	public void example()
 	{
 		System.out.println("running example: " + currentRecordID);
 	}
 
-	public synchronized static int getNextID()
-	{
-		return currentRecordID++;
+	public synchronized String getNextID()
+    {
+		String recordID = "";
+		for (int i = 0; i < 5 - (currentRecordID + "").length(); i++)
+			recordID += "0";
+		recordID += currentRecordID++;
+		return recordID;
 	}
 	
-	public static Record findRecordByID(String recordID, HashMap<Character, ArrayList<Record>> records)
+	public Record findRecordByID(String recordID, HashMap<Character, ArrayList<Record>> records)
 	{
 		for (Character key : records.keySet())
 		{
@@ -30,7 +34,7 @@ public class ServerManager
 			
 			for (Record record : listOfRecords)
 			{
-				if (record.mRecordID.matches(recordID))
+				if (record.mRecordID.equals(recordID))
 				{
 					return record;
 				}
@@ -40,20 +44,36 @@ public class ServerManager
 		return null;
 	}
 	
-	public static byte[] RecordToByte(Record record) throws IOException
+	public byte[] RecordToByte(Record record) throws IOException
 	{
 	    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 	    ObjectOutputStream objStream = new ObjectOutputStream(byteStream);
 	    objStream.writeObject(record);
 
-	    return byteStream.toByteArray();
+	    byte[] array = byteStream.toByteArray();
+
+	    byteStream.close();
+	    objStream.close();
+
+	    return array;
 	}
 
-	public static Record byteToRecord(byte[] bytes) throws IOException, ClassNotFoundException
+	public Record byteToRecord(byte[] bytes) throws IOException, ClassNotFoundException
 	{
 	    ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
 	    ObjectInputStream objStream = new ObjectInputStream(byteStream);
+        Record record = (Record) objStream.readObject();
 
-	    return (Record) objStream.readObject();
+        byteStream.close();
+        objStream.close();
+
+        return record;
 	}
+
+	public synchronized int getRecordCount(HashMap<Character, ArrayList<Record>> records) {
+	    int count = 0;
+        for (Character key : records.keySet())
+            count += records.get(key).size();
+        return count;
+    }
 }

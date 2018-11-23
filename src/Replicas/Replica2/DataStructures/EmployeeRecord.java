@@ -8,8 +8,7 @@ public class EmployeeRecord extends Record
 	public EmployeeRecord(String pFirstName, String pLastName, int pEmployeeID, String pMailID, String pProjectID)
 	{
 		super(pFirstName, pLastName, pEmployeeID, pMailID);
-		
-		mRecordID = "ER" + ServerManager.getNextID();
+
 		mProjectID = pProjectID;
 	}
 	
