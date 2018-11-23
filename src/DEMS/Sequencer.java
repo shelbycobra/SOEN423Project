@@ -14,17 +14,17 @@ public class Sequencer {
 
     private final static int MAX_NUM_ACKS = 3, TIME_LIMIT = 10;
 
-    private int sequenceNumber = 1;
-    private ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
-    private Map<Integer, SentMessage> sentMessagesHashMap = new HashMap<>();
-    private MulticastSocket multicastSocket;
-    private DatagramSocket datagramSocket;
-    private InetAddress group;
-    private Semaphore mutex = new Semaphore(1);
-    private Semaphore processMessageSem = new Semaphore(0);
-    private JSONParser parser;
+    private static int sequenceNumber = 1;
+    private static ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
+    private static Map<Integer, SentMessage> sentMessagesHashMap = new HashMap<>();
+    private static MulticastSocket multicastSocket;
+    private static DatagramSocket datagramSocket;
+    private static InetAddress group;
+    private static Semaphore mutex = new Semaphore(1);
+    private static Semaphore processMessageSem = new Semaphore(0);
+    private static JSONParser parser;
 
-    private class SentMessage {
+    private static class SentMessage {
 
         private JSONObject message;
         private int numAcks = 0;
@@ -48,7 +48,7 @@ public class Sequencer {
         }
     }
 
-    private  class ListenForMessagesThread extends Thread {
+    private static class ListenForMessagesThread extends Thread {
 
         public void run() {
             try {
@@ -133,11 +133,15 @@ public class Sequencer {
         }
     }
 
-    public void startup () {
+    public static void main (String[] args) {
+        startup();
+    }
+
+    public static void startup() {
         try {
             setupSockets();
             parser = new JSONParser();
-            
+
             ListenForMessagesThread listenForMessages  = new ListenForMessagesThread();
             listenForMessages.start();
             processMessage();
@@ -148,7 +152,7 @@ public class Sequencer {
         }
     }
 
-    private  void setupSockets() throws IOException{
+    private static void setupSockets() throws IOException{
         System.out.println("Setting up sockets\n");
         group = InetAddress.getByName("228.5.6.7");
         multicastSocket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
@@ -156,7 +160,7 @@ public class Sequencer {
         datagramSocket = new DatagramSocket(Config.PortNumbers.FE_SEQ);
     }
 
-    private  void processMessage() throws IOException, InterruptedException {
+    private static void processMessage() throws IOException, InterruptedException {
         while (true) {
             // Wait until queue isn't empty
             processMessageSem.acquire();
