@@ -1,5 +1,8 @@
 package Replicas.Replica1.DataStructures;
 
+import DEMS.MessageKeys;
+import org.json.simple.JSONObject;
+
 public class EmployeeRecord extends Record {
 
 	private String projectID = "";
@@ -32,10 +35,22 @@ public class EmployeeRecord extends Record {
 			return (super.equals(eRec) && eRec.getProjectID().equals(this.projectID));
 		}
 	}
-	
-    public String getData() {
+
+	@Override
+	public JSONObject getJSONObject() {
+		JSONObject record = new JSONObject();
+
+		record.put(MessageKeys.FIRST_NAME, getFirstName());
+		record.put(MessageKeys.LAST_NAME, getLastName());
+		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID());
+		record.put(MessageKeys.MAIL_ID, getMailID());
+		record.put(MessageKeys.PROJECT_ID, projectID);
+
+		return record;
+	}
+
+	public String getData() {
         return super.getData() + ":" + projectID;
-        
 	}
 	
     public String printData() {

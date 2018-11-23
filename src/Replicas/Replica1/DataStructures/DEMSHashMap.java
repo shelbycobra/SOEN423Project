@@ -1,15 +1,34 @@
 package Replicas.Replica1.DataStructures;
 
+import DEMS.MessageKeys;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 public class DEMSHashMap {
-	
-	private class HashNode {
+
+    public JSONArray getData() {
+        JSONArray recordArray = new JSONArray();
+        JSONObject record;
+        for (HashNode currentNode : map) {
+            //Cycles through linked list at map[i]
+            while (currentNode != null) {
+                record = currentNode.getRecord().getJSONObject();
+                record.put(MessageKeys.SERVER_LOCATION, location);
+                recordArray.add(record);
+                currentNode = currentNode.getNext();
+            }
+        }
+        return recordArray;
+    }
+
+    private class HashNode {
 		
 		private int key;
 		private String recordID;
 		private Record record;
 		private HashNode next;
 		
-		HashNode(char key, String recordID, Record record, HashNode link){
+		HashNode(char key, String recordID, Record record, HashNode link) {
 			this.key = key - 65;
 			this.recordID = recordID;
 			this.record = record;
@@ -27,14 +46,19 @@ public class DEMSHashMap {
 	private HashNode map[] = new HashNode[26];
 	private int recordCount = 0;
 	private int ID_count = 0;
-	
-	public synchronized String addRecord(Record record, String recordType){
-		HashNode newNode = new HashNode(record.getLastName().toUpperCase().charAt(0), recordType + produceRecordIDString("" + ID_count), record, null);
+	private String location;
 
+	public DEMSHashMap(String loc) {
+	    location = loc;
+    }
+	
+	public synchronized String addRecord(Record record, String recordType) {
+		HashNode newNode = new HashNode(record.getLastName().toUpperCase().charAt(0),
+                recordType + createRecordIDString("" + ID_count), record, null);
 		return addHashNode(newNode);
 	}
 	
-	public synchronized String addRecord(String recordID, Record record){
+	public synchronized String addRecord(String recordID, Record record) {
 		HashNode newNode = new HashNode(record.getLastName().toUpperCase().charAt(0), recordID, record, null);
 		return addHashNode(newNode);
 	}
@@ -45,9 +69,8 @@ public class DEMSHashMap {
             map[key] = newNode;
         else {
             HashNode node = map[key];
-            while (node.getNext() != null){
+            while (node.getNext() != null)
                 node = node.getNext();
-            }
             node.setNext(newNode);
         }
 
@@ -56,22 +79,21 @@ public class DEMSHashMap {
         return newNode.getRecordID();
 
     }
-	public synchronized Record getRecord(String recordID){
+	public synchronized Record getRecord(String recordID) {
             for (HashNode node : map) {
-                while (node != null){
-                    if (node.getRecordID().equals(recordID)) {
+                while (node != null) {
+                    if (node.getRecordID().equals(recordID))
                         return node.getRecord();
-                    }
                     node = node.getNext();
                 }
             }
 		return null;
 	}
 	
-	public synchronized boolean replaceRecord(Record record){
+	public synchronized boolean replaceRecord(Record record) {
 		int id = record.getEmployeeID();
         for (HashNode node : map) {
-            while (node != null){
+            while (node != null) {
                 if (node.getRecord().getEmployeeID() == id) {
                     node.setRecord(record);
                     return true;
@@ -82,27 +104,23 @@ public class DEMSHashMap {
 		return false;
 	}
 	
-    public synchronized boolean removeRecord(String recordID){
-        for (int i  = 0; i < map.length; i++) 
-        {
+    public synchronized boolean removeRecord(String recordID) {
+        for (int i  = 0; i < map.length; i++) {
             HashNode currentNode = map[i];
             int len = 0;
-            HashNode prevNode = null;
-            
+//            HashNode prevNode = null;
             //Cycles through linked list at map[i]
-            while (currentNode != null) 
-            {
-                if (currentNode.getRecordID().equals(recordID)) 
-                {
-                    if (len == 0) {
+            while (currentNode != null) {
+                if (currentNode.getRecordID().equals(recordID)) {
+                    if (len == 0)
                         map[i] = currentNode.getNext();
-                    } else {
-                        prevNode = currentNode.getNext();
-                    }
+//                    else {
+//                        prevNode = currentNode.getNext();
+//                    }
                     recordCount--;
                     return true;
                 }
-                prevNode = currentNode; //Will only be set when len >0
+//                prevNode = currentNode; //Will only be set when len >0
                 currentNode = currentNode.getNext();
                 len++;
             }
@@ -110,19 +128,18 @@ public class DEMSHashMap {
 		return false;
 	}
 	
-	public synchronized int getRecordCount(){
+	public synchronized int getRecordCount() {
 		return recordCount;
 	}
 	
-	public synchronized boolean isEmpty(){
+	public synchronized boolean isEmpty() {
 		return recordCount == 0;
 	}
 	
-	private String produceRecordIDString(String recordIDCount) {
+	private String createRecordIDString(String recordIDCount) {
         String recordID = "";
-        for (int i = 0; i < 5 - recordIDCount.length(); i++) {
+        for (int i = 0; i < 5 - recordIDCount.length(); i++)
             recordID += "0";
-        }
         return recordID + recordIDCount;
 	}
 

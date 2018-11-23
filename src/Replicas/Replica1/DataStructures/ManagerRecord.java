@@ -1,5 +1,9 @@
 package Replicas.Replica1.DataStructures;
 
+import DEMS.MessageKeys;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 public class ManagerRecord extends Record {
 	
 	private Project[] projects = new Project[10];
@@ -49,6 +53,29 @@ public class ManagerRecord extends Record {
         
         System.out.println(msg);
         return msg;
+	}
+
+	@Override
+	public JSONObject getJSONObject() {
+		JSONObject record = new JSONObject();
+
+		record.put(MessageKeys.FIRST_NAME, getFirstName());
+		record.put(MessageKeys.LAST_NAME, getLastName());
+		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID());
+		record.put(MessageKeys.MAIL_ID, getMailID());
+		record.put(MessageKeys.LOCATION, location);
+		record.put(MessageKeys.PROJECTS, getProjectsAsJSONArray());
+
+		return record;
+	}
+
+	private JSONArray getProjectsAsJSONArray() {
+		JSONArray projects = new JSONArray();
+
+		for (Project p : this.projects)
+			projects.add(p.toJSONObject());
+
+		return projects;
 	}
 	
 	@Override

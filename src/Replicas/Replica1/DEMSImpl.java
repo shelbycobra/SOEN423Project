@@ -21,7 +21,7 @@ public class DEMSImpl {
     
     public DEMSImpl (String location, BufferedWriter log) {
         super();
-        this.map = new DEMSHashMap();
+        this.map = new DEMSHashMap(location);
         this.location = location;
         this.log = log;
     }

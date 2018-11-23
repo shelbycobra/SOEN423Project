@@ -8,6 +8,10 @@ public interface Replica {
 
     void shutdownServers();
 
+    /*
+    Returns JSONArray in the format of
+    [ { Record 1 }, { Record 2 }, ... , { Record N } ]
+     */
     JSONArray getData();
 
     void setData(JSONArray array);

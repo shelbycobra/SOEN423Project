@@ -1,5 +1,7 @@
 package Replicas.Replica1;
 
+import org.json.simple.JSONArray;
+
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -7,6 +9,7 @@ public class ServerThread extends Thread {
 
     private String location;
     private int UDP_port;
+    private DEMSImpl demsImpl;
 
     public ServerThread (String location, int port) {
         this.location = location;
@@ -27,7 +30,7 @@ public class ServerThread extends Thread {
             System.out.println(msg);
             writeToLogFile(msg, log);
 
-            DEMSImpl demsImpl = new DEMSImpl(location, log);
+            demsImpl = new DEMSImpl(location, log);
 
             UDPThread = new UDPServerThread(demsImpl, UDP_port, location);
 
@@ -47,7 +50,11 @@ public class ServerThread extends Thread {
             e.printStackTrace();
         }
     }
-    
+
+    JSONArray getData(){
+        return demsImpl.getMap().getData();
+    }
+
     /*
      *  WRITE TO LOG FILE
      */

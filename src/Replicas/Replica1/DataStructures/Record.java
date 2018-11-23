@@ -1,5 +1,7 @@
 package Replicas.Replica1.DataStructures;
 
+import org.json.simple.JSONObject;
+
 public abstract class Record {
 
 	private String firstName;
@@ -75,4 +77,6 @@ public abstract class Record {
 					&& rec.getLastName().equals(this.lastName) && rec.getMailID().equals(this.mailID));
 		}
 	}
+
+	public abstract JSONObject getJSONObject();
 }

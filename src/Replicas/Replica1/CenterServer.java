@@ -15,7 +15,7 @@ public class CenterServer implements Replica {
 
     private static final int CA_PORT = 3500, UK_PORT = 4500, US_PORT = 5500;
 
-    private Replicas.Replica1.ServerThread CA_DEMS_server;
+    private ServerThread CA_DEMS_server;
     private ServerThread UK_DEMS_server;
     private ServerThread US_DEMS_server;
     private ListenForPacketsThread listenForPackets;
@@ -215,7 +215,25 @@ public class CenterServer implements Replica {
 
     @Override
     public JSONArray getData() {
-        return null;
+
+        JSONArray CAServerArray = CA_DEMS_server.getData();
+        JSONArray UKServerArray = UK_DEMS_server.getData();
+        JSONArray USServerArray = US_DEMS_server.getData();
+
+        JSONArray allRecordsArray = new JSONArray();
+
+        int maxSize = CAServerArray.size() > UKServerArray.size() ? CAServerArray.size() : (UKServerArray.size() > USServerArray.size() ? UKServerArray.size() : USServerArray.size());
+
+        for(int i = 0; i < maxSize; i++) {
+            if (i < CAServerArray.size())
+                allRecordsArray.add(CAServerArray.get(i));
+            if (i < UKServerArray.size())
+                allRecordsArray.add(UKServerArray.get(i));
+            if (i < USServerArray.size())
+                allRecordsArray.add(USServerArray.get(i));
+        }
+
+        return allRecordsArray;
     }
 
     @Override
