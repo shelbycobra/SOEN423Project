@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
+import DEMS.Config;
 import DEMS.MessageKeys;
 import DEMS.Replica;
 import org.json.simple.JSONArray;
@@ -16,12 +17,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import DEMS.UDPPortNumbers;
-
 public class Server implements Replica
 {
-	private static final int CA_PORT = 6000, UK_PORT = 6001, US_PORT = 6002;
-	
 	private ServerThread CA_DEMS_server;
     private ServerThread UK_DEMS_server;
     private ServerThread US_DEMS_server;
@@ -50,9 +47,9 @@ public class Server implements Replica
     public void runServers()
     {
         // Start up servers
-        CA_DEMS_server = new ServerThread("CA", CA_PORT);
-        UK_DEMS_server = new ServerThread("UK", UK_PORT);
-        US_DEMS_server = new ServerThread("US", US_PORT);
+        CA_DEMS_server = new ServerThread("CA", Config.Replica2.CA_PORT);
+        UK_DEMS_server = new ServerThread("UK", Config.Replica2.UK_PORT);
+        US_DEMS_server = new ServerThread("US", Config.Replica2.US_PORT);
 
         CA_DEMS_server.start();
         UK_DEMS_server.start();
@@ -72,11 +69,11 @@ public class Server implements Replica
         }
         catch (SocketException e)
         {
-            System.out.println("CenterServer Multicast Socket is closed.");
+            System.out.println("Server Multicast Socket is closed.");
         }
         catch (InterruptedException e )
         {
-            System.out.println("CenterServer is shutting down.");
+            System.out.println("Server is shutting down.");
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -86,7 +83,7 @@ public class Server implements Replica
     private void setupMulticastSocket() throws Exception
     {
         InetAddress group = InetAddress.getByName("228.5.6.7");
-        socket = new MulticastSocket(UDPPortNumbers.SEQ_RE);
+        socket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
         socket.joinGroup(group);
     }
 
@@ -238,7 +235,7 @@ public class Server implements Replica
                 InetAddress address = InetAddress.getByName("localhost");
                 DatagramSocket serverSocket = new DatagramSocket();
                 byte[] buffer = message.toString().getBytes();
-                System.out.println("CenterServer msg to server = " + message.toString());
+
                 // Send packet
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
                 serverSocket.send(packet);
@@ -262,15 +259,15 @@ public class Server implements Replica
         {
             if ("CA".equals(location))
             {
-                return CA_PORT;
+                return Config.Replica2.CA_PORT;
             }
             else if ("UK".equals(location))
             {
-                return UK_PORT;
+                return Config.Replica2.UK_PORT;
             }
             else if ("US".equals(location))
             {
-                return US_PORT;
+                return Config.Replica2.US_PORT;
             }
             
             return 0;

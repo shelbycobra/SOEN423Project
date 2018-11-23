@@ -2,6 +2,7 @@ package Replicas.Replica1;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import DEMS.Config;
 import Replicas.Replica1.DataStructures.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -12,7 +13,7 @@ public class DEMSImpl {
     
     private static final byte GET_COUNTS = 0x01, CHECK_RECORD = 0x02, ADD_RECORD = 0X03;
     private static final char YES = 'Y', NO = 'N';
-    private static final int[] PORT_NUMS = {3500, 4500, 5500};
+    private static final int[] PORT_NUMS = {Config.Replica1.CA_PORT, Config.Replica1.UK_PORT, Config.Replica1.US_PORT};
     private static final String[] PORT_NAMES= {"CA", "UK", "US"};
     private static final int NUM_THREADS = 3;
     private DEMSHashMap map;
@@ -260,11 +261,11 @@ public class DEMSImpl {
     private static int setPortNumber(String loc) {
         
         if ("CA".equals(loc)) 
-            return 3500;
+            return Config.Replica1.CA_PORT;
         else if ("UK".equals(loc))
-            return 4500;
+            return Config.Replica1.UK_PORT;
         else if ("US".equals(loc))
-            return 5500;
+            return Config.Replica1.US_PORT;
         else 
             return 6000;
     }

@@ -114,7 +114,7 @@ public class Sequencer {
         private void resend(JSONObject message) throws IOException {
             System.out.println("Resending message: " + message.toString()+"\n");
             byte[] buffer = message.toString().getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RE);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, Config.PortNumbers.SEQ_RE);
             multicastSocket.send(packet);
         }
 
@@ -125,7 +125,7 @@ public class Sequencer {
                 message.put(MessageKeys.MESSAGE_ID, messageID);
                 message.put(MessageKeys.COMMAND_TYPE, "ACK");
                 byte[] buffer = message.toString().getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), UDPPortNumbers.RE_FE);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -151,9 +151,9 @@ public class Sequencer {
     private  void setupSockets() throws IOException{
         System.out.println("Setting up sockets\n");
         group = InetAddress.getByName("228.5.6.7");
-        multicastSocket = new MulticastSocket(UDPPortNumbers.SEQ_RE);
+        multicastSocket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
         multicastSocket.joinGroup(group);
-        datagramSocket = new DatagramSocket(8000);
+        datagramSocket = new DatagramSocket(Config.PortNumbers.FE_SEQ);
     }
 
     private  void processMessage() throws IOException, InterruptedException {
@@ -172,7 +172,7 @@ public class Sequencer {
             mutex.release();
 
             byte[] buffer = jsonMessage.toString().getBytes();
-            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, UDPPortNumbers.SEQ_RE);
+            DatagramPacket message = new DatagramPacket(buffer, buffer.length, group, Config.PortNumbers.SEQ_RE);
             multicastSocket.send(message);
 
             // Increment sequence number

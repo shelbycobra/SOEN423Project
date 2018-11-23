@@ -1,6 +1,9 @@
 package Replicas.Replica2;
 
 import java.net.*;
+
+import DEMS.Config;
+import DEMS.MessageKeys;
 import Replicas.Replica2.DataStructures.*;
 
 import org.json.simple.*;
@@ -34,7 +37,7 @@ public class UDPServerThread extends Thread
         try
         {
             aSocket = new DatagramSocket(port);
-            System.out.println(location + "server UDP Socket started. Waiting for request...");
+            System.out.println(location + " server UDP Socket started on port " + port+". Waiting for request...");
             
             while(true) 
             {
@@ -42,6 +45,7 @@ public class UDPServerThread extends Thread
                 request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
 
+                System.out.println("RECEIVED MSG = " + new String(request.getData()).trim());
                 byte request_type = request.getData()[0];
 
                 // Checks first for Transfer Record messages
@@ -54,75 +58,75 @@ public class UDPServerThread extends Thread
                     String recordID = new String(request.getData());
                     checkRecords(recordID);
                 }
-else if (request_type == ADD_RECORD)
-{
-    String recordData = new String(request.getData()).trim();
-    String[] data = recordData.split(":");
-    addRecord(data);
-}
-else
-{
-    JSONParser parser = new JSONParser();
-    JSONObject jsonMessage = (JSONObject) parser.parse(new String(request.getData()).trim());
+                else if (request_type == ADD_RECORD)
+                {
+                    String recordData = new String(request.getData()).trim();
+                    String[] data = recordData.split(":");
+                    addRecord(data);
+                }
+                else
+                {
+                    JSONParser parser = new JSONParser();
+                    JSONObject jsonMessage = (JSONObject) parser.parse(new String(request.getData()).trim());
 
-    // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
-    // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
-    // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
+                    // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
+                    // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
+                    // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-    switch (Integer.parseInt( (String) jsonMessage.get("commandType")))
-    {
-        case 1:
-        {
-            // Get projects
-            JSONArray jsonProjects = (JSONArray) jsonMessage.get("projects");
-            Project[] projects = getProjectArray(jsonProjects);
-            System.out.println("Creating Record: " + jsonMessage.toJSONString());
+                    switch (Integer.parseInt(jsonMessage.get(MessageKeys.COMMAND_TYPE).toString()))
+                    {
+                        case Config.CREATE_MANAGER_RECORD:
+                        {
+                            // Get projects
+                            JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
+                            Project[] projects = getProjectArray(jsonProjects);
+                            System.out.println("Creating Record: " + jsonMessage.toJSONString());
 
-            // Create Manager Record
-            String msg = server.createMRecord((String) jsonMessage.get("managerID"),
-                    (String) jsonMessage.get("firstName"),
-                    (String) jsonMessage.get("lastName"),
-                    Integer.parseInt((String) jsonMessage.get("employeeID")),
-                    (String) jsonMessage.get("mailID"),
-                    projects,
-                    (String) jsonMessage.get("location"));
+                            // Create Manager Record
+                            String msg = server.createMRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID),
+                                (String) jsonMessage.get(MessageKeys.FIRST_NAME),
+                                (String) jsonMessage.get(MessageKeys.LAST_NAME),
+                                Integer.parseInt((String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)),
+                                (String) jsonMessage.get(MessageKeys.MAIL_ID),
+                                projects,
+                                (String) jsonMessage.get(MessageKeys.LOCATION));
                             System.out.println(msg);
                             continue;
                         }
-                        case 2:
+                        case Config.CREATE_EMPLOYEE_RECORD:
                         {
                             // Create Employee Record
-                            String msg = server.createERecord((String) jsonMessage.get("managerID"),
-                            		(String) jsonMessage.get("firstName"),
-                            		(String) jsonMessage.get("lastName"),
-                            		Integer.parseInt((String) jsonMessage.get("employeeID")),
-                            		(String) jsonMessage.get("mailID"),
-                            		(String) jsonMessage.get("projectID"));
+                            String msg = server.createERecord((String) jsonMessage.get(MessageKeys.MANAGER_ID),
+                                (String) jsonMessage.get(MessageKeys.FIRST_NAME),
+                                (String) jsonMessage.get(MessageKeys.LAST_NAME),
+                                Integer.parseInt((String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)),
+                                (String) jsonMessage.get(MessageKeys.MAIL_ID),
+                                (String) jsonMessage.get(MessageKeys.PROJECT_ID));
                             System.out.println(msg);
                             continue;
                         }
-                        case 3:
+                        case Config.GET_RECORD_COUNT:
                         {
                             // Get Record Count
-                            String counts = server.getRecordCount((String) jsonMessage.get("managerID"));
+                            String counts = server.getRecordCount((String) jsonMessage.get(MessageKeys.MANAGER_ID));
                             System.out.println("Record count: " + counts);
                             continue;
                         }
-                        case 4:
+                        case Config.EDIT_RECORD:
                         {
                             // Edit Record
-                            String output = server.editRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("fieldName"), (String) jsonMessage.get("newValue"));
+                            String output = server.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
                             System.out.println("\n" + output);
                             continue;
                         }
-                        case 5:
+                        case Config.TRANSFER_RECORD:
                         {
                             // Transfer Record
-                            String output = server.transferRecord((String) jsonMessage.get("managerID"), (String) jsonMessage.get("recordID"), (String) jsonMessage.get("targetServer"));
+                            String output = server.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
                             System.out.println(output);
                             continue;
                         }
-                        case 6:
+                        case Config.EXIT:
                         {
                             // Exit System
                             System.out.println("\nLogging out and exiting system...\n");
@@ -234,7 +238,7 @@ else
          for (Object obj : recordData)
          {
              JSONObject jsonProject = (JSONObject) obj;
-             Project proj = new Project((String) jsonProject.get("projectID"), (String) jsonProject.get("projectClient"), (String) jsonProject.get("projectName"));
+             Project proj = new Project((String) jsonProject.get(MessageKeys.PROJECT_ID), (String) jsonProject.get(MessageKeys.PROJECT_CLIENT), (String) jsonProject.get(MessageKeys.PROJECT_NAME));
              projects.add(proj);
          }
 

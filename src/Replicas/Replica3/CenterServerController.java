@@ -8,13 +8,12 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import DEMS.MessageKeys;
+import DEMS.Config;
 
 public class CenterServerController implements DEMS.Replica {
 
@@ -127,11 +126,11 @@ public class CenterServerController implements DEMS.Replica {
 			String location = ((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2);
 			int port = 0;
 			if (location.equals("CA")) {
-				port = DEMS.Config.Replica3.caPort;
+				port = DEMS.Config.Replica3.CA_PORT;
 			} else if (location.equals("UK")) {
-				port = DEMS.Config.Replica3.ukPort;
+				port = DEMS.Config.Replica3.UK_PORT;
 			} else if (location.equals("US")) {
-				port = DEMS.Config.Replica3.usPort;
+				port = DEMS.Config.Replica3.US_PORT;
 			}
 
 			try {
@@ -203,7 +202,7 @@ public class CenterServerController implements DEMS.Replica {
 
 	private void setupMulticastSocket() throws Exception {
 		InetAddress group = InetAddress.getByName("228.5.6.7");
-		multicastSocket = new MulticastSocket(6789);
+		multicastSocket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
 		multicastSocket.joinGroup(group);
 	}
 

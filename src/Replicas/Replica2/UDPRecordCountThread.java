@@ -25,7 +25,7 @@ public class UDPRecordCountThread extends Thread
 	@Override
 	public void run()
 	{
-		System.out.println(location + " Server listening for Record Count requests...");
+		System.out.println(location + " Server listening on port " + port+" for Record Count requests...");
 		DatagramSocket socket = null;
 
 		try

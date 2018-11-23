@@ -26,7 +26,7 @@ public class UDPRecordCheckThread extends Thread
 	@Override
 	public void run()
 	{
-		System.out.println(location + " Server listening for Record Check requests...");
+		System.out.println(location + " Server listening on port " + port+" for Record Check requests...");
 		DatagramSocket socket = null;
 
 		try

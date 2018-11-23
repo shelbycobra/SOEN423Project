@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import DEMS.Config;
 import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 
 import Replicas.Replica2.DataStructures.EmployeeRecord;
@@ -29,7 +30,7 @@ public class CenterServer implements CenterServerInterface
 	public CenterServer(String location, HashMap<Character, ArrayList<Record>> records)
 	{
 		this.location = location;
-		port = ServerManager.caPort;
+		port = Config.Replica2.CA_PORT;
 		this.records = records;
 	}
 	
@@ -117,7 +118,7 @@ public class CenterServer implements CenterServerInterface
 			byte[] messageBuffer = message.getBytes();
 			InetAddress host = InetAddress.getByName("localhost");
 			
-			for (int i = 6000; i < 6003; i++)
+			for (int i = Config.Replica2.CA_PORT; i < 6003; i++)
 			{
 				if (i != this.port)
 				{
@@ -303,17 +304,17 @@ public class CenterServer implements CenterServerInterface
 	private boolean doesRecordExistInRemoteCenterServer(String recordID, String remoteCenterServerName)
 	{
 		DatagramSocket socket = null;
-		int port = 6000;
+		int port = Config.Replica2.CA_PORT;
 		
 		System.out.println("Attempting to check if record exists at " + remoteCenterServerName + "...");
 		
 		switch (remoteCenterServerName)
 		{
-			case "CA":	port = ServerManager.caPort+10;
+			case "CA":	port = Config.Replica2.CA_PORT+10;
 						break;
-			case "US":	port = ServerManager.usPort+10;
+			case "US":	port = Config.Replica2.US_PORT+10;
 						break;
-			case "UK":	port = ServerManager.ukPort+10;
+			case "UK":	port = Config.Replica2.UK_PORT+10;
 						break;
 		}
 		
@@ -364,17 +365,17 @@ public class CenterServer implements CenterServerInterface
 	private boolean transferRecordToRemoteCenterServer(String recordID, String remoteCenterServerName)
 	{
 		DatagramSocket socket = null;
-		int port = 6000;
+		int port = Config.Replica2.CA_PORT;
 		
 		System.out.println("Attempting to transfer record to " + remoteCenterServerName + "...");
 		
 		switch (remoteCenterServerName)
 		{
-			case "CA":	port = ServerManager.caPort+20;
+			case "CA":	port = Config.Replica2.CA_PORT+20;
 						break;
-			case "US":	port = ServerManager.usPort+20;
+			case "US":	port = Config.Replica2.US_PORT+20;
 						break;
-			case "UK":	port = ServerManager.ukPort+20;
+			case "UK":	port = Config.Replica2.UK_PORT+20;
 						break;
 		}
 		

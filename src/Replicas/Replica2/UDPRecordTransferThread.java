@@ -26,7 +26,7 @@ public class UDPRecordTransferThread extends Thread
 	@Override
 	public void run()
 	{
-		System.out.println(location + " Server listening for Record Transfer requests...");
+		System.out.println(location + " Server listening on port " + port + " for Record Transfer requests...");
 		DatagramSocket socket = null;
 
 		try
