@@ -117,6 +117,8 @@ public class CenterServerController implements DEMS.Replica {
 					if (commandType == Config.CommandType.RESTART_REPLICA) {
 						shutdownServers();
 						runServers();
+					} else if (commandType == Config.CommandType.SET_DATA) {
+						setData((JSONArray) obj.get(MessageKeys.RECORDS));
 					} else {
 						sendMessageToServer(obj);
 					}
