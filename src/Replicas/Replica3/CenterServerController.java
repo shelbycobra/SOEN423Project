@@ -61,7 +61,7 @@ public class CenterServerController implements DEMS.Replica {
 					deliveryQueueMutex.release();
 				}
 			} catch (InterruptedException | IOException e) {
-			    e.printStackTrace();
+				e.printStackTrace();
 				logger.log("ListenForPacketsThread is shutting down");
 			} catch (ParseException e) {
 				e.printStackTrace();
@@ -94,21 +94,21 @@ public class CenterServerController implements DEMS.Replica {
 					int seqNum;
 					int nextSequenceNumber = lastSequenceNumber + 1;
 
-                    JSONObject obj = deliveryQueue.peek();
-                    while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
-                    {
-                        deliveryQueueMutex.acquire();
+					JSONObject obj = deliveryQueue.peek();
+					while ((seqNum = Integer.parseInt( (String) obj.get(MessageKeys.SEQUENCE_NUMBER))) < nextSequenceNumber)
+					{
+						deliveryQueueMutex.acquire();
 
-                        System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
+						System.out.println("\n*** Removing duplicate [" + seqNum + "] ***\n");
 
-                        mutex.acquire();
-                        deliveryQueue.remove(obj);
-                        obj = deliveryQueue.peek();
-                        mutex.release();
-                    }
+						mutex.acquire();
+						deliveryQueue.remove(obj);
+						obj = deliveryQueue.peek();
+						mutex.release();
+					}
 
-                    lastSequenceNumber = seqNum;
-                    sendMessageToServer(obj);
+					lastSequenceNumber = seqNum;
+					sendMessageToServer(obj);
 				}
 			} catch (InterruptedException e) {
 				logger.log("ProcessMessageThread is shutting down.");
@@ -180,16 +180,16 @@ public class CenterServerController implements DEMS.Replica {
 	public void runServers() {
 		try {
 
-            setupMulticastSocket();
+			setupMulticastSocket();
 
-            centerServerCA.start();
-            centerServerUS.start();
-            centerServerUK.start();
+			centerServerCA.start();
+			centerServerUS.start();
+			centerServerUK.start();
 
-            listenForPackets = new ListenForPacketsThread();
-            processMessages = new ProcessMessagesThread();
-            listenForPackets.start();
-            processMessages.start();
+			listenForPackets = new ListenForPacketsThread();
+			processMessages = new ProcessMessagesThread();
+			listenForPackets.start();
+			processMessages.start();
 
 		} catch (SocketException e) {
 			this.logger.log("CenterServerController Multicast Socket is closed.");
