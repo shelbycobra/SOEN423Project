@@ -1,14 +1,15 @@
 package DEMS;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class ReplicaManager {
 	private final int maxByzantineCount = 3;
 
 	private Thread udpServerThread;
+
+	private Logger logger;
 
 	class UdpServer extends Thread {
 
@@ -157,6 +160,7 @@ public class ReplicaManager {
 
 	public ReplicaManager(int replicaNumber) {
 		this.replicaNumber = replicaNumber;
+		this.logger = new Logger(replicaNumber);
 
 		if (replicaNumber == 1) {
 			this.replicaManagerPort = DEMS.Config.Replica1.RM_PORT;
@@ -172,13 +176,14 @@ public class ReplicaManager {
 	}
 
 	public void start() {
-		log("starting udpServerThread");
+		this.logger.log("starting udpServerThread");
 		udpServerThread.start();
 	}
 
 	public void stop() {
-		log("interrupting udpServerThread");
+		this.logger.log("interrupting udpServerThread");
 		udpServerThread.interrupt();
+		this.logger.close();
 	}
 
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
@@ -201,24 +206,51 @@ public class ReplicaManager {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				log("running shutdown hook");
+				replicaManager.logger.log("running shutdown hook");
 				replica.shutdownServers();
 				replicaManager.stop();
 			}
 		});
 
-		log("starting replica: " + replicaNumber);
+		replicaManager.logger.log("starting replica: " + replicaNumber);
 		replica.runServers();
 
-		log("starting ReplicaManager for replica: " + replicaNumber);
+		replicaManager.logger.log("starting ReplicaManager for replica: " + replicaNumber);
 		replicaManager.start();
 	}
 
-	private static void log(String message) {
-		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		Date dateTime = Calendar.getInstance().getTime();
-		String timeStamp = dateFormat.format(dateTime);
-		System.out.println(String.format("[ReplicaManager %s] %s", timeStamp, message));
+}
+
+class Logger {
+
+	public static Logger logger;
+
+	private PrintWriter logFile;
+	private String description;
+
+	public Logger(int replicaNumber) {
+		this.description = "ReplicaManager" + replicaNumber;
+		String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+		String logFileName = String.format("Logs/Replica%d/%s-%s.log", replicaNumber, description, timeStamp);
+		try {
+			logFile = new PrintWriter(logFileName, "UTF-8");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
+	public void log(String message) {
+		String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+		String logMessage = String.format("%s | %s | %s", description, timeStamp, message);
+		logFile.println(logMessage);
+		System.out.println(logMessage);
+	}
+
+	public void close() {
+		logFile.close();
+	}
 }
