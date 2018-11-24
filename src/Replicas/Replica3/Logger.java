@@ -16,7 +16,7 @@ public class Logger {
 	public Logger(String description) {
 		this.description = description;
 		String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
-		String logFileName = String.format("log/%s-%s.log", description, timeStamp);
+		String logFileName = String.format("Logs/Replica3/%s-%s.log", description, timeStamp);
 		try {
 			logFile = new PrintWriter(logFileName, "UTF-8");
 		} catch (FileNotFoundException e) {
