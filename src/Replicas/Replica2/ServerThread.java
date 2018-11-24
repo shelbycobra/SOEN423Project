@@ -3,6 +3,7 @@ package Replicas.Replica2;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.*;
 
@@ -25,6 +26,7 @@ public class ServerThread extends Thread
     int port;
 	private DatagramSocket aSocket = null;
 	private DatagramPacket request = null;
+	private String messageID;
 
     public ServerThread(String location, int portNumber)
 	{
@@ -79,7 +81,8 @@ public class ServerThread extends Thread
 					JSONParser parser = new JSONParser();
 					String str = new String(request.getData()).trim();
 					JSONObject jsonMessage = (JSONObject) parser.parse(str);
-
+					messageID = (String) jsonMessage.get(MessageKeys.MESSAGE_ID);
+					
 					// recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
 					// FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
 					// { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
@@ -100,7 +103,7 @@ public class ServerThread extends Thread
 									(String) jsonMessage.get(MessageKeys.MAIL_ID),
 									projects,
 									(String) jsonMessage.get(MessageKeys.LOCATION));
-							System.out.println(msg);
+							replyToFrontEnd(msg, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.CREATE_EMPLOYEE_RECORD:
@@ -112,28 +115,28 @@ public class ServerThread extends Thread
 									Integer.parseInt((String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)),
 									(String) jsonMessage.get(MessageKeys.MAIL_ID),
 									(String) jsonMessage.get(MessageKeys.PROJECT_ID));
-							System.out.println(msg);
+							replyToFrontEnd(msg, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.GET_RECORD_COUNT:
 						{
 							// Get Record Count
 							String counts = server.getRecordCount((String) jsonMessage.get(MessageKeys.MANAGER_ID));
-							System.out.println("Record count: " + counts);
+							replyToFrontEnd("Record count: " + counts, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.EDIT_RECORD:
 						{
 							// Edit Record
 							String output = server.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
-							System.out.println("\n" + output);
+							replyToFrontEnd(output, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.TRANSFER_RECORD:
 						{
 							// Transfer Record
 							String output = server.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
-							System.out.println(output);
+							replyToFrontEnd(output, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.EXIT:
@@ -144,7 +147,7 @@ public class ServerThread extends Thread
 						}
 						default:
 						{
-							System.out.println("Invalid request type");
+							replyToFrontEnd("Invalid request type", Config.StatusCode.FAIL);
 							continue;
 						}
 					}
@@ -166,6 +169,22 @@ public class ServerThread extends Thread
 				aSocket.close();
 			}
 		}
+    }
+    
+    @SuppressWarnings("unchecked")
+	private void replyToFrontEnd(String msg, Config.StatusCode status) throws IOException
+    {
+        DatagramSocket socket = new DatagramSocket();
+        JSONObject message = new JSONObject();
+        message.put(MessageKeys.MESSAGE, msg);
+        message.put(MessageKeys.MESSAGE_ID, messageID);
+        message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+        message.put(MessageKeys.STATUS_CODE, status);
+
+        byte[] buffer = message.toString().getBytes();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
+
+        socket.send(packet);
     }
 
 	private void sendRecordCount() throws IOException
