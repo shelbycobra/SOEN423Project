@@ -23,6 +23,14 @@ public abstract class Record implements Serializable {
 		this.mailID = mailID;
 	}
 
+	public Record(JSONObject jsonObject) {
+		this.recordID = (String) jsonObject.get(DEMS.MessageKeys.RECORD_ID);
+		this.firstName = (String) jsonObject.get(DEMS.MessageKeys.FIRST_NAME);
+		this.lastName = (String) jsonObject.get(DEMS.MessageKeys.LAST_NAME);
+		this.employeeID = Integer.parseInt((String) jsonObject.get(DEMS.MessageKeys.EMPLOYEE_ID));
+		this.mailID = (String) jsonObject.get(DEMS.MessageKeys.MAIL_ID);
+	}
+
 	public String getRecordID() {
 		return recordID;
 	}

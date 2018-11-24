@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -256,8 +257,40 @@ public class CenterServerController implements DEMS.Replica {
 	}
 
 	@Override
-	public void setData(JSONArray array) {
-		// TODO Auto-generated method stub
+	public void setData(JSONArray jsonArray) {
+		HashMap<Character, List<Record>> recordsCA = new HashMap<Character, List<Record>>();
+		HashMap<Character, List<Record>> recordsUK = new HashMap<Character, List<Record>>();
+		HashMap<Character, List<Record>> recordsUS = new HashMap<Character, List<Record>>();
+
+		for (int i = 0; i < jsonArray.size(); i++){
+			JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+			String recordID = (String) jsonObject.get(MessageKeys.RECORD_ID);
+			String recordType = recordID.substring(0, 2).toLowerCase();
+
+			Record record = null;
+			if (recordType.equals("er")) {
+				record = new EmployeeRecord(jsonObject);
+			} else if (recordType.equals("mr")) {
+				record = new ManagerRecord(jsonObject);
+			}
+
+			String location = (String) jsonObject.get(MessageKeys.SERVER_LOCATION);
+			char letter = record.lastName.toLowerCase().charAt(0);
+			List<Record> recordList = new ArrayList<Record>();
+			if (location.toLowerCase().equals("ca")) {
+				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+			} else if (location.toLowerCase().equals("uk")) {
+				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+			} else if (location.toLowerCase().equals("us")) {
+				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+			}
+
+			recordList.add(record);
+		}
+
+		centerServerCA.setRecords(recordsCA);
+		centerServerUK.setRecords(recordsUK);
+		centerServerUS.setRecords(recordsUS);
 	}
 
 }

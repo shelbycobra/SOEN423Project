@@ -13,6 +13,12 @@ public class Project {
 		this.projectName = projectName;
 	}
 
+	public Project(JSONObject jsonObject) {
+		this.ID = Integer.parseInt((String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID));
+		this.clientName = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_CLIENT);
+		this.projectName = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_NAME);
+	}
+
 	public int getID() {
 		return ID;
 	}

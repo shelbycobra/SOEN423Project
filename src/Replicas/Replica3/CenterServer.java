@@ -32,6 +32,10 @@ public class CenterServer extends Thread {
 		return records;
 	}
 
+	public void setRecords(HashMap<Character, List<Record>> records) {
+		this.records = records;
+	}
+
 	public String getLocation() {
 		return location;
 	}

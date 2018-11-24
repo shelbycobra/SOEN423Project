@@ -12,6 +12,11 @@ public class EmployeeRecord extends Record {
 		this.projectID = projectID;
 	}
 
+	public EmployeeRecord(JSONObject jsonObject) {
+		super(jsonObject);
+		this.projectID = Integer.parseInt((String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID));
+	}
+
 	@Override
 	public String toString() {
 		return "EmployeeRecord [recordID=" + recordID + ", firstName=" + firstName + ", lastName=" + lastName

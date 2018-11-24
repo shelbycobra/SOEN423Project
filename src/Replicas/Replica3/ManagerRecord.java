@@ -1,5 +1,6 @@
 package Replicas.Replica3;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.json.simple.JSONArray;
@@ -15,6 +16,19 @@ public class ManagerRecord extends Record {
 		super("MR" + employeeID, firstName, lastName, employeeID, mailID);
 		this.projects = projects;
 		this.location = location;
+	}
+
+	public ManagerRecord(JSONObject jsonObject) {
+		super(jsonObject);
+
+		this.projects = new ArrayList<Project>();
+		JSONArray jsonArrayProjects = (JSONArray) jsonObject.get(DEMS.MessageKeys.PROJECTS);
+		for (int i = 0; i < jsonArrayProjects.size(); i++) {
+			JSONObject jsonObjectProject = (JSONObject) jsonArrayProjects.get(i);
+			this.projects.add(new Project(jsonObjectProject));
+		}
+
+		this.location = (String) jsonObject.get(DEMS.MessageKeys.LOCATION);
 	}
 
 	@Override
