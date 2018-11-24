@@ -36,7 +36,7 @@ public class Config {
 	}
 
 	public static final int CREATE_MANAGER_RECORD = 1, CREATE_EMPLOYEE_RECORD = 2, GET_RECORD_COUNT = 3,
-		EDIT_RECORD = 4, TRANSFER_RECORD = 5, EXIT = 6, ACK = 7;
+		EDIT_RECORD = 4, TRANSFER_RECORD = 5, EXIT = 6, ACK = 7, RECORD_EXISTS = 8;
 
 	public enum StatusCode {
 		SUCCESS,
