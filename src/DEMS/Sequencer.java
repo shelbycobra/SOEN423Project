@@ -60,26 +60,26 @@ public class Sequencer {
                     String data = new String(message.getData()).trim();
                     JSONObject jsonMessage;
                     jsonMessage = (JSONObject) parser.parse(data);
-
+                    System.out.println("Received message from Front End: " + jsonMessage);
                     // Check if received message is an ACK message
-                    try {
-                        if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals("ACK")) {
-                            int ackSeqNum = Integer.parseInt("" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
-                            System.out.println("\n*** Receiving ACK " + ackSeqNum + " from port " + message.getPort() + " ***\n");
-                            processAck(ackSeqNum);
-                        } else throw new NullPointerException();
-                    } catch (NullPointerException e) {
-                        // Add message to queue
-                        mutex.acquire();
-                        deliveryQueue.add(jsonMessage);
-
-                        // Tells Sequencer to start processing message
-                        processMessageSem.release();
-                        mutex.release();
-
-                        // Send ACK to FE
-                        sendAckToFE((String) jsonMessage.get(MessageKeys.MESSAGE_ID));
-                    }
+					try {
+					    if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals("ACK")) {
+					        int ackSeqNum = Integer.parseInt("" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
+					        System.out.println("\n*** Receiving ACK " + ackSeqNum + " from port " + message.getPort() + " ***\n");
+					        processAck(ackSeqNum);
+					    } else throw new NullPointerException();
+					} catch (NullPointerException e) {
+					    // Add message to queue
+					    mutex.acquire();
+					    deliveryQueue.add(jsonMessage);
+					
+					    // Tells Sequencer to start processing message
+					    processMessageSem.release();
+					    mutex.release();
+					
+					    // Send ACK to FE
+					    sendAckToFE(jsonMessage.get(MessageKeys.MESSAGE_ID).toString());
+					}
                 }
             } catch (ParseException | InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -125,7 +125,7 @@ public class Sequencer {
                 message.put(MessageKeys.MESSAGE_ID, messageID);
                 message.put(MessageKeys.COMMAND_TYPE, "ACK");
                 byte[] buffer = message.toString().getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.SEQ_FE);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();

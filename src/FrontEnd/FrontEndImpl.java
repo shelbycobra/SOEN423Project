@@ -74,23 +74,31 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 
 		public String call()
 		{
-			DatagramSocket socket = null;
+			DatagramSocket senderSocket = null;
+			DatagramSocket receiverSocket = null;
 			
 			try
 			{
-				socket = new DatagramSocket();
+				senderSocket = new DatagramSocket();
+				receiverSocket = new DatagramSocket(Config.PortNumbers.SEQ_FE);
+				
 				byte[] messageBuffer = message.getSendData().toString().getBytes();
 				InetAddress host = InetAddress.getByName("localhost");
 				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.FE_SEQ);
 
-				System.out.println("Sending message to sequencer...");
-				socket.send(request);
+				System.out.println("Sending message to sequencer: " + message.getSendData().toJSONString());
+				senderSocket.send(request);
 
-//				byte[] buffer = new byte[1000];
-//				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-//				socket.receive(reply);
-//				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
-//				JSONObject jsonMessage = (JSONObject) parser.parse(replyString);
+				byte[] buffer = new byte[1000];
+				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+				receiverSocket.receive(reply);
+				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
+				JSONObject jsonMessage = (JSONObject) parser.parse(replyString);
+				System.out.println(jsonMessage);
+				if (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString().equals("ACK"))
+				{
+					System.out.println("Message " + message.getId() + " was successfully received by the Sequencer!");
+				}
 			}
 			catch (SocketTimeoutException e)
 			{
@@ -104,11 +112,20 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			{
 				System.out.println("IO: " + e.getMessage());
 			}
+			catch (ParseException e)
+			{
+				e.printStackTrace();
+			}
 			finally
 			{
-				if (socket != null)
+				if (senderSocket != null)
 				{
-					socket.close();
+					senderSocket.close();
+				}
+				
+				if (receiverSocket != null)
+				{
+					receiverSocket.close();
 				}
 			}
 			
@@ -250,6 +267,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    datagramSocket.receive(responsePacket);
 	                    String data = new String(responsePacket.getData()).trim();
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
+	                    System.out.println(jsonMessage);
 	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
 	                    Pair<Integer, String> returnMessage = new Pair<Integer, String>(port, jsonMessage.get(MessageKeys.MESSAGE).toString());

@@ -33,6 +33,7 @@ public class Config {
 		public static final int FE_SEQ = 8000; // From FE to Sequencer
 		public static final int SEQ_RE = 8001; // From Sequencer to Replica (Multicast)
 		public static final int RE_FE = 8002; // From Replica to FE
+		public static final int SEQ_FE = 8003; // From Sequencer to FE
 	}
 
 	public static final int CREATE_MANAGER_RECORD = 1, CREATE_EMPLOYEE_RECORD = 2, GET_RECORD_COUNT = 3,
