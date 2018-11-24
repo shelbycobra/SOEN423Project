@@ -1,13 +1,6 @@
 package Replicas.Replica3;
 
-import DEMS.Config;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -19,23 +12,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import DEMS.Config;
+import DEMS.MessageKeys;
+
 public class CenterServer implements Runnable {
 
 	private String location;
 	private Thread udpServerThread;
 	private Logger logger;
+	private JSONParser jsonParser = new JSONParser();
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
 
-	public static final HashMap<String, Integer> UDPPortMap;
-	static {
-		UDPPortMap = new HashMap<String, Integer>();
-		UDPPortMap.put("CA", Config.Replica3.CA_PORT);
-		UDPPortMap.put("US", Config.Replica3.US_PORT);
-		UDPPortMap.put("UK", Config.Replica3.UK_PORT);
-	}
-
 	class UdpServer implements Runnable {
+
 		@Override
 		public void run() {
 			try {
@@ -56,51 +50,76 @@ public class CenterServer implements Runnable {
 					logger.log("udp waiting for connection");
 					serverSocket.receive(receivePacket);
 
-					byte[] b = receivePacket.getData();
-					ByteArrayInputStream bis = new ByteArrayInputStream(b);
-					ObjectInput in = new ObjectInputStream(bis);
-					MethodCallMessage methodCallMessage = (MethodCallMessage) in.readObject();
+					JSONObject jsonReceiveObject;
+					try {
+						jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+					} catch (ParseException e) {
+						e.printStackTrace();
+						continue;
+					}
 
-					logger.log("udp method call received: " + methodCallMessage.getMethodName());
+					JSONObject jsonSendObject = new JSONObject();
 
-					String response = "";
-					if (methodCallMessage.getMethodName().equals("getRecordCounts")) {
+					int commandType = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.COMMAND_TYPE));
+					logger.log("udp command received: " + commandType);
+
+					if (commandType == Config.GET_RECORD_COUNT) {
 						int count = 0;
 						for (char key : records.keySet()) {
 							count += records.get(key).size();
 						}
-						response = Integer.toString(count);
-					} else if (methodCallMessage.getMethodName().startsWith("recordExists")) {
-						response = "recordExists";
+						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(count));
+					} else if (commandType == Config.RECORD_EXISTS) {
+						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						boolean recordExists = false;
 						for (char key : records.keySet()) {
 							for (Record value : records.get(key)) {
-								if (value.recordID.equals(methodCallMessage.getArguments()[0])) {
+								if (value.recordID.equals(recordID)) {
 									recordExists = true;
 									break;
 								}
 							}
 						}
-						response = Boolean.toString(recordExists);
-					} else if (methodCallMessage.getMethodName().startsWith("transferRecord")) {
-						Record newRecord = (Record)methodCallMessage.getArguments()[0];
-						char letter = newRecord.lastName.toLowerCase().charAt(0);
+						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(recordExists));
+					} else if (commandType == Config.TRANSFER_RECORD) {
+						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
+						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
+						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
+						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
+						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
+
+						Record record = null;
+						if (recordID.substring(0, 2).toLowerCase().equals("er")) {
+							int projectID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.PROJECT_ID));
+							record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
+						} else if (recordID.substring(0, 2).toLowerCase().equals("mr")) {
+							String location = (String) jsonReceiveObject.get(MessageKeys.LOCATION);
+							int projectID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.PROJECT_ID));
+							String clientName = (String) jsonReceiveObject.get(MessageKeys.PROJECT_CLIENT);
+							String projectName = (String) jsonReceiveObject.get(MessageKeys.PROJECT_NAME);
+							Project project = new Project(projectID, clientName, projectName);
+							ArrayList<Project> projects = new ArrayList<Project>(Arrays.asList(project));
+							record = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
+						}
+
+						char letter = record.lastName.toLowerCase().charAt(0);
 						List<Record> recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());
-						recordList.add(newRecord);
-						response = "ok";
+						recordList.add(record);
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
 					}
 
-					logger.log("udp response: " + response);
+					logger.log("udp command response: " + jsonSendObject);
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
-					sendData = response.getBytes();
+					sendData = jsonSendObject.toString().getBytes();
 					DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 					serverSocket.send(sendPacket);
 				}
-			} catch (IOException | ClassNotFoundException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+
 	}
 
 	public CenterServer(String location) {
@@ -155,22 +174,21 @@ public class CenterServer implements Runnable {
 				byte[] sendData = new byte[1024];
 				byte[] receiveData = new byte[1024];
 
-				MethodCallMessage methodCallMessage = new MethodCallMessage("getRecordCounts", null);
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				ObjectOutput out = new ObjectOutputStream(bos);
-				out.writeObject(methodCallMessage);
-				sendData = bos.toByteArray();
-				out.close();
-				bos.close();
-
+				JSONObject jsonSendObject = new JSONObject();
+				jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
+				sendData = jsonSendObject.toString().getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 				clientSocket.send(sendPacket);
 				clientSocket.setSoTimeout(2000);
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				clientSocket.receive(receivePacket);
-				response = (new String(receivePacket.getData())).trim();
+				JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+				response = (String) jsonReceiveObject.get(MessageKeys.RECORD_COUNT);
 				this.logger.log(String.format("record count from %s: %s", location, response));
 				clientSocket.close();
+			} catch (ParseException e) {
+				e.printStackTrace();
+				response = "ParseException";
 			} catch (SocketTimeoutException e) {
 				e.printStackTrace();
 				response = "SocketTimeoutException";
@@ -257,7 +275,7 @@ public class CenterServer implements Runnable {
 			return -1;
 		}
 
-		String newServerContainsRecordResponse;
+		boolean newServerContainsRecordResponse;
 
 		try {
 			DatagramSocket clientSocket = new DatagramSocket();
@@ -266,22 +284,23 @@ public class CenterServer implements Runnable {
 			byte[] receiveData = new byte[1024];
 
 			Object[] arguments = {recordID};
-			MethodCallMessage methodCallMessage = new MethodCallMessage("recordExists", arguments);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ObjectOutput out = new ObjectOutputStream(bos);
-			out.writeObject(methodCallMessage);
-			sendData = bos.toByteArray();
-			out.close();
-			bos.close();
 
+			JSONObject jsonSendObject = new JSONObject();
+			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.RECORD_EXISTS);
+			jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
+			sendData = jsonSendObject.toString().getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
 			clientSocket.setSoTimeout(2000);
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
-			newServerContainsRecordResponse = (new String(receivePacket.getData())).trim();
+			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+			newServerContainsRecordResponse = Boolean.parseBoolean((String) jsonReceiveObject.get(MessageKeys.RECORD_EXISTS));
 			this.logger.log(String.format("recordIDExists from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return -6;
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
 			return -2;
@@ -290,9 +309,9 @@ public class CenterServer implements Runnable {
 			return -3;
 		}
 
-		if (newServerContainsRecordResponse.equals("true")) {
+		if (newServerContainsRecordResponse == true) {
 			return -4;
-		} else if (newServerContainsRecordResponse.equals("false")) {
+		} else if (newServerContainsRecordResponse == false) {
 			// ok
 		} else {
 			return -5;
@@ -304,23 +323,38 @@ public class CenterServer implements Runnable {
 			byte[] sendData = new byte[1024];
 			byte[] receiveData = new byte[1024];
 
-			Object[] arguments = {recordToTransfer};
-			MethodCallMessage methodCallMessage = new MethodCallMessage("transferRecord", arguments);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ObjectOutput out = new ObjectOutputStream(bos);
-			out.writeObject(methodCallMessage);
-			sendData = bos.toByteArray();
-			out.close();
-			bos.close();
+			JSONObject jsonSendObject = new JSONObject();
+			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
+			jsonSendObject.put(MessageKeys.RECORD_ID, recordToTransfer.recordID);
+			jsonSendObject.put(MessageKeys.FIRST_NAME, recordToTransfer.firstName);
+			jsonSendObject.put(MessageKeys.LAST_NAME, recordToTransfer.lastName);
+			jsonSendObject.put(MessageKeys.EMPLOYEE_ID, recordToTransfer.employeeID);
+			jsonSendObject.put(MessageKeys.MAIL_ID, recordToTransfer.mailID);
 
+			if (recordToTransfer.recordID.substring(0, 2).toLowerCase().equals("er")) {
+				EmployeeRecord employeeRecord = (EmployeeRecord) recordToTransfer;
+				jsonSendObject.put(MessageKeys.PROJECT_ID, employeeRecord.projectID);
+			} else if (recordToTransfer.recordID.substring(0, 2).toLowerCase().equals("mr")) {
+				ManagerRecord managerRecord = (ManagerRecord) recordToTransfer;
+				jsonSendObject.put(MessageKeys.LOCATION, managerRecord.location);
+				jsonSendObject.put(MessageKeys.PROJECT_ID, managerRecord.projects.get(0).getID());
+				jsonSendObject.put(MessageKeys.PROJECT_CLIENT, managerRecord.projects.get(0).getClientName());
+				jsonSendObject.put(MessageKeys.PROJECT_NAME, managerRecord.projects.get(0).getProjectName());
+			}
+
+			sendData = jsonSendObject.toString().getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
 			clientSocket.setSoTimeout(2000);
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
-			newServerContainsRecordResponse = (new String(receivePacket.getData())).trim();
+			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+			newServerContainsRecordResponse = Boolean.parseBoolean((String) jsonReceiveObject.get(MessageKeys.RECORD_EXISTS));
 			this.logger.log(String.format("transferRecord from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return -6;
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
 			return -2;

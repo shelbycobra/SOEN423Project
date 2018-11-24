@@ -6,6 +6,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -155,11 +159,53 @@ public class ReplicaManager {
 	}
 
 	public void start() {
+		log("starting udpServerThread");
 		udpServerThread.start();
 	}
 
 	public void stop() {
+		log("interrupting udpServerThread");
 		udpServerThread.interrupt();
+	}
+
+	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
+		int replicaNumber = Integer.parseInt(args[0]);
+		Class replicaClass = null;
+
+		if (replicaNumber == 1) {
+			replicaClass = Replicas.Replica1.CenterServer.class;
+		} else if (replicaNumber == 2) {
+			replicaClass = Replicas.Replica2.Server.class;
+		} else if (replicaNumber == 3) {
+			replicaClass = Replicas.Replica3.CenterServerController.class;
+		} else {
+			throw new IllegalArgumentException("Invalid replicaNumber: " + replicaNumber);
+		}
+
+		Replica replica = (Replica) replicaClass.newInstance();
+		ReplicaManager replicaManager = new ReplicaManager(replicaNumber);
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				log("running shutdown hook");
+				replica.shutdownServers();
+				replicaManager.stop();
+			}
+		});
+
+		log("starting replica: " + replicaNumber);
+		replica.runServers();
+
+		log("starting ReplicaManager for replica: " + replicaNumber);
+		replicaManager.start();
+	}
+
+	private static void log(String message) {
+		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		Date dateTime = Calendar.getInstance().getTime();
+		String timeStamp = dateFormat.format(dateTime);
+		System.out.println(String.format("[ReplicaManager %s] %s", timeStamp, message));
 	}
 
 }
