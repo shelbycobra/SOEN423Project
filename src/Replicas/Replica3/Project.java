@@ -1,5 +1,7 @@
 package Replicas.Replica3;
 
+import org.json.simple.JSONObject;
+
 public class Project {
 	private int ID;
 	private String clientName;
@@ -33,6 +35,16 @@ public class Project {
 
 	public void setProjectName(String projectName) {
 		this.projectName = projectName;
+	}
+
+	public JSONObject getJSONObject() {
+		JSONObject jsonObject = new JSONObject();
+
+		jsonObject.put(DEMS.MessageKeys.PROJECT_ID, ID);
+		jsonObject.put(DEMS.MessageKeys.PROJECT_CLIENT, clientName);
+		jsonObject.put(DEMS.MessageKeys.PROJECT_NAME, projectName);
+
+		return jsonObject;
 	}
 
 }

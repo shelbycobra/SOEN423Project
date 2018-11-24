@@ -32,6 +32,10 @@ public class CenterServer extends Thread {
 		return records;
 	}
 
+	public String getLocation() {
+		return location;
+	}
+
 	class UdpServer implements Runnable {
 
 		@Override

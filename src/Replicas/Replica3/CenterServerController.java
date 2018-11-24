@@ -6,6 +6,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
 
@@ -233,13 +236,21 @@ public class CenterServerController implements DEMS.Replica {
 	public JSONArray getData() {
 		JSONArray jsonArray = new JSONArray();
 
-		JSONObject jsonObjectCA = new JSONObject(centerServerCA.getRecords());
-		JSONObject jsonObjectUK = new JSONObject(centerServerUK.getRecords());
-		JSONObject jsonObjectUS = new JSONObject(centerServerUS.getRecords());
+		List<CenterServer> centerServers = Arrays.asList(centerServerCA, centerServerUK, centerServerUS);
 
-		jsonArray.add(jsonObjectCA);
-		jsonArray.add(jsonObjectUK);
-		jsonArray.add(jsonObjectUS);
+		for (CenterServer centerServer : centerServers) {
+			HashMap<Character, List<Record>> records = centerServer.getRecords();
+			for (char key : records.keySet()) {
+				for (Record record : records.get(key)) {
+
+					JSONObject jsonObject = record.getJSONObject();
+					jsonObject.put(MessageKeys.SERVER_LOCATION, centerServer.getLocation());
+					jsonObject.put(MessageKeys.RECORD_ID, record.getRecordID());
+					jsonArray.add(jsonObject);
+
+				}
+			}
+		}
 
 		return jsonArray;
 	}

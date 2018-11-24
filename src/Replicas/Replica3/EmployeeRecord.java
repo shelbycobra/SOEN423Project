@@ -1,5 +1,7 @@
 package Replicas.Replica3;
 
+import org.json.simple.JSONObject;
+
 public class EmployeeRecord extends Record {
 	private static final long serialVersionUID = 4220125172871733314L;
 
@@ -15,4 +17,14 @@ public class EmployeeRecord extends Record {
 		return "EmployeeRecord [recordID=" + recordID + ", firstName=" + firstName + ", lastName=" + lastName
 				+ ", employeeID=" + employeeID + ", mailID=" + mailID + ", projectID=" + projectID + "]";
 	}
+
+	@Override
+	public JSONObject getJSONObject() {
+		JSONObject jsonObject = super.getJSONObject();
+
+		jsonObject.put(DEMS.MessageKeys.PROJECT_ID, projectID);
+
+		return jsonObject;
+	}
+
 }
