@@ -1,25 +1,16 @@
 package Replicas.Replica3;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
-
+import DEMS.Config;
+import DEMS.MessageKeys;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
+import java.io.IOException;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public class CenterServerController implements DEMS.Replica {
 
@@ -169,9 +160,9 @@ public class CenterServerController implements DEMS.Replica {
 	public CenterServerController() {
 		this.logger = new Logger("CenterServerController");
 
-		centerServerCA = (CenterServer) new Thread(new CenterServer("CA"));
-		centerServerUS = (CenterServer) new Thread(new CenterServer("US"));
-		centerServerUK = (CenterServer) new Thread(new CenterServer("UK"));
+		centerServerCA = new CenterServer("CA");
+		centerServerUS = new CenterServer("US");
+		centerServerUK = new CenterServer("UK");
 
 		// Instantiate Semaphores
 		mutex = new Semaphore(1);
