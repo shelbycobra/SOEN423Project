@@ -6,8 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.Semaphore;
@@ -34,9 +34,8 @@ import javafx.util.Pair;
 public class FrontEndImpl extends FrontEndInterfacePOA
 {
 	private ORB orb;
-	private Semaphore mutex = new Semaphore(1);
 	private Semaphore receiveFromReplica = new Semaphore(0);
-	private HashMap<Integer, Message> messages = new HashMap<>();
+	private ConcurrentHashMap<Integer, Message> messages = new ConcurrentHashMap<>();
 	private long longestTimeout = 1000;
 	private JSONParser parser = new JSONParser();
 	private int messageID = 1;
@@ -45,12 +44,9 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	public FrontEndImpl()
 	{
 		ReplicaResponseListener responseListener = new ReplicaResponseListener();
-		ProcessCrashMonitor processCrashMonitor = new ProcessCrashMonitor();
 		Thread responseListenerThread = new Thread(responseListener);
-		Thread processCrashMonitorThread = new Thread(processCrashMonitor);
 		
 		responseListenerThread.start();
-		processCrashMonitorThread.start();
 	}
 
 	public void setORB(ORB orb_val)
@@ -69,11 +65,11 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 
 	private class SendToSequencer implements Callable<String>
 	{
-		Message payload;
+		Message message;
 
-		public SendToSequencer(Message payload)
+		public SendToSequencer(Message message)
 		{
-			this.payload = payload;
+			this.message = message;
 		}
 
 		public String call()
@@ -83,7 +79,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			try
 			{
 				socket = new DatagramSocket();
-				byte[] messageBuffer = payload.getSendData().toString().getBytes();
+				byte[] messageBuffer = message.getSendData().toString().getBytes();
 				InetAddress host = InetAddress.getByName("localhost");
 				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.FE_SEQ);
 
@@ -116,13 +112,14 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				}
 			}
 			
+			startProcessCrashMonitor();
 			return waitForResponse();
 		}
 		
 		private String waitForResponse()
 		{
 			String response = null;
-			Callable<String> waitForResponseCall = new WaitForReplicaResponse(payload);
+			Callable<String> waitForResponseCall = new ProcessReplicaResponse(message);
 			FutureTask<String> waitForResponseTask = new FutureTask<>(waitForResponseCall);
 			Thread waitForResponseThread = new Thread(waitForResponseTask);
 			
@@ -143,16 +140,23 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			
 			return response;
 		}
+		
+		private void startProcessCrashMonitor()
+		{
+			ProcessCrashMonitor processCrashMonitor = new ProcessCrashMonitor(message);
+			Thread processCrashMonitorThread = new Thread(processCrashMonitor);
+			processCrashMonitorThread.start();
+		}
 	}
 	
-	private class WaitForReplicaResponse implements Callable<String>
+	private class ProcessReplicaResponse implements Callable<String>
 	{
 		Message message;
 		
-		public WaitForReplicaResponse(Message message)
+		public ProcessReplicaResponse(Message message)
 		{
 			this.message = message;
-			System.out.println("Waiting for responses for message ID: " + messageID);
+			System.out.println("Waiting for responses for message ID: " + message.getId());
 		}
 		
         public String call()
@@ -164,9 +168,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
             {
         		try
 				{
-        			System.out.println(messageID + ": Waiting for available permits...");
 					receiveFromReplica.acquire(2);
-					System.out.println(messageID + ": Acquired semaphore permit!");
 				}
         		catch (InterruptedException e)
 				{
@@ -190,7 +192,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         				break;
         			}
         			
-        			System.out.println("One of the messages was bad, waiting for the third...");
+//        			System.out.println("One of the messages was bad, waiting for the third...");
         			receiveFromReplica.release(2);
         			continue;
         		}
@@ -203,14 +205,14 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         			if (message1.getValue().equals(message3.getValue()))
         			{
         				response = message1.getValue();
-        				notifyReplicaOfFailure(Config.Failure.BYZANTINE, message2.getKey());
+        				notifyReplicaOfByzantineFailure(message2.getKey());
         				break;
         			}
         			
         			if (message2.getValue().equals(message3.getValue()))
         			{
         				response = message2.getValue();
-        				notifyReplicaOfFailure(Config.Failure.BYZANTINE, message1.getKey());
+        				notifyReplicaOfByzantineFailure(message1.getKey());
         				break;
         			}
 				}
@@ -248,11 +250,12 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    datagramSocket.receive(responsePacket);
 	                    String data = new String(responsePacket.getData()).trim();
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
+	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
-	                    Pair<Integer, String> returnMessage = new Pair<Integer, String>(responsePacket.getPort(), jsonMessage.get(MessageKeys.MESSAGE).toString());
+	                    Pair<Integer, String> returnMessage = new Pair<Integer, String>(port, jsonMessage.get(MessageKeys.MESSAGE).toString());
 	                    message.setReturnMessage(returnMessage);
 	                    
-	                    clockTime(message, responsePacket.getPort());
+	                    clockTime(message, port);
 	                    
 	                    receiveFromReplica.release();
 	                    System.out.println("Received response from Replica Manager for ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString() + " Semaphore: " + receiveFromReplica.availablePermits());
@@ -281,31 +284,66 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	
 	private class ProcessCrashMonitor implements Runnable
 	{
+		Message message;
+		long startTime;
+		long elapsedTime = 0;
+		
+		public ProcessCrashMonitor(Message message)
+		{
+			this.message = message;
+			this.startTime = System.currentTimeMillis();
+		}
+		
 		@Override
 		public void run()
 		{
-			while (listeningForResponses.get())
+			while (elapsedTime < 2 * longestTimeout)
 			{
-				for (Message message : messages.values())
+				if (message.getReturnMessages().size() == 3)
 				{
-					for (Pair<Integer, Long> time : message.getReturnTimes())
-					{
-						if (time.getValue() > longestTimeout)
-						{
-							notifyReplicaOfFailure(Config.Failure.PROCESS_CRASH, time.getKey());
-						}
-					}
+					return;
 				}
+				
+				elapsedTime = System.currentTimeMillis() - startTime;
 			}
+			
+			if (!message.getReturnTimes().containsKey(Config.Replica1.RM_PORT))
+			{
+				notifyReplicaOfProcessCrash(new int[] {Config.Replica2.RM_PORT, Config.Replica3.RM_PORT});
+			}
+			
+			if (!message.getReturnTimes().containsKey(Config.Replica2.RM_PORT))
+			{
+				notifyReplicaOfProcessCrash(new int[] {Config.Replica1.RM_PORT, Config.Replica3.RM_PORT});
+			}
+			
+			if (!message.getReturnTimes().containsKey(Config.Replica3.RM_PORT))
+			{
+				notifyReplicaOfProcessCrash(new int[] {Config.Replica1.RM_PORT, Config.Replica2.RM_PORT});
+			}
+			
+//			while (listeningForResponses.get())
+//			{
+//				for (Message message : messages.values())
+//				{
+//					for (Pair<Integer, Long> time : message.getReturnTimes())
+//					{
+//						if (time.getValue() > 2 * longestTimeout)
+//						{
+//							notifyReplicaOfFailure(Config.Failure.PROCESS_CRASH, time.getKey());
+//						}
+//					}
+//				}
+//			}
 		}
 	}
 	
-	private void notifyReplicaOfFailure(Config.Failure failureType, Integer port)
+	private void notifyReplicaOfByzantineFailure(int port)
 	{
 		DatagramSocket socket = null;
 		JSONObject payload = new JSONObject();
 		
-		payload.put(MessageKeys.FAILURE_TYPE, failureType.toString());
+		payload.put(MessageKeys.FAILURE_TYPE, Config.Failure.BYZANTINE.toString());
 		payload.put(MessageKeys.RM_PORT_NUMBER, port);
 		
 		try
@@ -315,7 +353,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			InetAddress host = InetAddress.getByName("localhost");
 			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port);
 
-			System.out.println("Sending message to Replica Manager...");
+			System.out.println("Sending byzantine error message to Replica Manager " + port);
 			socket.send(request);
 		}
 		catch (SocketTimeoutException e)
@@ -339,23 +377,63 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		}
 	}
 	
-	private String makeRequest(JSONObject payload)
+	private void notifyReplicaOfProcessCrash(int[] port)
+	{
+		DatagramSocket socket = null;
+		JSONObject payload = new JSONObject();
+		
+		payload.put(MessageKeys.FAILURE_TYPE, Config.Failure.PROCESS_CRASH.toString());
+		payload.put(MessageKeys.RM_PORT_NUMBER, port);
+		
+		try
+		{
+			socket = new DatagramSocket();
+			byte[] messageBuffer = payload.toString().getBytes();
+			InetAddress host = InetAddress.getByName("localhost");
+			
+			for (int i = 0; i < 2; i++)
+			{
+				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port[i]);
+				socket.send(request);
+				System.out.println("Sending process crash error message to Replica Manager " + port[i]);
+			}
+			
+		}
+		catch (SocketTimeoutException e)
+		{
+			System.out.println("Replica Manager on port " + port + " is not responding.");
+		}
+		catch (SocketException e)
+		{
+			System.out.println("Socket: " + e.getMessage());
+		}
+		catch (IOException e)
+		{
+			System.out.println("IO: " + e.getMessage());
+		}
+		finally
+		{
+			if (socket != null)
+			{
+				socket.close();
+			}
+		}
+	}
+	
+	private String makeRequest(Message message)
 	{
 		String response = null;
-		Integer messageID = Integer.parseInt(payload.get(MessageKeys.MESSAGE_ID).toString());
-		Message message = new Message(messageID);
 		Callable<String> sendToSequencerCall = new SendToSequencer(message);
 		FutureTask<String> sendToSequencerTask = new FutureTask<>(sendToSequencerCall);
 		Thread sendToSequencerThread = new Thread(sendToSequencerTask);
 		
-		messages.put(messageID, message);
 		startTimer(message);
 		sendToSequencerThread.start();
 		
 		try
 		{
 			response = sendToSequencerTask.get();
-			stopTimer(message.getId());
+//			stopTimer(message.getId());
 		}
 		catch (InterruptedException e)
 		{
@@ -394,11 +472,19 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		message.setStartTime(System.currentTimeMillis());
 	}
 
-	private void addMessageID(JSONObject payload) throws InterruptedException
+	private synchronized Message createMessage(JSONObject payload) throws InterruptedException
 	{
-		mutex.acquire();
-		payload.put("message_id", messageID++);
-        mutex.release();
+//		mutex.acquire();
+		
+		payload.put(MessageKeys.MESSAGE_ID, messageID);
+		Message message = new Message(messageID);
+		message.setSendData(payload);
+		messages.put(messageID, message);
+		messageID++;
+		
+//        mutex.release();
+        
+        return message;
 	}
 
 	@Override
@@ -412,6 +498,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	public String createMRecord(String managerID, String firstName, String lastName, String employeeID, String mailID, Project[] projects, String location)
 	{
 		JSONObject payload = new JSONObject();
+		Message message = null;
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.FIRST_NAME, firstName);
@@ -423,20 +510,21 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		
 		try
 		{
-			addMessageID(payload);
+			message = createMessage(payload);
 		}
 		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
-		return makeRequest(payload);
+		return makeRequest(message);
 	}
 
 	@Override
 	public String createERecord(String managerID, String firstName, String lastName, String employeeID, String mailID, String projectID)
 	{
 		JSONObject payload = new JSONObject();
+		Message message = null;
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.FIRST_NAME, firstName);
@@ -448,40 +536,42 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		
 		try
 		{
-			addMessageID(payload);
+			message = createMessage(payload);
 		}
 		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
-		return makeRequest(payload);
+		return makeRequest(message);
 	}
 
 	@Override
 	public String getRecordCount(String managerID)
 	{
 		JSONObject payload = new JSONObject();
+		Message message = null;
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
 		
 		try
 		{
-			addMessageID(payload);
+			message = createMessage(payload);
 		}
 		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
-		return makeRequest(payload);
+		return makeRequest(message);
 	}
 
 	@Override
 	public String editRecord(String managerID, String recordID, String fieldName, String newValue)
 	{
 		JSONObject payload = new JSONObject();
+		Message message = null;
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.RECORD_ID, recordID);
@@ -491,20 +581,21 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		
 		try
 		{
-			addMessageID(payload);
+			message = createMessage(payload);
 		}
 		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
-		return makeRequest(payload);
+		return makeRequest(message);
 	}
 
 	@Override
 	public String transferRecord(String managerID, String recordID, String remoteCenterServerName)
 	{
 		JSONObject payload = new JSONObject();
+		Message message = null;
 		
 		payload.put(MessageKeys.MANAGER_ID, managerID);
 		payload.put(MessageKeys.RECORD_ID, recordID);
@@ -513,13 +604,13 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		
 		try
 		{
-			addMessageID(payload);
+			message = createMessage(payload);
 		}
 		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
-		return makeRequest(payload);
+		return makeRequest(message);
 	}
 }
