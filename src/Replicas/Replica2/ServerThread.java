@@ -204,12 +204,12 @@ public class ServerThread extends Thread
 
         Record record = serverManager.byteToRecord(recordData);
 
-		if (record.mRecordID.charAt(0) == 'E')
+		if (record.getRecordID().charAt(0) == 'E')
 		{
 			// Make employee record
 			EmployeeRecord eRecord = (EmployeeRecord) record;
 
-			System.out.println("Adding Employee Record " + record.mRecordID + " to " + location + " server.");
+			System.out.println("Adding Employee Record " + record.getRecordID() + " to " + location + " server.");
 			eRecord.print();
 
 			// Add record to map
@@ -217,12 +217,12 @@ public class ServerThread extends Thread
             message = "success";
 
 		}
-		else if (record.mRecordID.charAt(0)  == 'M')
+		else if (record.getRecordID().charAt(0)  == 'M')
 		{
 			// Make manager Record
 			ManagerRecord mRecord = (ManagerRecord) record;
 
-			System.out.println("Adding Manager Record " + record.mRecordID + "  to " + location + " server.");
+			System.out.println("Adding Manager Record " + record.getRecordID() + "  to " + location + " server.");
 			mRecord.print();
 
 			// Add record to map
@@ -271,4 +271,85 @@ public class ServerThread extends Thread
 		Project[] prj_arr = new Project[projects.size()];
 		return projects.toArray(prj_arr);
 	}
+    
+    @SuppressWarnings("unchecked")
+	public JSONArray getRecords()
+    {
+    	JSONArray jsonRecords = new JSONArray();
+        
+        for (Character key : records.keySet())
+        {
+        	ArrayList<Record> recordList = records.get(key);
+        	
+        	for (Record record : recordList)
+        	{
+        		JSONObject jsonRecord = new JSONObject();
+
+        		jsonRecord.put(MessageKeys.MANAGER_ID, record.getManagerID());
+    			jsonRecord.put(MessageKeys.FIRST_NAME, record.getFirstName());
+    			jsonRecord.put(MessageKeys.LAST_NAME, record.getLastName());
+    			jsonRecord.put(MessageKeys.EMPLOYEE_ID, record.getEmployeeID());
+    			jsonRecord.put(MessageKeys.MAIL_ID, record.getMailID());
+    			jsonRecord.put(MessageKeys.SERVER_LOCATION, location);
+    			jsonRecord.put(MessageKeys.RECORD_ID, record.getRecordID());
+
+        		if (record.isManagerRecord())
+        		{
+        			ManagerRecord managerRecord = (ManagerRecord) record;
+        			
+        			jsonRecord.put(MessageKeys.PROJECTS, managerRecord.getProjects().toArray(new Project[0]));
+        			jsonRecord.put(MessageKeys.LOCATION, managerRecord.getLocation());
+        		}
+        		else
+        		{
+        			EmployeeRecord employeeRecord = (EmployeeRecord) record;
+        			
+        			jsonRecord.put(MessageKeys.PROJECT_ID, employeeRecord.getProjectID());
+        		}
+        	}
+        }
+        
+        return jsonRecords;
+    }
+    
+    public void setRecords(JSONArray array)
+    {
+    	for (Object arrayRecord : array)
+    	{
+    		JSONObject jsonRecord = (JSONObject) arrayRecord;
+    		boolean isManagerRecord = jsonRecord.get(MessageKeys.RECORD_ID).toString().charAt(0) == 'M';
+    		
+    		if (isManagerRecord)
+    		{
+    			JSONArray jsonProjects = (JSONArray) jsonRecord.get(MessageKeys.PROJECTS);
+    			Project[] projects = new Project[jsonProjects.size()];
+    			
+    			for (int i = 0; i < jsonProjects.size(); i++)
+    			{
+    				String projectID = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_ID).toString();
+    				String projectName = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_NAME).toString();
+    				String projectClient = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_CLIENT).toString();
+    				
+    				projects[i] = new Project(projectID, projectClient, projectName); 
+    			}
+    			
+    			server.createMRecord(jsonRecord.get(MessageKeys.MANAGER_ID).toString(),
+    					jsonRecord.get(MessageKeys.FIRST_NAME).toString(),
+    					jsonRecord.get(MessageKeys.LAST_NAME).toString(),
+    					Integer.parseInt(jsonRecord.get(MessageKeys.EMPLOYEE_ID).toString()),
+    					jsonRecord.get(MessageKeys.MAIL_ID).toString(),
+    					projects,
+    					jsonRecord.get(MessageKeys.LOCATION).toString());
+    		}
+    		else
+    		{
+    			server.createERecord(jsonRecord.get(MessageKeys.MANAGER_ID).toString(),
+    					jsonRecord.get(MessageKeys.FIRST_NAME).toString(),
+    					jsonRecord.get(MessageKeys.LAST_NAME).toString(),
+    					Integer.parseInt(jsonRecord.get(MessageKeys.EMPLOYEE_ID).toString()),
+    					jsonRecord.get(MessageKeys.MAIL_ID).toString(),
+    					jsonRecord.get(MessageKeys.PROJECT_ID).toString());
+    		}
+    	}
+    }
 }

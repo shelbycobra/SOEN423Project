@@ -34,7 +34,7 @@ public class ServerManager
 			
 			for (Record record : listOfRecords)
 			{
-				if (record.mRecordID.equals(recordID))
+				if (record.getRecordID().equals(recordID))
 				{
 					return record;
 				}
