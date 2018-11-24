@@ -4,6 +4,13 @@ SOEN 423 Group Project - DEMS
 
 [Link to Google Drive Folder](https://drive.google.com/drive/folders/1a_pQnYdVTQ2WMDOOZDDUdrWAXBgGCZk6?usp=sharing)
 
+## Instructions
+
+```shell
+# start replica manager including specified replica
+java -cp 'bin:lib/*' DEMS.ReplicaManager <replicaNumber>
+```
+
 ## Distribution of work
 
 TEAM :
