@@ -19,7 +19,7 @@ import org.json.simple.parser.ParseException;
 import DEMS.Config;
 import DEMS.MessageKeys;
 
-public class CenterServer implements Runnable {
+public class CenterServer extends Thread {
 
 	private String location;
 	private Thread udpServerThread;
@@ -27,6 +27,10 @@ public class CenterServer implements Runnable {
 	private JSONParser jsonParser = new JSONParser();
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
+
+	public HashMap<Character, List<Record>> getRecords() {
+		return records;
+	}
 
 	class UdpServer implements Runnable {
 

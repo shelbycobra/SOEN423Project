@@ -8,20 +8,22 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import DEMS.MessageKeys;
+
 import DEMS.Config;
+import DEMS.MessageKeys;
 
 public class CenterServerController implements DEMS.Replica {
 
 	private Logger logger;
 
-	private Thread centerServerCA;
-	private Thread centerServerUS;
-	private Thread centerServerUK;
+	private CenterServer centerServerCA;
+	private CenterServer centerServerUS;
+	private CenterServer centerServerUK;
 
 	private MulticastSocket multicastSocket;
 
@@ -163,9 +165,9 @@ public class CenterServerController implements DEMS.Replica {
 	public CenterServerController() {
 		this.logger = new Logger("CenterServerController");
 
-		centerServerCA = new Thread(new CenterServer("CA"));
-		centerServerUS = new Thread(new CenterServer("US"));
-		centerServerUK = new Thread(new CenterServer("UK"));
+		centerServerCA = (CenterServer) new Thread(new CenterServer("CA"));
+		centerServerUS = (CenterServer) new Thread(new CenterServer("US"));
+		centerServerUK = (CenterServer) new Thread(new CenterServer("UK"));
 
 		// Instantiate Semaphores
 		mutex = new Semaphore(1);
@@ -229,8 +231,17 @@ public class CenterServerController implements DEMS.Replica {
 
 	@Override
 	public JSONArray getData() {
-		// TODO Auto-generated method stub
-		return null;
+		JSONArray jsonArray = new JSONArray();
+
+		JSONObject jsonObjectCA = new JSONObject(centerServerCA.getRecords());
+		JSONObject jsonObjectUK = new JSONObject(centerServerUK.getRecords());
+		JSONObject jsonObjectUS = new JSONObject(centerServerUS.getRecords());
+
+		jsonArray.add(jsonObjectCA);
+		jsonArray.add(jsonObjectUK);
+		jsonArray.add(jsonObjectUS);
+
+		return jsonArray;
 	}
 
 	@Override
