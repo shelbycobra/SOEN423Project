@@ -1,16 +1,10 @@
 package Replicas.Replica3;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -26,13 +20,13 @@ public class CenterServer extends Thread {
 	private Logger logger;
 	private JSONParser jsonParser = new JSONParser();
 
-	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
+	private Records records = new Records();
 
-	public HashMap<Character, List<Record>> getRecords() {
+	public Records getRecords() {
 		return records;
 	}
 
-	public void setRecords(HashMap<Character, List<Record>> records) {
+	public void setRecords(Records records) {
 		this.records = records;
 	}
 
@@ -76,47 +70,12 @@ public class CenterServer extends Thread {
 					logger.log("udp command received: " + commandType);
 
 					if (commandType == Config.GET_RECORD_COUNT) {
-						int count = 0;
-						for (char key : records.keySet()) {
-							count += records.get(key).size();
-						}
-						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(count));
+						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
 					} else if (commandType == Config.RECORD_EXISTS) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
-						boolean recordExists = false;
-						for (char key : records.keySet()) {
-							for (Record value : records.get(key)) {
-								if (value.recordID.equals(recordID)) {
-									recordExists = true;
-									break;
-								}
-							}
-						}
-						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(recordExists));
+						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(records.recordExists(recordID)));
 					} else if (commandType == Config.TRANSFER_RECORD) {
-						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
-						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
-						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
-						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
-						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
-
-						Record record = null;
-						if (recordID.substring(0, 2).toLowerCase().equals("er")) {
-							int projectID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.PROJECT_ID));
-							record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
-						} else if (recordID.substring(0, 2).toLowerCase().equals("mr")) {
-							String location = (String) jsonReceiveObject.get(MessageKeys.LOCATION);
-							int projectID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.PROJECT_ID));
-							String clientName = (String) jsonReceiveObject.get(MessageKeys.PROJECT_CLIENT);
-							String projectName = (String) jsonReceiveObject.get(MessageKeys.PROJECT_NAME);
-							Project project = new Project(projectID, clientName, projectName);
-							ArrayList<Project> projects = new ArrayList<Project>(Arrays.asList(project));
-							record = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
-						}
-
-						char letter = record.lastName.toLowerCase().charAt(0);
-						List<Record> recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());
-						recordList.add(record);
+						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
 					}
 
@@ -141,14 +100,11 @@ public class CenterServer extends Thread {
 		udpServerThread = new Thread(new UdpServer());
 	}
 
-	public synchronized int createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location) {
+	public synchronized int createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Projects projects, String location) {
 		this.logger.log(String.format("createMRecord(%s, %s, %s, %d, %s, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projects.toString(), location));
 
-		ArrayList<Project> projectsList = new ArrayList<Project>(Arrays.asList(projects));
-		ManagerRecord record = new ManagerRecord(firstName, lastName, employeeID, mailID, projectsList, location);
-		char letter = lastName.toLowerCase().charAt(0);
-		List<Record> recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());
-		recordList.add(record);
+		ManagerRecord record = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
+		records.addRecord(record);
 
 		return 0;
 	}
@@ -157,9 +113,7 @@ public class CenterServer extends Thread {
 		this.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %d)", managerID, firstName, lastName, employeeID, mailID, projectID));
 
 		EmployeeRecord record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
-		char letter = lastName.toLowerCase().charAt(0);
-		List<Record> recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());
-		recordList.add(record);
+		records.addRecord(record);
 
 		return 0;
 	}
@@ -221,41 +175,23 @@ public class CenterServer extends Thread {
 	public synchronized int editRecord(String managerID, String recordID, String fieldName, String newValue) {
 		this.logger.log(String.format("editRecord(%s, %s, %s, %s)", managerID, recordID, fieldName, newValue));
 
-		for (char key : records.keySet()) {
-			for (Record value : records.get(key)) {
-				if (value.recordID.equals(recordID)) {
-					try {
-						Class c = value.getClass();
-						Field f = c.getField(fieldName);
-						f.set(value, newValue);
-						return 0;
-					} catch (NoSuchFieldException | IllegalAccessException e) {
-						e.printStackTrace();
-						return -1;
-					}
-				}
-			}
+		try {
+			records.editRecord(recordID, fieldName, newValue);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return -2;
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			e.printStackTrace();
+			return -1;
 		}
 
-		// no record was edited
-		return -2;
+		return 0;
 	}
 
 	public int printData(String managerID) {
 		this.logger.log(String.format("printData(%s)", managerID));
 
-		for (char key : records.keySet()) {
-			this.logger.log(String.format("  %c:", key));
-			for (Record value : records.get(key)) {
-				this.logger.log("    " + value.toString());
-				if (value instanceof ManagerRecord) {
-					this.logger.log("      projects:");
-					for (Project project : ((ManagerRecord) value).projects) {
-						this.logger.log("        " + project.toString());
-					}
-				}
-			}
-		}
+		records.printRecords(this.logger);
 
 		return 0;
 	}
@@ -273,17 +209,10 @@ public class CenterServer extends Thread {
 		}
 
 		Record recordToTransfer = null;
-
-		for (char key : records.keySet()) {
-			for (Record value : records.get(key)) {
-				if (value.recordID.equals(recordID)) {
-					recordToTransfer = value;
-					break;
-				}
-			}
-		}
-
-		if (recordToTransfer == null) {
+		try {
+			recordToTransfer = records.getRecord(recordID);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
 			return -1;
 		}
 
@@ -335,25 +264,7 @@ public class CenterServer extends Thread {
 			byte[] sendData = new byte[1024];
 			byte[] receiveData = new byte[1024];
 
-			JSONObject jsonSendObject = new JSONObject();
-			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.TRANSFER_RECORD);
-			jsonSendObject.put(MessageKeys.RECORD_ID, recordToTransfer.recordID);
-			jsonSendObject.put(MessageKeys.FIRST_NAME, recordToTransfer.firstName);
-			jsonSendObject.put(MessageKeys.LAST_NAME, recordToTransfer.lastName);
-			jsonSendObject.put(MessageKeys.EMPLOYEE_ID, recordToTransfer.employeeID);
-			jsonSendObject.put(MessageKeys.MAIL_ID, recordToTransfer.mailID);
-
-			if (recordToTransfer.recordID.substring(0, 2).toLowerCase().equals("er")) {
-				EmployeeRecord employeeRecord = (EmployeeRecord) recordToTransfer;
-				jsonSendObject.put(MessageKeys.PROJECT_ID, employeeRecord.projectID);
-			} else if (recordToTransfer.recordID.substring(0, 2).toLowerCase().equals("mr")) {
-				ManagerRecord managerRecord = (ManagerRecord) recordToTransfer;
-				jsonSendObject.put(MessageKeys.LOCATION, managerRecord.location);
-				jsonSendObject.put(MessageKeys.PROJECT_ID, managerRecord.projects.get(0).getID());
-				jsonSendObject.put(MessageKeys.PROJECT_CLIENT, managerRecord.projects.get(0).getClientName());
-				jsonSendObject.put(MessageKeys.PROJECT_NAME, managerRecord.projects.get(0).getProjectName());
-			}
-
+			JSONObject jsonSendObject = recordToTransfer.getJSONObject();
 			sendData = jsonSendObject.toString().getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
@@ -375,14 +286,7 @@ public class CenterServer extends Thread {
 			return -3;
 		}
 
-		for (char key : records.keySet()) {
-			for (Iterator<Record> iter = records.get(key).listIterator(); iter.hasNext();) {
-				Record record = iter.next();
-				if (record.recordID.equals(recordID)) {
-					iter.remove();
-				}
-			}
-		}
+		records.removeRecord(recordID);
 
 		return 0;
 	}

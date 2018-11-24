@@ -1,7 +1,16 @@
 package Replicas.Replica3;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -231,17 +240,8 @@ public class CenterServerController implements DEMS.Replica {
 		List<CenterServer> centerServers = Arrays.asList(centerServerCA, centerServerUK, centerServerUS);
 
 		for (CenterServer centerServer : centerServers) {
-			HashMap<Character, List<Record>> records = centerServer.getRecords();
-			for (char key : records.keySet()) {
-				for (Record record : records.get(key)) {
-
-					JSONObject jsonObject = record.getJSONObject();
-					jsonObject.put(MessageKeys.SERVER_LOCATION, centerServer.getLocation());
-					jsonObject.put(MessageKeys.RECORD_ID, record.getRecordID());
-					jsonArray.add(jsonObject);
-
-				}
-			}
+			String serverLocation = centerServer.getLocation();
+			jsonArray.add(centerServer.getRecords().getJSONArray(serverLocation));
 		}
 
 		return jsonArray;
@@ -249,34 +249,20 @@ public class CenterServerController implements DEMS.Replica {
 
 	@Override
 	public void setData(JSONArray jsonArray) {
-		HashMap<Character, List<Record>> recordsCA = new HashMap<Character, List<Record>>();
-		HashMap<Character, List<Record>> recordsUK = new HashMap<Character, List<Record>>();
-		HashMap<Character, List<Record>> recordsUS = new HashMap<Character, List<Record>>();
+		Records recordsCA = new Records();
+		Records recordsUK = new Records();
+		Records recordsUS = new Records();
 
 		for (int i = 0; i < jsonArray.size(); i++){
 			JSONObject jsonObject = (JSONObject) jsonArray.get(i);
-			String recordID = (String) jsonObject.get(MessageKeys.RECORD_ID);
-			String recordType = recordID.substring(0, 2).toLowerCase();
-
-			Record record = null;
-			if (recordType.equals("er")) {
-				record = new EmployeeRecord(jsonObject);
-			} else if (recordType.equals("mr")) {
-				record = new ManagerRecord(jsonObject);
-			}
-
 			String location = (String) jsonObject.get(MessageKeys.SERVER_LOCATION);
-			char letter = record.lastName.toLowerCase().charAt(0);
-			List<Record> recordList = new ArrayList<Record>();
 			if (location.toLowerCase().equals("ca")) {
-				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+				recordsCA.addRecord(jsonObject);
 			} else if (location.toLowerCase().equals("uk")) {
-				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+				recordsUK.addRecord(jsonObject);
 			} else if (location.toLowerCase().equals("us")) {
-				recordList = recordsCA.computeIfAbsent(letter, k -> new ArrayList<Record>());
+				recordsUS.addRecord(jsonObject);
 			}
-
-			recordList.add(record);
 		}
 
 		centerServerCA.setRecords(recordsCA);
