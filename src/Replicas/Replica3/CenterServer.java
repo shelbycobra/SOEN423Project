@@ -27,14 +27,6 @@ public class CenterServer implements Runnable {
 
 	static HashMap<Character, List<Record>> records = new HashMap<Character, List<Record>>();
 
-	public static final HashMap<String, Integer> UDPPortMap;
-	static {
-		UDPPortMap = new HashMap<String, Integer>();
-		UDPPortMap.put("CA", Config.Replica3.CA_PORT);
-		UDPPortMap.put("US", Config.Replica3.US_PORT);
-		UDPPortMap.put("UK", Config.Replica3.UK_PORT);
-	}
-
 	class UdpServer implements Runnable {
 		@Override
 		public void run() {
