@@ -66,26 +66,26 @@ public class CenterServer extends Thread {
 
 					JSONObject jsonSendObject = new JSONObject();
 
-					int commandType = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.COMMAND_TYPE));
+					Config.CommandType commandType = (Config.CommandType) jsonReceiveObject.get(MessageKeys.COMMAND_TYPE);
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
 
 					logger.log(String.format("udp message: managerID: %s, commandType: ", managerID, commandType));
 
-					if (commandType == Config.GET_RECORD_COUNT) {
+					if (commandType == Config.CommandType.GET_RECORD_COUNT) {
 						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
-					} else if (commandType == Config.RECORD_EXISTS) {
+					} else if (commandType == Config.CommandType.RECORD_EXISTS) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(records.recordExists(recordID)));
-					} else if (commandType == Config.TRANSFER_RECORD) {
+					} else if (commandType == Config.CommandType.TRANSFER_RECORD) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.CREATE_MANAGER_RECORD) {
+					} else if (commandType == Config.CommandType.CREATE_MANAGER_RECORD) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.CREATE_EMPLOYEE_RECORD) {
+					} else if (commandType == Config.CommandType.CREATE_EMPLOYEE_RECORD) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.EDIT_RECORD) {
+					} else if (commandType == Config.CommandType.EDIT_RECORD) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
