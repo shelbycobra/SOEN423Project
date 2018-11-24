@@ -3,6 +3,7 @@ package Replicas.Replica2;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.*;
 
@@ -25,6 +26,7 @@ public class ServerThread extends Thread
     int port;
 	private DatagramSocket aSocket = null;
 	private DatagramPacket request = null;
+	private String messageID;
 
     public ServerThread(String location, int portNumber)
 	{
@@ -79,7 +81,8 @@ public class ServerThread extends Thread
 					JSONParser parser = new JSONParser();
 					String str = new String(request.getData()).trim();
 					JSONObject jsonMessage = (JSONObject) parser.parse(str);
-
+					messageID = (String) jsonMessage.get(MessageKeys.MESSAGE_ID);
+					
 					// recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
 					// FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
 					// { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
@@ -100,7 +103,7 @@ public class ServerThread extends Thread
 									(String) jsonMessage.get(MessageKeys.MAIL_ID),
 									projects,
 									(String) jsonMessage.get(MessageKeys.LOCATION));
-							System.out.println(msg);
+							replyToFrontEnd(msg, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.CREATE_EMPLOYEE_RECORD:
@@ -112,28 +115,28 @@ public class ServerThread extends Thread
 									Integer.parseInt((String) jsonMessage.get(MessageKeys.EMPLOYEE_ID)),
 									(String) jsonMessage.get(MessageKeys.MAIL_ID),
 									(String) jsonMessage.get(MessageKeys.PROJECT_ID));
-							System.out.println(msg);
+							replyToFrontEnd(msg, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.GET_RECORD_COUNT:
 						{
 							// Get Record Count
 							String counts = server.getRecordCount((String) jsonMessage.get(MessageKeys.MANAGER_ID));
-							System.out.println("Record count: " + counts);
+							replyToFrontEnd("Record count: " + counts, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.EDIT_RECORD:
 						{
 							// Edit Record
 							String output = server.editRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.FIELD_NAME), (String) jsonMessage.get(MessageKeys.NEW_VALUE));
-							System.out.println("\n" + output);
+							replyToFrontEnd(output, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.TRANSFER_RECORD:
 						{
 							// Transfer Record
 							String output = server.transferRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID), (String) jsonMessage.get(MessageKeys.RECORD_ID), (String) jsonMessage.get(MessageKeys.REMOTE_SERVER_NAME));
-							System.out.println(output);
+							replyToFrontEnd(output, Config.StatusCode.SUCCESS);
 							continue;
 						}
 						case Config.EXIT:
@@ -144,7 +147,7 @@ public class ServerThread extends Thread
 						}
 						default:
 						{
-							System.out.println("Invalid request type");
+							replyToFrontEnd("Invalid request type", Config.StatusCode.FAIL);
 							continue;
 						}
 					}
@@ -166,6 +169,22 @@ public class ServerThread extends Thread
 				aSocket.close();
 			}
 		}
+    }
+    
+    @SuppressWarnings("unchecked")
+	private void replyToFrontEnd(String msg, Config.StatusCode status) throws IOException
+    {
+        DatagramSocket socket = new DatagramSocket();
+        JSONObject message = new JSONObject();
+        message.put(MessageKeys.MESSAGE, msg);
+        message.put(MessageKeys.MESSAGE_ID, messageID);
+        message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+        message.put(MessageKeys.STATUS_CODE, status);
+
+        byte[] buffer = message.toString().getBytes();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
+
+        socket.send(packet);
     }
 
 	private void sendRecordCount() throws IOException
@@ -204,12 +223,12 @@ public class ServerThread extends Thread
 
         Record record = serverManager.byteToRecord(recordData);
 
-		if (record.mRecordID.charAt(0) == 'E')
+		if (record.getRecordID().charAt(0) == 'E')
 		{
 			// Make employee record
 			EmployeeRecord eRecord = (EmployeeRecord) record;
 
-			System.out.println("Adding Employee Record " + record.mRecordID + " to " + location + " server.");
+			System.out.println("Adding Employee Record " + record.getRecordID() + " to " + location + " server.");
 			eRecord.print();
 
 			// Add record to map
@@ -217,12 +236,12 @@ public class ServerThread extends Thread
             message = "success";
 
 		}
-		else if (record.mRecordID.charAt(0)  == 'M')
+		else if (record.getRecordID().charAt(0)  == 'M')
 		{
 			// Make manager Record
 			ManagerRecord mRecord = (ManagerRecord) record;
 
-			System.out.println("Adding Manager Record " + record.mRecordID + "  to " + location + " server.");
+			System.out.println("Adding Manager Record " + record.getRecordID() + "  to " + location + " server.");
 			mRecord.print();
 
 			// Add record to map
@@ -271,4 +290,85 @@ public class ServerThread extends Thread
 		Project[] prj_arr = new Project[projects.size()];
 		return projects.toArray(prj_arr);
 	}
+    
+    @SuppressWarnings("unchecked")
+	public JSONArray getRecords()
+    {
+    	JSONArray jsonRecords = new JSONArray();
+        
+        for (Character key : records.keySet())
+        {
+        	ArrayList<Record> recordList = records.get(key);
+        	
+        	for (Record record : recordList)
+        	{
+        		JSONObject jsonRecord = new JSONObject();
+
+        		jsonRecord.put(MessageKeys.MANAGER_ID, record.getManagerID());
+    			jsonRecord.put(MessageKeys.FIRST_NAME, record.getFirstName());
+    			jsonRecord.put(MessageKeys.LAST_NAME, record.getLastName());
+    			jsonRecord.put(MessageKeys.EMPLOYEE_ID, record.getEmployeeID());
+    			jsonRecord.put(MessageKeys.MAIL_ID, record.getMailID());
+    			jsonRecord.put(MessageKeys.SERVER_LOCATION, location);
+    			jsonRecord.put(MessageKeys.RECORD_ID, record.getRecordID());
+
+        		if (record.isManagerRecord())
+        		{
+        			ManagerRecord managerRecord = (ManagerRecord) record;
+        			
+        			jsonRecord.put(MessageKeys.PROJECTS, managerRecord.getProjects().toArray(new Project[0]));
+        			jsonRecord.put(MessageKeys.LOCATION, managerRecord.getLocation());
+        		}
+        		else
+        		{
+        			EmployeeRecord employeeRecord = (EmployeeRecord) record;
+        			
+        			jsonRecord.put(MessageKeys.PROJECT_ID, employeeRecord.getProjectID());
+        		}
+        	}
+        }
+        
+        return jsonRecords;
+    }
+    
+    public void setRecords(JSONArray array)
+    {
+    	for (Object arrayRecord : array)
+    	{
+    		JSONObject jsonRecord = (JSONObject) arrayRecord;
+    		boolean isManagerRecord = jsonRecord.get(MessageKeys.RECORD_ID).toString().charAt(0) == 'M';
+    		
+    		if (isManagerRecord)
+    		{
+    			JSONArray jsonProjects = (JSONArray) jsonRecord.get(MessageKeys.PROJECTS);
+    			Project[] projects = new Project[jsonProjects.size()];
+    			
+    			for (int i = 0; i < jsonProjects.size(); i++)
+    			{
+    				String projectID = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_ID).toString();
+    				String projectName = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_NAME).toString();
+    				String projectClient = ((JSONObject) jsonProjects.get(i)).get(MessageKeys.PROJECT_CLIENT).toString();
+    				
+    				projects[i] = new Project(projectID, projectClient, projectName); 
+    			}
+    			
+    			server.createMRecord(jsonRecord.get(MessageKeys.MANAGER_ID).toString(),
+    					jsonRecord.get(MessageKeys.FIRST_NAME).toString(),
+    					jsonRecord.get(MessageKeys.LAST_NAME).toString(),
+    					Integer.parseInt(jsonRecord.get(MessageKeys.EMPLOYEE_ID).toString()),
+    					jsonRecord.get(MessageKeys.MAIL_ID).toString(),
+    					projects,
+    					jsonRecord.get(MessageKeys.LOCATION).toString());
+    		}
+    		else
+    		{
+    			server.createERecord(jsonRecord.get(MessageKeys.MANAGER_ID).toString(),
+    					jsonRecord.get(MessageKeys.FIRST_NAME).toString(),
+    					jsonRecord.get(MessageKeys.LAST_NAME).toString(),
+    					Integer.parseInt(jsonRecord.get(MessageKeys.EMPLOYEE_ID).toString()),
+    					jsonRecord.get(MessageKeys.MAIL_ID).toString(),
+    					jsonRecord.get(MessageKeys.PROJECT_ID).toString());
+    		}
+    	}
+    }
 }

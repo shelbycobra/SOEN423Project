@@ -40,13 +40,13 @@ public class CenterServer implements CenterServerInterface
 	@Override
 	public String createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Project[] projects, String location)
 	{
-		ManagerRecord managerRecord = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
-		managerRecord.mRecordID = "MR" + serverManager.getNextID();
+		ManagerRecord managerRecord = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location, managerID);
+		managerRecord.setRecordID("MR" + serverManager.getNextID());
 		String message = location + " Server ";
 		
 		if (createRecord(managerRecord))
 		{
-			message += "manager Record Created " + managerRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + location.toString();
+			message += "manager Record Created " + managerRecord.getRecordID() + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + location.toString();
 		}
 		else
 		{
@@ -60,13 +60,13 @@ public class CenterServer implements CenterServerInterface
 	@Override
 	public String createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, String projectID)
 	{
-		EmployeeRecord employeeRecord = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
-		employeeRecord.mRecordID = "ER" + serverManager.getNextID();
+		EmployeeRecord employeeRecord = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID, managerID);
+		employeeRecord.setRecordID("ER" + serverManager.getNextID());
 		String message = location + " Server ";
 		
 		if (createRecord(employeeRecord))
 		{
-			message += "employee Record Created " + employeeRecord.mRecordID + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + projectID;
+			message += "employee Record Created " + employeeRecord.getRecordID() + ": " + firstName + ", " + lastName + ", " + employeeID + ", " + mailID + ", " + projectID;
 		}
 		else
 		{
@@ -79,7 +79,7 @@ public class CenterServer implements CenterServerInterface
 	
 	public synchronized boolean createRecord(Record record)
 	{
-		Character key = record.mLastName.charAt(0);
+		Character key = record.getLastName().charAt(0);
 		ArrayList<Record> value;
 		
 		try
@@ -218,18 +218,30 @@ public class CenterServer implements CenterServerInterface
 			if (recordToEdit == null)
 			{
 				message = location + " Server Couldn't find manager record with ID: " + recordID;
-			} else {
-                if (fieldName.matches("mail_id")) {
-                    recordToEdit.mMailID = newValue;
-                } else if (fieldName.matches("project_id")) {
+			}
+			else
+			{
+                if (fieldName.matches("mail_id"))
+                {
+                    recordToEdit.setMailID(newValue);
+                }
+                else if (fieldName.matches("project_id"))
+                {
                     // TODO: Do something about project...
-                } else if (fieldName.matches("location")) {
-                    if (newValue.matches("CA") || newValue.matches("US") || newValue.matches("UK")) {
-                        recordToEdit.mLocation = newValue;
-                    } else {
+                }
+                else if (fieldName.matches("location"))
+                {
+                    if (newValue.matches("CA") || newValue.matches("US") || newValue.matches("UK"))
+                    {
+                        recordToEdit.setLocation(newValue);
+                    }
+                    else
+                    {
                         message = "Invalid location. Must be CA, US, or UK.";
                     }
-                } else {
+                }
+                else
+                {
                     message = "Invalid field.";
                 }
             }
@@ -241,13 +253,19 @@ public class CenterServer implements CenterServerInterface
 			if (recordToEdit == null)
 			{
 				message = location + " Server couldn't find record employee with ID: " + recordID;
-			} else {
-
-                if (fieldName.matches("mail_id")) {
-                    recordToEdit.mMailID = newValue;
-                } else if (fieldName.matches("project_id")) {
-                    recordToEdit.mProjectID = newValue;
-                } else {
+			}
+			else
+			{
+                if (fieldName.matches("mail_id"))
+                {
+                    recordToEdit.setMailID(newValue);
+                }
+                else if (fieldName.matches("project_id"))
+                {
+                    recordToEdit.setProjectID(newValue);
+                }
+                else
+                {
                     message = "Invalid field.";
                 }
             }
@@ -383,7 +401,7 @@ public class CenterServer implements CenterServerInterface
 				socket.receive(reply);
 				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
 				if (replyString.equals("success")) {
-                    removeRecord(message.mLastName.charAt(0), message);
+                    removeRecord(message.getLastName().charAt(0), message);
                     return true;
                 }
                 return false;
