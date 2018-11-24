@@ -47,5 +47,11 @@ public class Config {
 	public enum Failure {
 	    BYZANTINE,
 	    PROCESS_CRASH,
+
+	public enum CommandTypes {
+		RESTART_REPLICA,
+		BAD_REPLICA_NUMBER,
+		FAILED_REPLICA_RESTART_FAILED,
+		FAILED_REPLICA_RESTARTED,
 	}
 }
