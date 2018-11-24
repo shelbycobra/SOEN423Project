@@ -108,14 +108,62 @@ public class Server implements Replica
         }
     }
 
-    @Override
-    public JSONArray getData() {
-        return null;
+    @SuppressWarnings("unchecked")
+	@Override
+    public JSONArray getData()
+    {
+    	JSONArray caRecords = CA_DEMS_server.getRecords();
+    	JSONArray usRecords = US_DEMS_server.getRecords();
+    	JSONArray ukRecords = UK_DEMS_server.getRecords();
+    	JSONArray allRecords = new JSONArray();
+    	
+    	for (Object record : caRecords)
+    	{
+    		allRecords.add((JSONObject) record);
+    	}
+    	
+    	for (Object record : usRecords)
+    	{
+    		allRecords.add((JSONObject) record);
+    	}
+    	
+    	for (Object record : ukRecords)
+    	{
+    		allRecords.add((JSONObject) record);
+    	}
+    	
+    	return allRecords;
     }
 
-    @Override
-    public void setData(JSONArray array) {
-
+    @SuppressWarnings("unchecked")
+	@Override
+    public void setData(JSONArray array)
+    {
+    	JSONArray caRecords = new JSONArray();
+    	JSONArray usRecords = new JSONArray();
+    	JSONArray ukRecords = new JSONArray();
+    	
+    	for (Object record : array)
+    	{
+    		String location = ((JSONObject) record).get(MessageKeys.SERVER_LOCATION).toString();
+    		
+    		if (location.equals("CA"))
+    		{
+    			caRecords.add((JSONObject) record);
+    		}
+    		else if (location.equals("CA"))
+    		{
+    			usRecords.add((JSONObject) record);
+    		}
+    		else
+    		{
+    			ukRecords.add((JSONObject) record);
+			}
+    	}
+    	
+    	CA_DEMS_server.setRecords(caRecords);
+    	US_DEMS_server.setRecords(usRecords);
+    	UK_DEMS_server.setRecords(ukRecords);
     }
 
     private class ListenForPacketsThread extends Thread

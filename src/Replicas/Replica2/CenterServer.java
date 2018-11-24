@@ -53,7 +53,7 @@ public class CenterServer implements CenterServerInterface
 			message += "manager Record creation failed.";
 		}
 
-		log(message+ "\n");
+		log(message + "\n");
 		return message + "\n";
 	}
 
@@ -73,8 +73,8 @@ public class CenterServer implements CenterServerInterface
 			message += "employee Record creation failed.";
 		}
 
-		log(message+ "\n");
-		return message+ "\n";
+		log(message + "\n");
+		return message + "\n";
 	}
 	
 	public synchronized boolean createRecord(Record record)
