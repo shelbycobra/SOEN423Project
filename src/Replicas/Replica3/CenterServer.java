@@ -67,7 +67,9 @@ public class CenterServer extends Thread {
 					JSONObject jsonSendObject = new JSONObject();
 
 					int commandType = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.COMMAND_TYPE));
-					logger.log("udp command received: " + commandType);
+					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
+
+					logger.log(String.format("udp message: managerID: %s, commandType: ", managerID, commandType));
 
 					if (commandType == Config.GET_RECORD_COUNT) {
 						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
@@ -77,6 +79,20 @@ public class CenterServer extends Thread {
 					} else if (commandType == Config.TRANSFER_RECORD) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+					} else if (commandType == Config.CREATE_MANAGER_RECORD) {
+						records.addRecord(jsonReceiveObject);
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+					} else if (commandType == Config.CREATE_EMPLOYEE_RECORD) {
+						records.addRecord(jsonReceiveObject);
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+					} else if (commandType == Config.EDIT_RECORD) {
+						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
+						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
+						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
+						editRecord(managerID, recordID, fieldName, newValue);
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+					} else {
+						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
 					}
 
 					logger.log("udp command response: " + jsonSendObject);
