@@ -6,6 +6,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -155,10 +159,12 @@ public class ReplicaManager {
 	}
 
 	public void start() {
+		log("starting udpServerThread");
 		udpServerThread.start();
 	}
 
 	public void stop() {
+		log("interrupting udpServerThread");
 		udpServerThread.interrupt();
 	}
 
@@ -176,10 +182,19 @@ public class ReplicaManager {
 			throw new IllegalArgumentException("Invalid replicaNumber: " + replicaNumber);
 		}
 
+		log("starting replica: " + replicaNumber);
 		replica.runServers();
 
 		ReplicaManager replicaManager = new ReplicaManager(replicaNumber);
+		log("starting ReplicaManager for replica: " + replicaNumber);
 		replicaManager.start();
+	}
+
+	private static void log(String message) {
+		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		Date dateTime = Calendar.getInstance().getTime();
+		String timeStamp = dateFormat.format(dateTime);
+		System.out.println(String.format("[ReplicaManager %s] %s", timeStamp, message));
 	}
 
 }
