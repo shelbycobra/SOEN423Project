@@ -168,24 +168,35 @@ public class ReplicaManager {
 		udpServerThread.interrupt();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
 		int replicaNumber = Integer.parseInt(args[0]);
-		Replica replica = null;
+		Class replicaClass = null;
 
 		if (replicaNumber == 1) {
-			replica = new Replicas.Replica1.CenterServer();
+			replicaClass = Replicas.Replica1.CenterServer.class;
 		} else if (replicaNumber == 2) {
-			replica = new Replicas.Replica2.Server();
+			replicaClass = Replicas.Replica2.Server.class;
 		} else if (replicaNumber == 3) {
-			replica = new Replicas.Replica3.CenterServerController();
+			replicaClass = Replicas.Replica3.CenterServerController.class;
 		} else {
 			throw new IllegalArgumentException("Invalid replicaNumber: " + replicaNumber);
 		}
 
+		Replica replica = (Replica) replicaClass.newInstance();
+		ReplicaManager replicaManager = new ReplicaManager(replicaNumber);
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				log("running shutdown hook");
+				replica.shutdownServers();
+				replicaManager.stop();
+			}
+		});
+
 		log("starting replica: " + replicaNumber);
 		replica.runServers();
 
-		ReplicaManager replicaManager = new ReplicaManager(replicaNumber);
 		log("starting ReplicaManager for replica: " + replicaNumber);
 		replicaManager.start();
 	}
