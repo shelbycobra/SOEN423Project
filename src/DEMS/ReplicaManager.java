@@ -162,4 +162,24 @@ public class ReplicaManager {
 		udpServerThread.interrupt();
 	}
 
+	public static void main(String[] args) {
+		int replicaNumber = Integer.parseInt(args[0]);
+		Replica replica = null;
+
+		if (replicaNumber == 1) {
+			replica = new Replicas.Replica1.CenterServer();
+		} else if (replicaNumber == 2) {
+			replica = new Replicas.Replica2.Server();
+		} else if (replicaNumber == 3) {
+			replica = new Replicas.Replica3.CenterServerController();
+		} else {
+			throw new IllegalArgumentException("Invalid replicaNumber: " + replicaNumber);
+		}
+
+		replica.runServers();
+
+		ReplicaManager replicaManager = new ReplicaManager(replicaNumber);
+		replicaManager.start();
+	}
+
 }
