@@ -112,7 +112,14 @@ public class CenterServerController implements DEMS.Replica {
 					}
 
 					lastSequenceNumber = seqNum;
-					sendMessageToServer(obj);
+
+					Config.CommandType commandType = (Config.CommandType) obj.get(MessageKeys.COMMAND_TYPE);
+					if (commandType == Config.CommandType.RESTART_REPLICA) {
+						shutdownServers();
+						runServers();
+					} else {
+						sendMessageToServer(obj);
+					}
 				}
 			} catch (InterruptedException e) {
 				logger.log("ProcessMessageThread is shutting down.");
