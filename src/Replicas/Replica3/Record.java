@@ -14,7 +14,7 @@ public abstract class Record implements Serializable {
 	public int employeeID;
 	public String mailID;
 
-	Record(String recordID, String firstName, String lastName, int employeeID, String mailID) {
+	public Record(String recordID, String firstName, String lastName, int employeeID, String mailID) {
 		this.recordID = recordID;
 
 		this.firstName = firstName;
