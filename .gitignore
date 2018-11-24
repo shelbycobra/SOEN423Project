@@ -3,7 +3,8 @@
 .idea/
 .directory
 Test/Logs/
-Logs/
+Logs/ManagerLogs/*
+Logs/ServerLogs/*
 *.txt
 
 # bin folder
@@ -102,3 +103,5 @@ local.properties
 .apt_generated
 
 .sts4-cache/
+
+src/orb.db/
