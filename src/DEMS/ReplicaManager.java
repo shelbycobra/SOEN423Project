@@ -72,7 +72,7 @@ public class ReplicaManager {
 				if (!((replicaNumber == 1 && (faildReplicaNumber == 2 || faildReplicaNumber == 3)) ||
 						(replicaNumber == 2 && (faildReplicaNumber == 1 || faildReplicaNumber == 3)) ||
 						(replicaNumber == 3 && (faildReplicaNumber == 1 || faildReplicaNumber == 2)))) {
-					notifyFrontEnd(Config.CommandTypes.BAD_REPLICA_NUMBER, faildReplicaNumber);
+					notifyFrontEnd(Config.CommandType.BAD_REPLICA_NUMBER, faildReplicaNumber);
 					continue;
 				}
 
@@ -91,13 +91,13 @@ public class ReplicaManager {
 					try {
 						restartReplica(faildReplicaNumber);
 					} catch (IOException e) {
-						notifyFrontEnd(Config.CommandTypes.FAILED_REPLICA_RESTART_FAILED, faildReplicaNumber);
+						notifyFrontEnd(Config.CommandType.FAILED_REPLICA_RESTART_FAILED, faildReplicaNumber);
 						e.printStackTrace();
 						continue;
 					}
 					replicaCrashCounts.put(faildReplicaNumber, 0);
 					replicaByzantineCounts.put(faildReplicaNumber, 0);
-					notifyFrontEnd(Config.CommandTypes.FAILED_REPLICA_RESTARTED, faildReplicaNumber);
+					notifyFrontEnd(Config.CommandType.FAILED_REPLICA_RESTARTED, faildReplicaNumber);
 				}
 
 			}
@@ -127,7 +127,7 @@ public class ReplicaManager {
 			multicastSocket.joinGroup(group);
 
 			JSONObject jsonObject = new JSONObject();
-			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.CommandTypes.RESTART_REPLICA);
+			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.CommandType.RESTART_REPLICA);
 			jsonObject.put(MessageKeys.REPLICA_NUMBER, faildReplicaNumber);
 			byte[] sendDate = jsonObject.toString().getBytes();
 
@@ -137,7 +137,7 @@ public class ReplicaManager {
 			multicastSocket.close();
 		}
 
-		private void notifyFrontEnd(Config.CommandTypes commandType, int replicaNumber) {
+		private void notifyFrontEnd(Config.CommandType commandType, int replicaNumber) {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(MessageKeys.COMMAND_TYPE, commandType);
 			jsonObject.put(MessageKeys.REPLICA_NUMBER, replicaNumber);
