@@ -22,22 +22,29 @@ public class ReplicaManager {
 	private final int replicaNumber;
 	private final int replicaManagerPort;
 
-	private final int maxFailedReplicaCount = 3;
+	private final int maxCrashCount = 3;
+	private final int maxByzantineCount = 3;
 
 	private Thread udpServerThread;
 
 	class UdpServer extends Thread {
 
-		private Map<Integer, Integer> replicaFailureCounts = new HashMap<>();
+		private Map<Integer, Integer> replicaCrashCounts = new HashMap<>();
+		private Map<Integer, Integer> replicaByzantineCounts = new HashMap<>();
+
 		private DatagramSocket datagramSocket;
 		private JSONParser jsonParser = new JSONParser();
 
 		@Override
 		public void run() {
 
-			replicaFailureCounts.put(1, 0);
-			replicaFailureCounts.put(2, 0);
-			replicaFailureCounts.put(3, 0);
+			replicaCrashCounts.put(1, 0);
+			replicaCrashCounts.put(2, 0);
+			replicaCrashCounts.put(3, 0);
+
+			replicaByzantineCounts.put(1, 0);
+			replicaByzantineCounts.put(2, 0);
+			replicaByzantineCounts.put(3, 0);
 
 			try {
 				datagramSocket = new DatagramSocket(replicaManagerPort);
@@ -61,30 +68,36 @@ public class ReplicaManager {
 					continue;
 				}
 
-				if (jsonObject.get(MessageKeys.COMMAND_TYPE).equals("REPORT_FAILED_REPLICA")) {
-					int faildReplicaNumber = Integer.parseInt((String) jsonObject.get(MessageKeys.REPLICA_NUMBER));
+				int faildReplicaNumber = Integer.parseInt((String) jsonObject.get(MessageKeys.REPLICA_NUMBER));
+				if (!((replicaNumber == 1 && (faildReplicaNumber == 2 || faildReplicaNumber == 3)) ||
+						(replicaNumber == 2 && (faildReplicaNumber == 1 || faildReplicaNumber == 3)) ||
+						(replicaNumber == 3 && (faildReplicaNumber == 1 || faildReplicaNumber == 2)))) {
+					notifyFrontEnd("BAD_REPLICA_NUMBER", faildReplicaNumber);
+					continue;
+				}
 
-					if (!((replicaNumber == 1 && (faildReplicaNumber == 2 || faildReplicaNumber == 3)) ||
-							(replicaNumber == 2 && (faildReplicaNumber == 1 || faildReplicaNumber == 3)) ||
-							(replicaNumber == 3 && (faildReplicaNumber == 1 || faildReplicaNumber == 2)))) {
-						notifyFrontEnd("BAD_REPLICA_NUMBER", faildReplicaNumber);
+				int replicaCrashCount = replicaCrashCounts.get(faildReplicaNumber);
+				int replicaByzantineCount = replicaByzantineCounts.get(faildReplicaNumber);
+
+				if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.PROCESS_CRASH) {
+					replicaCrashCount += 1;
+					replicaCrashCounts.put(faildReplicaNumber, replicaCrashCount);
+				} else if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.BYZANTINE) {
+					replicaByzantineCount += 1;
+					replicaByzantineCounts.put(faildReplicaNumber, replicaByzantineCount);
+				}
+
+				if (replicaCrashCount >= maxCrashCount || replicaByzantineCount >= maxByzantineCount) {
+					try {
+						restartReplica(faildReplicaNumber);
+					} catch (IOException e) {
+						notifyFrontEnd("FAILED_REPLICA_RESTART_FAILED", faildReplicaNumber);
+						e.printStackTrace();
 						continue;
 					}
-
-					int newReplicaFailureCount = replicaFailureCounts.get(faildReplicaNumber) + 1;
-					replicaFailureCounts.put(faildReplicaNumber, newReplicaFailureCount);
-
-					if (newReplicaFailureCount >= maxFailedReplicaCount) {
-						try {
-							restartReplica(faildReplicaNumber);
-						} catch (IOException e) {
-							notifyFrontEnd("FAILED_REPLICA_RESTART_FAILED", faildReplicaNumber);
-							e.printStackTrace();
-							continue;
-						}
-						replicaFailureCounts.put(faildReplicaNumber, 0);
-						notifyFrontEnd("FAILED_REPLICA_RESTARTED", faildReplicaNumber);
-					}
+					replicaCrashCounts.put(faildReplicaNumber, 0);
+					replicaByzantineCounts.put(faildReplicaNumber, 0);
+					notifyFrontEnd("FAILED_REPLICA_RESTARTED", faildReplicaNumber);
 				}
 
 			}
