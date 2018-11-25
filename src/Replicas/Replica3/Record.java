@@ -53,6 +53,26 @@ public abstract class Record implements Serializable {
 		return mailID;
 	}
 
+	public void setRecordID(String recordID) {
+		this.recordID = recordID;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public void setEmployeeID(int employeeID) {
+		this.employeeID = employeeID;
+	}
+
+	public void setMailID(String mailID) {
+		this.mailID = mailID;
+	}
+
 	public JSONObject getJSONObject() {
 		JSONObject jsonObject = new JSONObject();
 

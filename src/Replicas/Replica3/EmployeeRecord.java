@@ -21,6 +21,10 @@ public class EmployeeRecord extends Record {
 		return projectID;
 	}
 
+	public void setProjectID(String projectID) {
+		this.projectID = projectID;
+	}
+
 	@Override
 	public String toString() {
 		return "EmployeeRecord [recordID=" + getRecordID() + ", firstName=" + getFirstName() + ", lastName=" + getLastName()

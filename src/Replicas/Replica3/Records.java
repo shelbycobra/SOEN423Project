@@ -1,6 +1,5 @@
 package Replicas.Replica3;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -100,14 +99,29 @@ public class Records {
 	}
 
 	public void editRecord(String recordID, String fieldName, String newValue) throws IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
-		for (char key : records.keySet()) {
-			for (Record value : records.get(key)) {
-				if (value.getRecordID().equals(recordID)) {
-					Class c = value.getClass();
-					Field f = c.getField(fieldName);
-					f.set(value, newValue);
-					return;
-				}
+		Record record = getRecord(recordID);
+
+		if (fieldName.equals(MessageKeys.FIRST_NAME)) {
+			record.setFirstName(newValue);
+		} else if (fieldName.equals(MessageKeys.LAST_NAME)) {
+			record.setLastName(newValue);
+		} else if (fieldName.equals(MessageKeys.EMPLOYEE_ID)) {
+			record.setEmployeeID(Integer.parseInt(newValue));
+		} else if (fieldName.equals(MessageKeys.MAIL_ID)) {
+			record.setMailID(newValue);
+		}
+
+		if (recordID.substring(0, 2).toLowerCase().equals("er")) {
+			EmployeeRecord recordER = (EmployeeRecord) getRecord(recordID);
+			if (fieldName.equals(MessageKeys.PROJECT_ID)) {
+				recordER.setProjectID(newValue);
+			}
+		} else if (recordID.substring(0, 2).toLowerCase().equals("mr")) {
+			ManagerRecord recordMR = (ManagerRecord) getRecord(recordID);
+			if (fieldName.equals(MessageKeys.LOCATION)) {
+				recordMR.setLocation(newValue);
+			} else if (fieldName.equals(MessageKeys.PROJECTS)) {
+				// recordMR.setProjects(newValue);
 			}
 		}
 

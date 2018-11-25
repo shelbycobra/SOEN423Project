@@ -29,6 +29,14 @@ public class ManagerRecord extends Record {
 		return location;
 	}
 
+	public void setProjects(Projects projects) {
+		this.projects = projects;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
 	@Override
 	public String toString() {
 		return "ManagerRecord [recordID=" + getRecordID() + ", firstName=" + getFirstName() + ", lastName=" + getLastName()
