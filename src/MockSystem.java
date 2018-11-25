@@ -13,6 +13,7 @@ import org.json.simple.parser.ParseException;
 
 import DEMS.MessageKeys;
 import DEMS.Config.PortNumbers;
+import DEMS.Config.StatusCode;
 
 public class MockSystem
 {
@@ -120,6 +121,7 @@ public class MockSystem
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
 	
 	                    jsonMessage.put(MessageKeys.MESSAGE, "Successfully received client request ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString());
+	                    jsonMessage.put(MessageKeys.STATUS_CODE, StatusCode.SUCCESS);
 	                    
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
@@ -134,6 +136,7 @@ public class MockSystem
 		    				JSONObject jsonMessage2 = new JSONObject();
 		    				jsonMessage2.put(MessageKeys.MESSAGE_ID, jsonMessage.get(MessageKeys.MESSAGE_ID));
 		                    jsonMessage2.put(MessageKeys.MESSAGE, "Bad message!");
+		                    jsonMessage.put(MessageKeys.STATUS_CODE, StatusCode.FAIL);
 		                    byte[] messageBuffer2 = jsonMessage2.toString().getBytes();
 		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, Config.PortNumbers.RE_FE);
 		    				datagramSocket.send(request2);

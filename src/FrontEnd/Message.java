@@ -1,6 +1,5 @@
 package FrontEnd;
 
-import javafx.util.Pair;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
@@ -9,7 +8,7 @@ import java.util.HashMap;
 public class Message
 {
 	private int id;
-	private ArrayList<Pair<Integer, String>> returnMessages; // Port number, message.
+	private ArrayList<ReturnMessage> returnMessages; // Port number, message.
 	private HashMap<Integer, Long> returnTimes; // Port number, response time.
 	private long startTime;
 	private JSONObject sendData;
@@ -31,12 +30,12 @@ public class Message
 		this.id = id;
 	}
 
-	public ArrayList<Pair<Integer, String>> getReturnMessages()
+	public ArrayList<ReturnMessage> getReturnMessages()
 	{
 		return returnMessages;
 	}
 
-	public void setReturnMessage(Pair<Integer, String> returnMessage)
+	public void setReturnMessage(ReturnMessage returnMessage)
 	{
 		this.returnMessages.add(returnMessage);
 	}

@@ -170,7 +170,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         public String call()
         {
         	String response = null;
-        	Pair<Integer, String> message1 = null, message2 = null, message3 = null;
+        	ReturnMessage message1 = null, message2 = null, message3 = null;
 
         	while (true)
             {
@@ -194,9 +194,9 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         			message1 = message.getReturnMessages().get(0);
         			message2 = message.getReturnMessages().get(1);
         			
-        			if (message1.getValue().equals(message2.getValue()))
+        			if (message1.code.equals(message2.code))
         			{
-        				response = message1.getValue();
+        				response = message1.message;
         				break;
         			}
         			
@@ -210,19 +210,19 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         			message2 = message.getReturnMessages().get(1);
         			message3 = message.getReturnMessages().get(2);
         			
-        			if (message1.getValue().equals(message3.getValue()))
+        			if (message1.code.equals(message3.code))
         			{
-        				response = message1.getValue(); // Response to client.
-        				int port = message2.getKey();
-        				notifyReplicaOfByzantineFailure(message2.getKey(), getIPFromPort(port));
+        				response = message1.message; // Response to client.
+        				int port = message2.port;
+        				notifyReplicaOfByzantineFailure(port, getIPFromPort(port));
         				break;
         			}
         			
-        			if (message2.getValue().equals(message3.getValue()))
+        			if (message2.code.equals(message3.code))
         			{
-        				response = message2.getValue(); // Response to client.
-        				int port = message1.getKey();
-        				notifyReplicaOfByzantineFailure(message1.getKey(), getIPFromPort(port));
+        				response = message2.message; // Response to client.
+        				int port = message1.port;
+        				notifyReplicaOfByzantineFailure(port, getIPFromPort(port));
         				break;
         			}
 				}
@@ -275,7 +275,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    System.out.println(jsonMessage);
 	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
-	                    Pair<Integer, String> returnMessage = new Pair<Integer, String>(port, jsonMessage.get(MessageKeys.MESSAGE).toString());
+	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), jsonMessage.get(MessageKeys.STATUS_CODE).toString());
 	                    message.setReturnMessage(returnMessage);
 	                    
 	                    clockTime(message, port);
