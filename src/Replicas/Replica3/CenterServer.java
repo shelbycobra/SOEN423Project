@@ -1,17 +1,18 @@
 package Replicas.Replica3;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import DEMS.Config;
+import DEMS.MessageKeys;
 
 public class CenterServer extends Thread {
 
@@ -61,7 +62,7 @@ public class CenterServer extends Thread {
 						String str = new String(receivePacket.getData()).trim();
 						System.out.println(str);
 						jsonReceiveObject = (JSONObject) jsonParser.parse(str);
-                        receiveData = new byte[1024];
+						receiveData = new byte[1024];
 					} catch (ParseException e) {
 						e.printStackTrace();
 						continue;
@@ -89,15 +90,17 @@ public class CenterServer extends Thread {
 						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
 						Projects projects = new Projects((JSONArray) jsonReceiveObject.get(DEMS.MessageKeys.PROJECTS));
 						String location = (String) jsonReceiveObject.get(DEMS.MessageKeys.LOCATION);
-						createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, location);
+						String recordID = createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, location);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
 					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
 						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
 						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
 						String projectID = (String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID);
-						createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
+						String recordID = createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
+						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
@@ -130,22 +133,22 @@ public class CenterServer extends Thread {
 		udpServerThread = new Thread(new UdpServer());
 	}
 
-	public synchronized int createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Projects projects, String location) {
+	public synchronized String createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Projects projects, String location) {
 		this.logger.log(String.format("createMRecord(%s, %s, %s, %d, %s, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projects.toString(), location));
 
 		ManagerRecord record = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
 		records.addRecord(record);
 
-		return 0;
+		return record.getRecordID();
 	}
 
-	public synchronized int createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, String projectID) {
+	public synchronized String createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, String projectID) {
 		this.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projectID));
 
 		EmployeeRecord record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
 		records.addRecord(record);
 
-		return 0;
+		return record.getRecordID();
 	}
 
 	public synchronized String getRecordCounts(String managerID) {
