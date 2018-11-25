@@ -14,7 +14,7 @@ public abstract class Record implements Serializable {
 	private int employeeID;
 	private String mailID;
 
-	private int recordCount = 0;
+	private static int recordCount = 0;
 
 	public Record(String recordIDPrefix, String firstName, String lastName, int employeeID, String mailID) {
 		this.recordID = String.format("%s%05d", recordIDPrefix, recordCount++);
