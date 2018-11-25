@@ -10,8 +10,14 @@ SOEN 423 Group Project - DEMS
 # start sequencer
 java -cp 'bin:lib/*' DEMS.Sequencer
 
+# start frontend
+java -cp 'bin:lib/*' FrontEnd.FrontEndServerMain <orbArguments>
+
 # start replica manager including specified replica
 java -cp 'bin:lib/*' DEMS.ReplicaManager <replicaNumber>
+
+# start client
+java -cp 'bin:lib/*' Client.ClientMain
 ```
 
 ## Distribution of work
