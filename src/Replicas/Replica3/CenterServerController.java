@@ -27,8 +27,6 @@ public class CenterServerController implements DEMS.Replica {
 	private CenterServer centerServerUS;
 	private CenterServer centerServerUK;
 
-	private int centerServerErrorValue = 0;
-
 	private MulticastSocket multicastSocket;
 
 	private Thread listenForPackets;
@@ -39,6 +37,9 @@ public class CenterServerController implements DEMS.Replica {
 	private Semaphore mutex;
 	private Semaphore deliveryQueueMutex;
 	private JSONParser jsonParser = new JSONParser();
+
+	private int numMessages = 0;
+	private Config.Failure errorType = Config.Failure.NONE;
 
 	private class ListenForPacketsThread extends Thread {
 
@@ -94,6 +95,8 @@ public class CenterServerController implements DEMS.Replica {
 			logger.log("CenterServerController: Processing messages\n");
 			try {
 				while (true) {
+					// Checks if failure should start
+					checkToStartFailure();
 
 					// Sleep a bit so that the message can be added to the queue
 					Thread.sleep(300);
@@ -184,9 +187,50 @@ public class CenterServerController implements DEMS.Replica {
 		deliveryQueue = new PriorityQueue<>(msgComp);
 	}
 
+	void checkToStartFailure() throws IOException, InterruptedException {
+		if (numMessages >= Config.MESSAGE_DELAY) {
+			switch(this.errorType) {
+				case BYZANTINE:
+					byzantineFailure();
+					numMessages = 0;
+					break;
+				case PROCESS_CRASH:
+					processCrashFailure();
+					numMessages = 0;
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+	void byzantineFailure() throws IOException, InterruptedException {
+		while (true) {
+			JSONObject obj = new JSONObject();
+			obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL);
+			byte[] buffer = obj.toString().getBytes();
+
+			DatagramSocket socket = new DatagramSocket();
+			DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
+
+			socket.send(packet);
+			Thread.sleep(200);
+		}
+	}
+
+	void processCrashFailure() {
+		while (true);
+	}
+
 	@Override
-	public void runServers(int centerServerErrorValue) {
-		this.centerServerErrorValue = centerServerErrorValue;
+	public void runServers(int errorType) {
+		if (errorType == Config.Failure.NONE.ordinal()) {
+			// no error
+		} else if (errorType == Config.Failure.BYZANTINE.ordinal()) {
+			this.errorType = Config.Failure.BYZANTINE;
+		} else if (errorType == Config.Failure.PROCESS_CRASH.ordinal()) {
+			this.errorType = Config.Failure.PROCESS_CRASH;
+		}
 
 		try {
 			setupMulticastSocket();
