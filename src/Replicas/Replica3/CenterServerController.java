@@ -115,16 +115,8 @@ public class CenterServerController implements DEMS.Replica {
 					}
 
 					lastSequenceNumber = seqNum;
-
-					String commandType = obj.get(MessageKeys.COMMAND_TYPE).toString();
-					if (commandType.equals(Config.RESTART_REPLICA)) {
-						shutdownServers();
-						runServers(centerServerErrorValue);
-					} else if (commandType.equals(Config.SET_DATA)) {
-						setData((JSONArray) obj.get(MessageKeys.RECORDS));
-					} else {
-						sendMessageToServer(obj);
-					}
+					sendMessageToServer(obj);
+					numMessages++;
 				}
 			} catch (InterruptedException e) {
 				logger.log("ProcessMessageThread is shutting down.");
