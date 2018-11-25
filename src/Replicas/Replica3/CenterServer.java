@@ -222,7 +222,7 @@ public class CenterServer extends Thread {
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				clientSocket.receive(receivePacket);
 				JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
-				response = (String) jsonReceiveObject.get(MessageKeys.RECORD_COUNT);
+				response = (String) jsonReceiveObject.get(MessageKeys.MESSAGE);
 				this.logger.log(String.format("record count from %s: %s", location, response));
 				clientSocket.close();
 			} catch (ParseException e) {
