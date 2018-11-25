@@ -7,6 +7,9 @@ SOEN 423 Group Project - DEMS
 ## Instructions
 
 ```shell
+# start sequencer
+java -cp 'bin:lib/*' DEMS.Sequencer
+
 # start replica manager including specified replica
 java -cp 'bin:lib/*' DEMS.ReplicaManager <replicaNumber>
 ```
