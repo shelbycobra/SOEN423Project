@@ -41,6 +41,7 @@ public class CenterServerController implements DEMS.Replica {
 				while (true) {
 					byte[] buffer = new byte[1000];
 					DatagramPacket message = new DatagramPacket(buffer, buffer.length);
+					logger.log("listening on port: " + Config.PortNumbers.SEQ_RE);
 					multicastSocket.receive(message);
 
 					// logger.log("Received Message = " + new String(message.getData()));

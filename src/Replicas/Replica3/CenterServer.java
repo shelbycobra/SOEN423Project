@@ -60,7 +60,7 @@ public class CenterServer extends Thread {
 				byte[] sendData = new byte[1024];
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-					logger.log("udp waiting for connection");
+					logger.log("udp waiting for connection on port: " + localPort);
 					serverSocket.receive(receivePacket);
 
 					JSONObject jsonReceiveObject;
