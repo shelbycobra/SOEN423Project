@@ -6,7 +6,7 @@ public class Replica1Driver {
 
     public static void main (String[] args){
         CenterServer centerServer = new CenterServer();
-        centerServer.runServers();
+        centerServer.runServers(0);
     }
 
 }

@@ -8,7 +8,7 @@ java -cp .;lib\json-simple-1.1.1.jar FrontEnd.FrontEndServerMain -ORBInitialPort
 java Client.ClientMain -ORBInitialPort 1050 -ORBInitialHost localhost CA1111
 
 # Mock System
-java -cp .;lib\json-simple-1.1.1.jar MockSystem
+java -cp .;lib\json-simple-1.1.1.jar Test.MockSystem
 
 # Sequencer
 java -cp 'bin:lib/*' DEMS.Sequencer

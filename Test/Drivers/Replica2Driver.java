@@ -7,6 +7,6 @@ public class Replica2Driver {
     public static void main(String[] args) {
 
         Server server = new Server();
-        server.runServers();
+        server.runServers(0);
     }
 }

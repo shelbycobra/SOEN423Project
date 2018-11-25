@@ -38,8 +38,8 @@ public class SequencerTest {
         public void run() {
             replica1Servers = new CenterServer();
             replica2Servers = new Server();
-            replica1Servers.runServers();
-            replica2Servers.runServers();
+            replica1Servers.runServers(0);
+            replica2Servers.runServers(0);
         }
     }
 

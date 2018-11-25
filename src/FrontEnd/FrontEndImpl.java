@@ -275,7 +275,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    System.out.println(jsonMessage);
 	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
-	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), jsonMessage.get(MessageKeys.STATUS_CODE).toString());
+	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), (Config.StatusCode) jsonMessage.get(MessageKeys.STATUS_CODE));
 	                    message.setReturnMessage(returnMessage);
 	                    
 	                    clockTime(message, port);

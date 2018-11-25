@@ -6,6 +6,6 @@ public class Replica3Driver {
 
     public static void main (String[] args) {
         CenterServerController servers = new CenterServerController();
-        servers.runServers();
+        servers.runServers(0);
     }
 }

@@ -40,7 +40,7 @@ public class Server implements Replica
     }
 
     @Override
-    public void runServers()
+    public void runServers(int i)
     {
         // Start up servers
         CA_DEMS_server = new ServerThread("CA", Config.Replica2.CA_PORT);
