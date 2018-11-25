@@ -1,18 +1,23 @@
 package Replicas.Replica3;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
-import java.net.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
+import DEMS.Config;
+import DEMS.MessageKeys;
 
 public class CenterServerController implements DEMS.Replica {
 
@@ -188,7 +193,6 @@ public class CenterServerController implements DEMS.Replica {
 	@Override
 	public void runServers() {
 		try {
-
 			setupMulticastSocket();
 
 			centerServerCA.start();
