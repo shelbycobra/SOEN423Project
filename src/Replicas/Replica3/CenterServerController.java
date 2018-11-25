@@ -27,6 +27,8 @@ public class CenterServerController implements DEMS.Replica {
 	private CenterServer centerServerUS;
 	private CenterServer centerServerUK;
 
+	private int centerServerErrorValue = 0;
+
 	private MulticastSocket multicastSocket;
 
 	private Thread listenForPackets;
@@ -117,7 +119,7 @@ public class CenterServerController implements DEMS.Replica {
 					String commandType = obj.get(MessageKeys.COMMAND_TYPE).toString();
 					if (commandType.equals(Config.RESTART_REPLICA)) {
 						shutdownServers();
-						runServers();
+						runServers(centerServerErrorValue);
 					} else if (commandType.equals(Config.SET_DATA)) {
 						setData((JSONArray) obj.get(MessageKeys.RECORDS));
 					} else {
@@ -191,7 +193,9 @@ public class CenterServerController implements DEMS.Replica {
 	}
 
 	@Override
-	public void runServers() {
+	public void runServers(int centerServerErrorValue) {
+		this.centerServerErrorValue = centerServerErrorValue;
+
 		try {
 			setupMulticastSocket();
 
