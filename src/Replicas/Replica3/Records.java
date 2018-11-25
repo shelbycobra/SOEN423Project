@@ -126,8 +126,6 @@ public class Records {
 				// recordMR.setProjects(newValue);
 			}
 		}
-
-		throw new IllegalArgumentException("recordID not found: " + recordID);
 	}
 
 	public void printRecords(Logger logger) {
