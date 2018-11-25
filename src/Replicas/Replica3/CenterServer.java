@@ -69,6 +69,8 @@ public class CenterServer extends Thread {
 					}
 
 					JSONObject jsonSendObject = new JSONObject();
+					jsonSendObject.put(MessageKeys.MESSAGE_ID, jsonReceiveObject.get(MessageKeys.MESSAGE_ID).toString());
+					jsonSendObject.put(MessageKeys.RM_PORT_NUMBER, Config.Replica3.RM_PORT);
 
 					String commandType = jsonReceiveObject.get(MessageKeys.COMMAND_TYPE).toString();
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
@@ -77,12 +79,17 @@ public class CenterServer extends Thread {
 
 					if (commandType.equals(Config.GET_RECORD_COUNT)) {
 						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else if (commandType == Config.RECORD_EXISTS) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(records.recordExists(recordID)));
+						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
@@ -91,8 +98,9 @@ public class CenterServer extends Thread {
 						Projects projects = new Projects((JSONArray) jsonReceiveObject.get(DEMS.MessageKeys.PROJECTS));
 						String location = (String) jsonReceiveObject.get(DEMS.MessageKeys.LOCATION);
 						String recordID = createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, location);
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
 						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
+						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).getJSONObject());
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
@@ -101,15 +109,18 @@ public class CenterServer extends Thread {
 						String projectID = (String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID);
 						String recordID = createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
 						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).getJSONObject());
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
 						editRecord(managerID, recordID, fieldName, newValue);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
 					} else {
 						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, "unknown command type");
 					}
 
 					logger.log("udp command response: " + jsonSendObject);
