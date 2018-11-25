@@ -1,7 +1,6 @@
 package Replicas.Replica3;
 
 import java.io.Serializable;
-import java.util.Random;
 
 import org.json.simple.JSONObject;
 
@@ -15,8 +14,10 @@ public abstract class Record implements Serializable {
 	private int employeeID;
 	private String mailID;
 
+	private int recordCount = 0;
+
 	public Record(String recordIDPrefix, String firstName, String lastName, int employeeID, String mailID) {
-		this.recordID = recordIDPrefix + randomInt(10000, 99999);
+		this.recordID = String.format("%s%05d", recordIDPrefix, recordCount++);
 
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -62,10 +63,5 @@ public abstract class Record implements Serializable {
 		jsonObject.put(DEMS.MessageKeys.MAIL_ID, mailID);
 
 		return jsonObject;
-	}
-
-	public int randomInt(int min, int max) {
-		Random random = new Random();
-		return random.nextInt((max - min) + 1) + min;
 	}
 }
