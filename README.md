@@ -11,9 +11,9 @@ SOEN 423 Group Project - DEMS
 java -cp 'bin:lib/*' DEMS.Sequencer
 
 # start replicas and replica managers
-java -cp 'bin:lib/*' DEMS.ReplicaManager 1
-java -cp 'bin:lib/*' DEMS.ReplicaManager 2
-java -cp 'bin:lib/*' DEMS.ReplicaManager 3
+java -cp 'bin:lib/*' DEMS.ReplicaManager 1 <errorType>
+java -cp 'bin:lib/*' DEMS.ReplicaManager 2 <errorType>
+java -cp 'bin:lib/*' DEMS.ReplicaManager 3 <errorType>
 
 # start orbd
 orbd -ORBInitialPort 1050 -ORBInitialHost localhost
