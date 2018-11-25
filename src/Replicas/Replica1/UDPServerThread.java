@@ -208,7 +208,7 @@ public class UDPServerThread extends Thread {
          message.put(MessageKeys.STATUS_CODE, status);
 
          byte[] buffer = message.toString().getBytes();
-         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
+         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
 
          socket.send(packet);
      }
