@@ -1,17 +1,16 @@
 package Replicas.Replica3;
 
+import DEMS.Config;
+import DEMS.MessageKeys;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import DEMS.Config;
-import DEMS.MessageKeys;
 
 public class CenterServer extends Thread {
 
@@ -58,7 +57,8 @@ public class CenterServer extends Thread {
 
 					JSONObject jsonReceiveObject;
 					try {
-						jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+					    String str = new String(receivePacket.getData()).trim();
+						jsonReceiveObject = (JSONObject) jsonParser.parse(str);
 					} catch (ParseException e) {
 						e.printStackTrace();
 						continue;
@@ -66,26 +66,26 @@ public class CenterServer extends Thread {
 
 					JSONObject jsonSendObject = new JSONObject();
 
-					Config.CommandType commandType = (Config.CommandType) jsonReceiveObject.get(MessageKeys.COMMAND_TYPE);
+					String commandType = jsonReceiveObject.get(MessageKeys.COMMAND_TYPE).toString();
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
 
 					logger.log(String.format("udp message: managerID: %s, commandType: ", managerID, commandType));
 
-					if (commandType == Config.CommandType.GET_RECORD_COUNT) {
+					if (commandType.equals(Config.GET_RECORD_COUNT)) {
 						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
-					} else if (commandType == Config.CommandType.RECORD_EXISTS) {
+					} else if (commandType == Config.RECORD_EXISTS) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(records.recordExists(recordID)));
-					} else if (commandType == Config.CommandType.TRANSFER_RECORD) {
+					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.CommandType.CREATE_MANAGER_RECORD) {
+					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.CommandType.CREATE_EMPLOYEE_RECORD) {
+					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-					} else if (commandType == Config.CommandType.EDIT_RECORD) {
+					} else if (commandType.equals(Config.EDIT_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);

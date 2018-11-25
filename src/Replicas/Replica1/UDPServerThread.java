@@ -71,7 +71,7 @@ public class UDPServerThread extends Thread {
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
                     // { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-                    switch (Integer.parseInt( jsonMessage.get(MessageKeys.COMMAND_TYPE).toString())) {
+                    switch (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString()) {
                         case Config.CREATE_MANAGER_RECORD: {
                             // Get projects
                             JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
@@ -114,7 +114,7 @@ public class UDPServerThread extends Thread {
                             continue;
                         } default: {
                             System.out.println("Invalid request type");
-                            replyToFE("Invalid request type", Config.StatusCode.SUCCESS);
+                            replyToFE("Invalid request type", Config.StatusCode.FAIL);
                         }
                     }
                 }

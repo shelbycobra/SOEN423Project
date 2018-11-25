@@ -1,14 +1,5 @@
 package Replicas.Replica2;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
-import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
-
 import DEMS.Config;
 import DEMS.MessageKeys;
 import DEMS.Replica;
@@ -16,6 +7,11 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import java.io.IOException;
+import java.net.*;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
 
 public class Server implements Replica
 {
@@ -211,7 +207,7 @@ public class Server implements Replica
         {
             JSONObject jsonAck = new JSONObject();
             jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
-            jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
+            jsonAck.put(MessageKeys.COMMAND_TYPE, Config.ACK);
             byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket(11000);
             DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), Config.PortNumbers.FE_SEQ);

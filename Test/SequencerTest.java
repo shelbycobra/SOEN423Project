@@ -1,17 +1,17 @@
 package Test;
 
 import DEMS.Config;
+import DEMS.MessageKeys;
 import DEMS.Sequencer;
 import Replicas.Replica1.CenterServer;
 import Replicas.Replica2.Server;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.io.IOException;
 import java.net.*;
-import DEMS.MessageKeys;
 
 public class SequencerTest {
 

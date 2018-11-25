@@ -1,12 +1,5 @@
 package Replicas.Replica2;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.*;
-
 import DEMS.Config;
 import DEMS.MessageKeys;
 import Replicas.Replica2.DataStructures.*;
@@ -14,6 +7,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ServerThread extends Thread
 {
@@ -87,7 +88,7 @@ public class ServerThread extends Thread
 					// FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
 					// { PROJECT ID } || { (PROJECT_ID, PROJECT_CLIENT, PROJECT_CLIENT_NAME) X N , LOCATION } ]
 
-					switch (Integer.parseInt(jsonMessage.get(MessageKeys.COMMAND_TYPE).toString()))
+					switch (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString())
 					{
 						case Config.CREATE_MANAGER_RECORD:
 						{

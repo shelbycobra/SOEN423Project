@@ -66,7 +66,7 @@ public class CenterServer implements Replica {
         private void sendACK(Integer num) throws IOException {
             JSONObject jsonAck = new JSONObject();
             jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
-            jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
+            jsonAck.put(MessageKeys.COMMAND_TYPE, Config.ACK);
             byte[] ack = jsonAck.toString().getBytes();
             DatagramSocket socket = new DatagramSocket(10000);
             DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), Config.PortNumbers.FE_SEQ);

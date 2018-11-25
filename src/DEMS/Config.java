@@ -36,9 +36,6 @@ public class Config {
 		public static final int SEQ_FE = 8003; // From Sequencer to FE
 	}
 
-	public static final int CREATE_MANAGER_RECORD = 1, CREATE_EMPLOYEE_RECORD = 2, GET_RECORD_COUNT = 3,
-			EDIT_RECORD = 4, TRANSFER_RECORD = 5, EXIT = 6, ACK = 7, RECORD_EXISTS = 8;
-
 	public enum StatusCode {
 		SUCCESS,
 		FAIL,
@@ -49,20 +46,9 @@ public class Config {
 		PROCESS_CRASH,
 	}
 
-	public enum CommandType {
-		CREATE_MANAGER_RECORD,
-		CREATE_EMPLOYEE_RECORD,
-		GET_RECORD_COUNT,
-		EDIT_RECORD,
-		TRANSFER_RECORD,
-		EXIT,
-		ACK,
-		RECORD_EXISTS,
-		RESTART_REPLICA,
-		BAD_REPLICA_NUMBER,
-		FAILED_REPLICA_RESTART_FAILED,
-		FAILED_REPLICA_RESTARTED,
-		GET_DATA,
-		SET_DATA,
-	}
+	public static final String CREATE_MANAGER_RECORD = "create_manager_record", CREATE_EMPLOYEE_RECORD = "create_employee_record",
+			GET_RECORD_COUNT = "get_record_count", EDIT_RECORD = "edit_record", TRANSFER_RECORD = "transfer_record",
+			EXIT = "exit", ACK = "ack", RECORD_EXISTS = "record_exists", RESTART_REPLICA = "restart_replica",
+			BAD_REPLICA_NUMBER = "bad_replica_number", FAILED_REPLICA_RESTART_FAILED = "failed_replica_restart_failed",
+			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data";
 }

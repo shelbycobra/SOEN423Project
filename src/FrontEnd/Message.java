@@ -1,11 +1,10 @@
 package FrontEnd;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
+import javafx.util.Pair;
 import org.json.simple.JSONObject;
 
-import javafx.util.Pair;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Message
 {

@@ -1,22 +1,18 @@
 package DEMS;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 public class ReplicaManager {
 
@@ -75,7 +71,7 @@ public class ReplicaManager {
 				if (!((replicaNumber == 1 && (faildReplicaNumber == 2 || faildReplicaNumber == 3)) ||
 						(replicaNumber == 2 && (faildReplicaNumber == 1 || faildReplicaNumber == 3)) ||
 						(replicaNumber == 3 && (faildReplicaNumber == 1 || faildReplicaNumber == 2)))) {
-					notifyFrontEnd(Config.CommandType.BAD_REPLICA_NUMBER, faildReplicaNumber);
+					notifyFrontEnd(Config.BAD_REPLICA_NUMBER, faildReplicaNumber);
 					continue;
 				}
 
@@ -94,13 +90,13 @@ public class ReplicaManager {
 					try {
 						restartReplica(faildReplicaNumber);
 					} catch (IOException e) {
-						notifyFrontEnd(Config.CommandType.FAILED_REPLICA_RESTART_FAILED, faildReplicaNumber);
+						notifyFrontEnd(Config.FAILED_REPLICA_RESTART_FAILED, faildReplicaNumber);
 						e.printStackTrace();
 						continue;
 					}
 					replicaCrashCounts.put(faildReplicaNumber, 0);
 					replicaByzantineCounts.put(faildReplicaNumber, 0);
-					notifyFrontEnd(Config.CommandType.FAILED_REPLICA_RESTARTED, faildReplicaNumber);
+					notifyFrontEnd(Config.FAILED_REPLICA_RESTARTED, faildReplicaNumber);
 				}
 
 			}
@@ -130,7 +126,7 @@ public class ReplicaManager {
 			multicastSocket.joinGroup(group);
 
 			JSONObject jsonObject = new JSONObject();
-			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.CommandType.RESTART_REPLICA);
+			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.RESTART_REPLICA);
 			jsonObject.put(MessageKeys.REPLICA_NUMBER, faildReplicaNumber);
 			byte[] sendDate = jsonObject.toString().getBytes();
 
@@ -140,7 +136,7 @@ public class ReplicaManager {
 			multicastSocket.close();
 		}
 
-		private void notifyFrontEnd(Config.CommandType commandType, int replicaNumber) {
+		private void notifyFrontEnd(String commandType, int replicaNumber) {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(MessageKeys.COMMAND_TYPE, commandType);
 			jsonObject.put(MessageKeys.REPLICA_NUMBER, replicaNumber);

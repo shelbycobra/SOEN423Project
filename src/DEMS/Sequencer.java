@@ -63,7 +63,7 @@ public class Sequencer {
                     System.out.println("Received message from Front End: " + jsonMessage);
                     // Check if received message is an ACK message
 					try {
-					    if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals("ACK")) {
+					    if ((jsonMessage.get(MessageKeys.COMMAND_TYPE)).equals(Config.ACK)) {
 					        int ackSeqNum = Integer.parseInt("" + jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
 					        System.out.println("\n*** Receiving ACK " + ackSeqNum + " from port " + message.getPort() + " ***\n");
 					        processAck(ackSeqNum);
@@ -123,7 +123,7 @@ public class Sequencer {
                 DatagramSocket socket = new DatagramSocket();
                 JSONObject message = new JSONObject();
                 message.put(MessageKeys.MESSAGE_ID, messageID);
-                message.put(MessageKeys.COMMAND_TYPE, "ACK");
+                message.put(MessageKeys.COMMAND_TYPE, Config.ACK);
                 byte[] buffer = message.toString().getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.SEQ_FE);
                 socket.send(packet);

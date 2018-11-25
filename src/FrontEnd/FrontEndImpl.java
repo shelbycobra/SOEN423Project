@@ -1,26 +1,17 @@
 package FrontEnd;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.omg.CORBA.*;
-
 import DEMS.Config;
 import DEMS.MessageKeys;
 import javafx.util.Pair;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.omg.CORBA.ORB;
+
+import java.io.IOException;
+import java.net.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * 1) Receives a client request as a CORBA invocation. 
@@ -95,7 +86,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
 				JSONObject jsonMessage = (JSONObject) parser.parse(replyString);
 				System.out.println(jsonMessage);
-				if (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString().equals("ACK"))
+				if (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.ACK))
 				{
 					System.out.println("Message " + message.getId() + " was successfully received by the Sequencer!");
 				}

@@ -1,23 +1,18 @@
 package Replicas.Replica3;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
-
+import DEMS.Config;
+import DEMS.MessageKeys;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
+import java.io.IOException;
+import java.net.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
 
 public class CenterServerController implements DEMS.Replica {
 
@@ -75,7 +70,7 @@ public class CenterServerController implements DEMS.Replica {
 		private void sendACK(Integer num) throws IOException {
 			JSONObject jsonAck = new JSONObject();
 			jsonAck.put(MessageKeys.SEQUENCE_NUMBER, num);
-			jsonAck.put(MessageKeys.COMMAND_TYPE, "ACK");
+			jsonAck.put(MessageKeys.COMMAND_TYPE, Config.ACK);
 			byte[] ack = jsonAck.toString().getBytes();
 			DatagramSocket socket = new DatagramSocket(12000);
 			DatagramPacket packet = new DatagramPacket(ack, ack.length, InetAddress.getLocalHost(), Config.PortNumbers.FE_SEQ);
@@ -113,11 +108,11 @@ public class CenterServerController implements DEMS.Replica {
 
 					lastSequenceNumber = seqNum;
 
-					Config.CommandType commandType = (Config.CommandType) obj.get(MessageKeys.COMMAND_TYPE);
-					if (commandType == Config.CommandType.RESTART_REPLICA) {
+					String commandType = obj.get(MessageKeys.COMMAND_TYPE).toString();
+					if (commandType.equals(Config.RESTART_REPLICA)) {
 						shutdownServers();
 						runServers();
-					} else if (commandType == Config.CommandType.SET_DATA) {
+					} else if (commandType.equals(Config.SET_DATA)) {
 						setData((JSONArray) obj.get(MessageKeys.RECORDS));
 					} else {
 						sendMessageToServer(obj);
