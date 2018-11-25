@@ -19,7 +19,7 @@ public class ReplicaManager {
 	private final int replicaNumber;
 	private final int replicaManagerPort;
 
-	private final int maxCrashCount = 3;
+	private final int maxCrashCount = 1;
 	private final int maxByzantineCount = 3;
 
 	private Thread udpServerThread;
@@ -184,6 +184,7 @@ public class ReplicaManager {
 
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
 		int replicaNumber = Integer.parseInt(args[0]);
+		int errorType =  Integer.parseInt(args[1]);
 		Class replicaClass = null;
 
 		if (replicaNumber == 1) {
@@ -209,7 +210,7 @@ public class ReplicaManager {
 		});
 
 		replicaManager.logger.log("starting replica: " + replicaNumber);
-		replica.runServers();
+		replica.runServers(errorType);
 
 		replicaManager.logger.log("starting ReplicaManager for replica: " + replicaNumber);
 		replicaManager.start();
