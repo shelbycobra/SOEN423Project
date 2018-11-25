@@ -185,8 +185,17 @@ public class CenterServer extends Thread {
 	public synchronized String getRecordCounts(String managerID) {
 		this.logger.log(String.format("getRecordCounts(%s)", managerID));
 
-		String result = "";
-		for (String location : new String[]{"CA", "UK", "US"}) {
+		String result = String.format("%s: %d, ", this.location, records.getRecordCount());
+		String otherLocations[] = new String[0];
+		if (this.location.equals("CA")) {
+			otherLocations = new String[]{"UK", "US"};
+		} else if (this.location.equals("UK")) {
+			otherLocations = new String[]{"CA", "US"};
+		} else if (this.location.equals("US")) {
+			otherLocations = new String[]{"CA", "UK"};
+		}
+
+		for (String location : otherLocations) {
 			int port = 0;
 			if (location.equals("CA")) {
 				port = Config.Replica3.CA_PORT;
