@@ -35,6 +35,12 @@ public class CenterServer extends Thread {
 		return location;
 	}
 
+	class InternalMessage {
+		public static final String getRecordCountInternal = "getRecordCountInternal";
+		public static final String transferRecordInternal = "transferRecordInternal";
+		public static final String recordExistsInternal = "recordExistsInternal";
+	}
+
 	class UdpServer implements Runnable {
 
 		@Override
@@ -77,19 +83,32 @@ public class CenterServer extends Thread {
 
 					logger.log(String.format("udp message: managerID: %s, commandType: %s", managerID, commandType));
 
-					if (commandType.equals(Config.GET_RECORD_COUNT)) {
-						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
-					} else if (commandType == Config.RECORD_EXISTS) {
-						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
-						jsonSendObject.put(MessageKeys.RECORD_EXISTS, Boolean.toString(records.recordExists(recordID)));
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
-					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
+					if (commandType.equals(InternalMessage.getRecordCountInternal)) {
+						jsonSendObject.put(MessageKeys.MESSAGE, Integer.toString(records.getRecordCount()));
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+					} else if (commandType.equals(InternalMessage.transferRecordInternal)) {
 						records.addRecord(jsonReceiveObject);
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+					} else if (commandType == InternalMessage.recordExistsInternal) {
+						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
+						jsonSendObject.put(MessageKeys.MESSAGE, Boolean.toString(records.recordExists(recordID)));
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+					} else if (commandType.equals(Config.GET_RECORD_COUNT)) {
+						String recordCount = getRecordCounts(managerID);
+						jsonSendObject.put(MessageKeys.MESSAGE, recordCount);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
+						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
+						String remoteCenterServerName = (String) jsonReceiveObject.get(MessageKeys.REMOTE_SERVER_NAME);
+						String recordString = records.getRecord(recordID).toString();
+						String message = transferRecord(managerID, recordID, remoteCenterServerName);
+						if (message.equals("ok")) {
+							jsonSendObject.put(MessageKeys.MESSAGE, recordString);
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						} else {
+							jsonSendObject.put(MessageKeys.MESSAGE, message);
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL);
+						}
 					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
@@ -98,9 +117,8 @@ public class CenterServer extends Thread {
 						Projects projects = new Projects((JSONArray) jsonReceiveObject.get(DEMS.MessageKeys.PROJECTS));
 						String location = (String) jsonReceiveObject.get(DEMS.MessageKeys.LOCATION);
 						String recordID = createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, location);
-						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
-						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).getJSONObject());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
+						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
 					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
@@ -108,19 +126,18 @@ public class CenterServer extends Thread {
 						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
 						String projectID = (String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID);
 						String recordID = createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
-						jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
-						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).getJSONObject());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
+						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
 						editRecord(managerID, recordID, fieldName, newValue);
-						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "ok");
+						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
 					} else {
 						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, "unknown command type");
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL);
 					}
 
 					logger.log("udp command response: " + jsonSendObject);
@@ -185,7 +202,7 @@ public class CenterServer extends Thread {
 				byte[] receiveData = new byte[1024];
 
 				JSONObject jsonSendObject = new JSONObject();
-				jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_RECORD_COUNT);
+				jsonSendObject.put(MessageKeys.COMMAND_TYPE, InternalMessage.getRecordCountInternal);
 				sendData = jsonSendObject.toString().getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 				clientSocket.send(sendPacket);
@@ -240,7 +257,7 @@ public class CenterServer extends Thread {
 		return 0;
 	}
 
-	public synchronized int transferRecord(String managerID, String recordID, String remoteCenterServerName) {
+	public synchronized String transferRecord(String managerID, String recordID, String remoteCenterServerName) {
 		this.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
 
 		int remoteCenterServerPort = 0;
@@ -257,7 +274,7 @@ public class CenterServer extends Thread {
 			recordToTransfer = records.getRecord(recordID);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
-			return -1;
+			return "recordToTransfer does not exist";
 		}
 
 		boolean newServerContainsRecordResponse;
@@ -271,7 +288,7 @@ public class CenterServer extends Thread {
 			Object[] arguments = {recordID};
 
 			JSONObject jsonSendObject = new JSONObject();
-			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.RECORD_EXISTS);
+			jsonSendObject.put(MessageKeys.COMMAND_TYPE, InternalMessage.recordExistsInternal);
 			jsonSendObject.put(MessageKeys.RECORD_ID, recordID);
 			sendData = jsonSendObject.toString().getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
@@ -280,26 +297,26 @@ public class CenterServer extends Thread {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
-			newServerContainsRecordResponse = Boolean.parseBoolean((String) jsonReceiveObject.get(MessageKeys.RECORD_EXISTS));
+			newServerContainsRecordResponse = Boolean.parseBoolean((String) jsonReceiveObject.get(MessageKeys.MESSAGE));
 			this.logger.log(String.format("recordIDExists from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			return -6;
+			return "ParseException";
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
-			return -2;
+			return "SocketTimeoutException";
 		} catch (IOException e) {
 			e.printStackTrace();
-			return -3;
+			return "IOException";
 		}
 
 		if (newServerContainsRecordResponse == true) {
-			return -4;
+			return "new server already contains record";
 		} else if (newServerContainsRecordResponse == false) {
 			// ok
 		} else {
-			return -5;
+			return "unknown message from new server";
 		}
 
 		try {
@@ -309,6 +326,7 @@ public class CenterServer extends Thread {
 			byte[] receiveData = new byte[1024];
 
 			JSONObject jsonSendObject = recordToTransfer.getJSONObject();
+			jsonSendObject.put(MessageKeys.COMMAND_TYPE, InternalMessage.transferRecordInternal);
 			sendData = jsonSendObject.toString().getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, remoteCenterServerPort);
 			clientSocket.send(sendPacket);
@@ -316,23 +334,22 @@ public class CenterServer extends Thread {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			clientSocket.receive(receivePacket);
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
-			newServerContainsRecordResponse = Boolean.parseBoolean((String) jsonReceiveObject.get(MessageKeys.RECORD_EXISTS));
 			this.logger.log(String.format("transferRecord from %s: %s", remoteCenterServerName, newServerContainsRecordResponse));
 			clientSocket.close();
 		} catch (ParseException e) {
 			e.printStackTrace();
-			return -6;
+			return "ParseException";
 		} catch (SocketTimeoutException e) {
 			e.printStackTrace();
-			return -2;
+			return "SocketTimeoutException";
 		} catch (IOException e) {
 			e.printStackTrace();
-			return -3;
+			return "SocketTimeoutException";
 		}
 
 		records.removeRecord(recordID);
 
-		return 0;
+		return "ok";
 	}
 
 	@Override
