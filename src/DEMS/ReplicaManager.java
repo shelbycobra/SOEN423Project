@@ -139,7 +139,7 @@ public class ReplicaManager {
 		private void notifyFrontEnd(JSONObject jsonObject) {
 			try {
 				InetAddress frontEndHost = InetAddress.getByName(Config.FRONT_END_HOST);
-				int frontEndPort = Config.PortNumbers.SEQ_RE;
+				int frontEndPort = Config.PortNumbers.RE_FE;
 				byte[] sendData = jsonObject.toString().getBytes();
 				DatagramPacket datagramPacket = new DatagramPacket(sendData, sendData.length, frontEndHost, frontEndPort);
 				datagramSocket.send(datagramPacket);
