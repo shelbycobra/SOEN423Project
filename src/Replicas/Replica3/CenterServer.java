@@ -144,8 +144,11 @@ public class CenterServer extends Thread {
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
 					sendData = jsonSendObject.toString().getBytes();
-					DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-					serverSocket.send(sendPacket);
+					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+					serverSocket.send(sendPacket1);
+					InetAddress frontEndHost = InetAddress.getByName(Config.FRONT_END_HOST);
+					DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
+					serverSocket.send(sendPacket2);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
