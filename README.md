@@ -4,27 +4,6 @@ SOEN 423 Group Project - DEMS
 
 [Link to Google Drive Folder](https://drive.google.com/drive/folders/1a_pQnYdVTQ2WMDOOZDDUdrWAXBgGCZk6?usp=sharing)
 
-## Instructions
-
-```shell
-# start sequencer
-java -cp 'bin:lib/*' DEMS.Sequencer
-
-# start replicas and replica managers
-java -cp 'bin:lib/*' DEMS.ReplicaManager 1 <errorType>
-java -cp 'bin:lib/*' DEMS.ReplicaManager 2 <errorType>
-java -cp 'bin:lib/*' DEMS.ReplicaManager 3 <errorType>
-
-# start orbd
-orbd -ORBInitialPort 1050 -ORBInitialHost localhost
-
-# start frontend
-java -cp 'bin:lib/*' FrontEnd.FrontEndServerMain -ORBInitialPort 1050 -ORBInitialHost localhost
-
-# start client
-java -cp 'bin:lib/*' Client.ClientMain
-```
-
 ## Distribution of work
 
 TEAM :
