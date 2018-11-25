@@ -352,6 +352,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		DatagramSocket socket = null;
 		JSONObject payload = new JSONObject();
 		
+		payload.put(MessageKeys.COMMAND_TYPE, Config.REPORT_FAILURE);
 		payload.put(MessageKeys.FAILURE_TYPE, Config.Failure.BYZANTINE.toString());
 		payload.put(MessageKeys.RM_PORT_NUMBER, port);
 		
@@ -393,6 +394,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		int[] ports = new int[]{Config.Replica1.RM_PORT, Config.Replica2.RM_PORT, Config.Replica3.RM_PORT};
 		String[] hosts = new String[]{Config.IPAddresses.REPLICA1, Config.IPAddresses.REPLICA2, Config.IPAddresses.REPLICA3};
 		
+		payload.put(MessageKeys.COMMAND_TYPE, Config.REPORT_FAILURE);
 		payload.put(MessageKeys.FAILURE_TYPE, Config.Failure.PROCESS_CRASH.toString());
 		payload.put(MessageKeys.RM_PORT_NUMBER, port);
 		
