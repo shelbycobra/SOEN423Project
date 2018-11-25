@@ -10,14 +10,16 @@ SOEN 423 Group Project - DEMS
 # start sequencer
 java -cp 'bin:lib/*' DEMS.Sequencer
 
+# start replicas and replica managers
+java -cp 'bin:lib/*' DEMS.ReplicaManager 1
+java -cp 'bin:lib/*' DEMS.ReplicaManager 2
+java -cp 'bin:lib/*' DEMS.ReplicaManager 3
+
 # start orbd
 orbd -ORBInitialPort 1050 -ORBInitialHost localhost
 
 # start frontend
 java -cp 'bin:lib/*' FrontEnd.FrontEndServerMain -ORBInitialPort 1050 -ORBInitialHost localhost
-
-# start replica manager including specified replica
-java -cp 'bin:lib/*' DEMS.ReplicaManager <replicaNumber>
 
 # start client
 java -cp 'bin:lib/*' Client.ClientMain
