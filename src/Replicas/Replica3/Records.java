@@ -13,6 +13,7 @@ import DEMS.MessageKeys;
 public class Records {
 
 	private HashMap<Character, List<Record>> records;
+	private int recordCounter = 0;
 
 	public Records() {
 		this.records = new HashMap<Character, List<Record>>();
@@ -72,6 +73,7 @@ public class Records {
 	}
 
 	public void addRecord(Record record) {
+		record.setRecordIDNumber(recordCounter++);
 		char letter = record.getLastName().toLowerCase().charAt(0);
 		List<Record> recordList = new ArrayList<Record>();
 		recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());

@@ -8,16 +8,15 @@ public abstract class Record implements Serializable {
 	private static final long serialVersionUID = -4371452764387799673L;
 
 	private String recordID;
+	private String recordIDPrefix;
 
 	private String firstName;
 	private String lastName;
 	private int employeeID;
 	private String mailID;
 
-	private static int recordCount = 0;
-
 	public Record(String recordIDPrefix, String firstName, String lastName, int employeeID, String mailID) {
-		this.recordID = String.format("%s%05d", recordIDPrefix, recordCount++);
+		this.recordIDPrefix = recordIDPrefix;
 
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -71,6 +70,10 @@ public abstract class Record implements Serializable {
 
 	public void setMailID(String mailID) {
 		this.mailID = mailID;
+	}
+
+	public void setRecordIDNumber(int recordIDNumber) {
+		this.recordID = String.format("%s%05d", recordIDPrefix, recordIDNumber);
 	}
 
 	public JSONObject getJSONObject() {
