@@ -82,7 +82,7 @@ public abstract class Record implements Serializable {
 		jsonObject.put(DEMS.MessageKeys.RECORD_ID, recordID);
 		jsonObject.put(DEMS.MessageKeys.FIRST_NAME, firstName);
 		jsonObject.put(DEMS.MessageKeys.LAST_NAME, lastName);
-		jsonObject.put(DEMS.MessageKeys.EMPLOYEE_ID, employeeID);
+		jsonObject.put(DEMS.MessageKeys.EMPLOYEE_ID, Integer.toString(employeeID));
 		jsonObject.put(DEMS.MessageKeys.MAIL_ID, mailID);
 
 		return jsonObject;
