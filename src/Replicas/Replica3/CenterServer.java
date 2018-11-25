@@ -85,18 +85,18 @@ public class CenterServer extends Thread {
 
 					if (commandType.equals(InternalMessage.getRecordCountInternal)) {
 						jsonSendObject.put(MessageKeys.MESSAGE, Integer.toString(records.getRecordCount()));
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(InternalMessage.transferRecordInternal)) {
 						records.addRecord(jsonReceiveObject);
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType == InternalMessage.recordExistsInternal) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.MESSAGE, Boolean.toString(records.recordExists(recordID)));
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.GET_RECORD_COUNT)) {
 						String recordCount = getRecordCounts(managerID);
 						jsonSendObject.put(MessageKeys.MESSAGE, recordCount);
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String remoteCenterServerName = (String) jsonReceiveObject.get(MessageKeys.REMOTE_SERVER_NAME);
@@ -104,10 +104,10 @@ public class CenterServer extends Thread {
 						String message = transferRecord(managerID, recordID, remoteCenterServerName);
 						if (message.equals("ok")) {
 							jsonSendObject.put(MessageKeys.MESSAGE, recordString);
-							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 						} else {
 							jsonSendObject.put(MessageKeys.MESSAGE, message);
-							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL);
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 						}
 					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
@@ -118,7 +118,7 @@ public class CenterServer extends Thread {
 						String location = (String) jsonReceiveObject.get(DEMS.MessageKeys.LOCATION);
 						String recordID = createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, location);
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
@@ -127,17 +127,17 @@ public class CenterServer extends Thread {
 						String projectID = (String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID);
 						String recordID = createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
 						editRecord(managerID, recordID, fieldName, newValue);
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else {
 						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL);
+						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
 
 					logger.log("udp command response: " + jsonSendObject);
