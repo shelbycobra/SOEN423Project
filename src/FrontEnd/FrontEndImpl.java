@@ -74,7 +74,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				receiverSocket = new DatagramSocket(Config.PortNumbers.SEQ_FE);
 				
 				byte[] messageBuffer = message.getSendData().toString().getBytes();
-				InetAddress host = InetAddress.getByName("localhost");
+				InetAddress host = InetAddress.getByName(Config.IPAddresses.SEQUENCER);
 				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.FE_SEQ);
 
 				System.out.println("Sending message to sequencer: " + message.getSendData().toJSONString());
@@ -85,7 +85,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				receiverSocket.receive(reply);
 				String replyString = new String(reply.getData(), reply.getOffset(), reply.getLength());
 				JSONObject jsonMessage = (JSONObject) parser.parse(replyString);
-				System.out.println(jsonMessage);
+				
 				if (jsonMessage.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.ACK))
 				{
 					System.out.println("Message " + message.getId() + " was successfully received by the Sequencer!");
@@ -212,15 +212,17 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         			
         			if (message1.getValue().equals(message3.getValue()))
         			{
-        				response = message1.getValue();
-        				notifyReplicaOfByzantineFailure(message2.getKey());
+        				response = message1.getValue(); // Response to client.
+        				int port = message2.getKey();
+        				notifyReplicaOfByzantineFailure(message2.getKey(), getIPFromPort(port));
         				break;
         			}
         			
         			if (message2.getValue().equals(message3.getValue()))
         			{
-        				response = message2.getValue();
-        				notifyReplicaOfByzantineFailure(message1.getKey());
+        				response = message2.getValue(); // Response to client.
+        				int port = message1.getKey();
+        				notifyReplicaOfByzantineFailure(message1.getKey(), getIPFromPort(port));
         				break;
         			}
 				}
@@ -232,6 +234,18 @@ public class FrontEndImpl extends FrontEndInterfacePOA
         	
         	return response;
         }
+
+		private String getIPFromPort(int port)
+		{
+			switch (port)
+			{
+				case Config.Replica1.RM_PORT: return Config.IPAddresses.REPLICA1;
+				case Config.Replica2.RM_PORT: return Config.IPAddresses.REPLICA2;
+				case Config.Replica3.RM_PORT: return Config.IPAddresses.REPLICA3;
+			}
+			
+			return null;
+		}
 	}
 	
 	private class ReplicaResponseListener extends Thread
@@ -318,36 +332,22 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 			
 			if (!message.getReturnTimes().containsKey(Config.Replica1.RM_PORT))
 			{
-				notifyReplicaOfProcessCrash(new int[] {Config.Replica2.RM_PORT, Config.Replica3.RM_PORT});
+				notifyReplicaOfProcessCrash(Config.Replica1.RM_PORT);
 			}
 			
 			if (!message.getReturnTimes().containsKey(Config.Replica2.RM_PORT))
 			{
-				notifyReplicaOfProcessCrash(new int[] {Config.Replica1.RM_PORT, Config.Replica3.RM_PORT});
+				notifyReplicaOfProcessCrash(Config.Replica2.RM_PORT);
 			}
 			
 			if (!message.getReturnTimes().containsKey(Config.Replica3.RM_PORT))
 			{
-				notifyReplicaOfProcessCrash(new int[] {Config.Replica1.RM_PORT, Config.Replica2.RM_PORT});
+				notifyReplicaOfProcessCrash(Config.Replica3.RM_PORT);
 			}
-			
-//			while (listeningForResponses.get())
-//			{
-//				for (Message message : messages.values())
-//				{
-//					for (Pair<Integer, Long> time : message.getReturnTimes())
-//					{
-//						if (time.getValue() > 2 * longestTimeout)
-//						{
-//							notifyReplicaOfFailure(Config.Failure.PROCESS_CRASH, time.getKey());
-//						}
-//					}
-//				}
-//			}
 		}
 	}
 	
-	private void notifyReplicaOfByzantineFailure(int port)
+	private void notifyReplicaOfByzantineFailure(int port, String ipAddress)
 	{
 		DatagramSocket socket = null;
 		JSONObject payload = new JSONObject();
@@ -359,7 +359,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		{
 			socket = new DatagramSocket();
 			byte[] messageBuffer = payload.toString().getBytes();
-			InetAddress host = InetAddress.getByName("localhost");
+			InetAddress host = InetAddress.getByName(ipAddress);
 			DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port);
 
 			System.out.println("Sending byzantine error message to Replica Manager " + port);
@@ -386,10 +386,12 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		}
 	}
 	
-	private void notifyReplicaOfProcessCrash(int[] port)
+	private void notifyReplicaOfProcessCrash(int port)
 	{
 		DatagramSocket socket = null;
 		JSONObject payload = new JSONObject();
+		int[] ports = new int[]{Config.Replica1.RM_PORT, Config.Replica2.RM_PORT, Config.Replica3.RM_PORT};
+		String[] hosts = new String[]{Config.IPAddresses.REPLICA1, Config.IPAddresses.REPLICA2, Config.IPAddresses.REPLICA3};
 		
 		payload.put(MessageKeys.FAILURE_TYPE, Config.Failure.PROCESS_CRASH.toString());
 		payload.put(MessageKeys.RM_PORT_NUMBER, port);
@@ -398,13 +400,13 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		{
 			socket = new DatagramSocket();
 			byte[] messageBuffer = payload.toString().getBytes();
-			InetAddress host = InetAddress.getByName("localhost");
 			
-			for (int i = 0; i < 2; i++)
+			for (int i = 0; i < 3; i++)
 			{
-				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, port[i]);
+				InetAddress host = InetAddress.getByName(hosts[i]);
+				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, ports[i]);
 				socket.send(request);
-				System.out.println("Sending process crash error message to Replica Manager " + port[i]);
+				System.out.println("Sending process crash error message to Replica Manager " + ports[i]);
 			}
 			
 		}
@@ -454,12 +456,6 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		}
 		
 		return response;
-	}
-	
-	// Removes the given timer from the HashMap so that the ProcessCrashMonitor doesn't have to iterate over it.
-	private void stopTimer(Integer messageID)
-	{
-		messages.remove(messageID);
 	}
 
 	public void clockTime(Message message, int port)
