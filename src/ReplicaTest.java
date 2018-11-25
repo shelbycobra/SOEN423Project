@@ -66,7 +66,7 @@ public class ReplicaTest {
 	public static JSONObject baseObject() {
 		JSONObject message = new JSONObject();
 		message.put(MessageKeys.SEQUENCE_NUMBER, Integer.toString(sequenceNumber++));
-		message.put(MessageKeys.MESSAGE_ID, messageID++);
+		message.put(MessageKeys.MESSAGE_ID, Integer.toString(messageID++));
 		message.put(MessageKeys.MANAGER_ID, managerID);
 		return message;
 	}
