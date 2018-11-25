@@ -3,27 +3,27 @@ package Replicas.Replica3;
 import org.json.simple.JSONObject;
 
 public class Project {
-	private int ID;
+	private String ID;
 	private String clientName;
 	private String projectName;
 
-	public Project(int ID, String clientName, String projectName) {
+	public Project(String ID, String clientName, String projectName) {
 		this.ID = ID;
 		this.clientName = clientName;
 		this.projectName = projectName;
 	}
 
 	public Project(JSONObject jsonObject) {
-		this.ID = Integer.parseInt((String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID));
+		this.ID = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID);
 		this.clientName = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_CLIENT);
 		this.projectName = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_NAME);
 	}
 
-	public int getID() {
+	public String getID() {
 		return ID;
 	}
 
-	public void setID(int iD) {
+	public void setID(String iD) {
 		ID = iD;
 	}
 

@@ -1,18 +1,17 @@
 package Replicas.Replica3;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-
+import DEMS.Config;
+import DEMS.MessageKeys;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import DEMS.Config;
-import DEMS.MessageKeys;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 public class CenterServer extends Thread {
 
@@ -51,7 +50,7 @@ public class CenterServer extends Thread {
 
 				DatagramSocket serverSocket = new DatagramSocket(localPort);
 				byte[] receiveData = new byte[1024];
-				byte[] sendData = new byte[1024];
+				byte[] sendData;
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 					logger.log("udp waiting for connection");
@@ -60,7 +59,9 @@ public class CenterServer extends Thread {
 					JSONObject jsonReceiveObject;
 					try {
 						String str = new String(receivePacket.getData()).trim();
+						System.out.println(str);
 						jsonReceiveObject = (JSONObject) jsonParser.parse(str);
+                        receiveData = new byte[1024];
 					} catch (ParseException e) {
 						e.printStackTrace();
 						continue;
@@ -71,7 +72,7 @@ public class CenterServer extends Thread {
 					String commandType = jsonReceiveObject.get(MessageKeys.COMMAND_TYPE).toString();
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
 
-					logger.log(String.format("udp message: managerID: %s, commandType: ", managerID, commandType));
+					logger.log(String.format("udp message: managerID: %s, commandType: %s", managerID, commandType));
 
 					if (commandType.equals(Config.GET_RECORD_COUNT)) {
 						jsonSendObject.put(MessageKeys.RECORD_COUNT, Integer.toString(records.getRecordCount()));
@@ -95,7 +96,7 @@ public class CenterServer extends Thread {
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
 						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
 						String mailID = (String) jsonReceiveObject.get(MessageKeys.MAIL_ID);
-						int projectID = Integer.parseInt((String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID));
+						String projectID = (String) jsonReceiveObject.get(DEMS.MessageKeys.PROJECT_ID);
 						createERecord(managerID, firstName, lastName, employeeID, mailID, projectID);
 						jsonSendObject.put(MessageKeys.MESSAGE, "ok");
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
@@ -138,8 +139,8 @@ public class CenterServer extends Thread {
 		return 0;
 	}
 
-	public synchronized int createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, int projectID) {
-		this.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %d)", managerID, firstName, lastName, employeeID, mailID, projectID));
+	public synchronized int createERecord(String managerID, String firstName, String lastName, int employeeID, String mailID, String projectID) {
+		this.logger.log(String.format("createERecord(%s, %s, %s, %d, %s, %s)", managerID, firstName, lastName, employeeID, mailID, projectID));
 
 		EmployeeRecord record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
 		records.addRecord(record);

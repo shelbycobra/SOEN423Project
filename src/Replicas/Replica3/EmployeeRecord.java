@@ -5,16 +5,16 @@ import org.json.simple.JSONObject;
 public class EmployeeRecord extends Record {
 	private static final long serialVersionUID = 4220125172871733314L;
 
-	public int projectID;
+	public String projectID;
 
-	public EmployeeRecord(String firstName, String lastName, int employeeID, String mailID, int projectID) {
+	public EmployeeRecord(String firstName, String lastName, int employeeID, String mailID, String projectID) {
 		super("ER" + employeeID, firstName, lastName, employeeID, mailID);
 		this.projectID = projectID;
 	}
 
 	public EmployeeRecord(JSONObject jsonObject) {
 		super(jsonObject);
-		this.projectID = Integer.parseInt((String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID));
+		this.projectID = (String) jsonObject.get(DEMS.MessageKeys.PROJECT_ID);
 	}
 
 	@Override

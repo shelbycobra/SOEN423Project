@@ -1,15 +1,14 @@
 package Replicas.Replica3;
 
+import DEMS.MessageKeys;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import DEMS.MessageKeys;
 
 public class Records {
 
@@ -88,7 +87,7 @@ public class Records {
 
 		Record record = null;
 		if (recordID.substring(0, 2).toLowerCase().equals("er")) {
-			int projectID = Integer.parseInt((String) jsonObject.get(MessageKeys.PROJECT_ID));
+			String projectID = (String) jsonObject.get(MessageKeys.PROJECT_ID);
 			record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
 		} else if (recordID.substring(0, 2).toLowerCase().equals("mr")) {
 			String location = (String) jsonObject.get(MessageKeys.LOCATION);
