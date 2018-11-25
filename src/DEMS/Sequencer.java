@@ -125,7 +125,7 @@ public class Sequencer {
                 message.put(MessageKeys.MESSAGE_ID, messageID);
                 message.put(MessageKeys.COMMAND_TYPE, Config.ACK);
                 byte[] buffer = message.toString().getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.SEQ_FE);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.SEQ_FE);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
