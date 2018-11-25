@@ -59,5 +59,6 @@ public class Config {
 			GET_RECORD_COUNT = "get_record_count", EDIT_RECORD = "edit_record", TRANSFER_RECORD = "transfer_record",
 			EXIT = "exit", ACK = "ack", RECORD_EXISTS = "record_exists", RESTART_REPLICA = "restart_replica",
 			BAD_REPLICA_NUMBER = "bad_replica_number", FAILED_REPLICA_RESTART_FAILED = "failed_replica_restart_failed",
-			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data", REPORT_FAILURE = "report_failure";
+			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data", REPORT_FAILURE = "report_failure",
+			REPLICA_RESTARTED = "replica_restarted", FAILURE_COUNTS_INCREMENTED = "failure_counts_incremented";
 }
