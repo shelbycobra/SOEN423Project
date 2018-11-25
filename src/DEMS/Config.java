@@ -5,7 +5,6 @@ public class Config {
 	public static final String FRONT_END_HOST = "localhost";
 
 	public static class Replica1 {
-		public static final String HOST = "localhost";
 		public static final int RM_PORT = 9000;
 		public static final int CA_PORT = 5000;
 		public static final int UK_PORT = 5001;
@@ -13,7 +12,6 @@ public class Config {
 	}
 
 	public static class Replica2 {
-		public static final String HOST = "localhost";
 		public static final int RM_PORT = 9001;
 		public static final int CA_PORT = 6000;
 		public static final int UK_PORT = 6001;
@@ -21,7 +19,6 @@ public class Config {
 	}
 
 	public static class Replica3 {
-		public static final String HOST = "localhost";
 		public static final int RM_PORT = 9002;
 		public static final int CA_PORT = 7000;
 		public static final int UK_PORT = 7001;
