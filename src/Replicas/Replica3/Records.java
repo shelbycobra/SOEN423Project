@@ -1,14 +1,15 @@
 package Replicas.Replica3;
 
-import DEMS.MessageKeys;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import DEMS.MessageKeys;
 
 public class Records {
 
@@ -62,7 +63,7 @@ public class Records {
 		boolean recordExists = false;
 		for (char key : records.keySet()) {
 			for (Record value : records.get(key)) {
-				if (value.recordID.equals(recordID)) {
+				if (value.getRecordID().equals(recordID)) {
 					recordExists = true;
 					break;
 				}
@@ -72,7 +73,7 @@ public class Records {
 	}
 
 	public void addRecord(Record record) {
-		char letter = record.lastName.toLowerCase().charAt(0);
+		char letter = record.getLastName().toLowerCase().charAt(0);
 		List<Record> recordList = new ArrayList<Record>();
 		recordList = records.computeIfAbsent(letter, k -> new ArrayList<Record>());
 		recordList.add(record);
@@ -101,7 +102,7 @@ public class Records {
 	public void editRecord(String recordID, String fieldName, String newValue) throws IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		for (char key : records.keySet()) {
 			for (Record value : records.get(key)) {
-				if (value.recordID.equals(recordID)) {
+				if (value.getRecordID().equals(recordID)) {
 					Class c = value.getClass();
 					Field f = c.getField(fieldName);
 					f.set(value, newValue);
@@ -120,7 +121,7 @@ public class Records {
 				logger.log("    " + value.toString());
 				if (value instanceof ManagerRecord) {
 					logger.log("      projects:");
-					for (Project project : ((ManagerRecord) value).projects) {
+					for (Project project : ((ManagerRecord) value).getProjects()) {
 						logger.log("        " + project.toString());
 					}
 				}
@@ -131,7 +132,7 @@ public class Records {
 	public Record getRecord(String recordID) throws IllegalArgumentException {
 		for (char key : records.keySet()) {
 			for (Record value : records.get(key)) {
-				if (value.recordID.equals(recordID)) {
+				if (value.getRecordID().equals(recordID)) {
 					return value;
 				}
 			}
@@ -143,7 +144,7 @@ public class Records {
 		for (char key : records.keySet()) {
 			for (Iterator<Record> iter = records.get(key).listIterator(); iter.hasNext();) {
 				Record record = iter.next();
-				if (record.recordID.equals(recordID)) {
+				if (record.getRecordID().equals(recordID)) {
 					iter.remove();
 				}
 			}

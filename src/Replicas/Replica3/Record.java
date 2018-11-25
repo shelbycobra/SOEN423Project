@@ -1,21 +1,22 @@
 package Replicas.Replica3;
 
 import java.io.Serializable;
+import java.util.Random;
 
 import org.json.simple.JSONObject;
 
 public abstract class Record implements Serializable {
 	private static final long serialVersionUID = -4371452764387799673L;
 
-	public String recordID;
+	private String recordID;
 
-	public String firstName;
-	public String lastName;
-	public int employeeID;
-	public String mailID;
+	private String firstName;
+	private String lastName;
+	private int employeeID;
+	private String mailID;
 
-	public Record(String recordID, String firstName, String lastName, int employeeID, String mailID) {
-		this.recordID = recordID;
+	public Record(String recordIDPrefix, String firstName, String lastName, int employeeID, String mailID) {
+		this.recordID = recordIDPrefix + randomInt(10000, 99999);
 
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -35,6 +36,22 @@ public abstract class Record implements Serializable {
 		return recordID;
 	}
 
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public int getEmployeeID() {
+		return employeeID;
+	}
+
+	public String getMailID() {
+		return mailID;
+	}
+
 	public JSONObject getJSONObject() {
 		JSONObject jsonObject = new JSONObject();
 
@@ -45,5 +62,10 @@ public abstract class Record implements Serializable {
 		jsonObject.put(DEMS.MessageKeys.MAIL_ID, mailID);
 
 		return jsonObject;
+	}
+
+	public int randomInt(int min, int max) {
+		Random random = new Random();
+		return random.nextInt((max - min) + 1) + min;
 	}
 }

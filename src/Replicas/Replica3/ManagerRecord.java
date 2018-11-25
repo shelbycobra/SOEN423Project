@@ -6,11 +6,11 @@ import org.json.simple.JSONObject;
 public class ManagerRecord extends Record {
 	private static final long serialVersionUID = -7309796150452080853L;
 
-	public Projects projects;
-	public String location;
+	private Projects projects;
+	private String location;
 
 	public ManagerRecord(String firstName, String lastName, int employeeID, String mailID, Projects projects, String location) {
-		super("MR" + employeeID, firstName, lastName, employeeID, mailID);
+		super("MR", firstName, lastName, employeeID, mailID);
 		this.projects = projects;
 		this.location = location;
 	}
@@ -21,10 +21,18 @@ public class ManagerRecord extends Record {
 		this.location = (String) jsonObject.get(DEMS.MessageKeys.LOCATION);
 	}
 
+	public Projects getProjects() {
+		return projects;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
 	@Override
 	public String toString() {
-		return "ManagerRecord [recordID=" + recordID + ", firstName=" + firstName + ", lastName=" + lastName
-				+ ", employeeID=" + employeeID + ", mailID=" + mailID + ", location=" + location + "]";
+		return "ManagerRecord [recordID=" + getRecordID() + ", firstName=" + getFirstName() + ", lastName=" + getLastName()
+		+ ", employeeID=" + getEmployeeID() + ", mailID=" + getMailID() + ", location=" + location + "]";
 	}
 
 	@Override
