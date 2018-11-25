@@ -11,7 +11,7 @@ SOEN 423 Group Project - DEMS
 java -cp 'bin:lib/*' DEMS.Sequencer
 
 # start frontend
-java -cp 'bin:lib/*' FrontEnd.FrontEndServerMain <orbArguments>
+java -cp 'bin:lib/*' FrontEnd.FrontEndServerMain -ORBInitialPort 1050 -ORBInitialHost localhost
 
 # start replica manager including specified replica
 java -cp 'bin:lib/*' DEMS.ReplicaManager <replicaNumber>
