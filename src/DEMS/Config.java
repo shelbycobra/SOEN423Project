@@ -48,13 +48,16 @@ public class Config {
 	}
 
 	public enum Failure {
+		NONE,
 		BYZANTINE,
 		PROCESS_CRASH,
 	}
 
+	public static final int MESSAGE_DELAY = 3;
+	
 	public static final String CREATE_MANAGER_RECORD = "create_manager_record", CREATE_EMPLOYEE_RECORD = "create_employee_record",
 			GET_RECORD_COUNT = "get_record_count", EDIT_RECORD = "edit_record", TRANSFER_RECORD = "transfer_record",
 			EXIT = "exit", ACK = "ack", RECORD_EXISTS = "record_exists", RESTART_REPLICA = "restart_replica",
 			BAD_REPLICA_NUMBER = "bad_replica_number", FAILED_REPLICA_RESTART_FAILED = "failed_replica_restart_failed",
-			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data";
+			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data", REPORT_FAILURE = "report_failure";
 }

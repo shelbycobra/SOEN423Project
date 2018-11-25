@@ -22,6 +22,8 @@ public class CenterServer implements Replica {
     private ProcessMessagesThread processMessages;
 
     private int lastSequenceNumber = 0;
+    private int numMessages = 0;
+    private Config.Failure failureType = Config.Failure.NONE;
     private MulticastSocket socket;
     private PriorityQueue<JSONObject> deliveryQueue;
     private Semaphore mutex; // Used to ensure that the delivery queue is thread safe
@@ -82,7 +84,10 @@ public class CenterServer implements Replica {
             System.out.println("CenterServer: Processing messages\n");
             try {
                 while (keepRunning.get()) {
-
+                	
+                	// Checks if failure should start
+                	checkToStartFailure();
+                	
                     // Sleep a bit so that the message can be added to the queue
                     Thread.sleep(300);
                     deliveryQueueMutex.acquire();
@@ -105,8 +110,11 @@ public class CenterServer implements Replica {
 
                     lastSequenceNumber = seqNum;
                     sendMessageToServer(obj);
+                    numMessages++;
                 }
-            } catch (InterruptedException e) {
+            } catch (IOException e) {
+            	e.printStackTrace();
+        	} catch (InterruptedException e) {
                 System.out.println("ProcessMessageThread is shutting down.");
             }
         }
@@ -154,41 +162,8 @@ public class CenterServer implements Replica {
         // Instantiate Semaphores
         mutex = new Semaphore(1);
         deliveryQueueMutex = new Semaphore(0);
-
-        // Instantiate Delivery Queue with the MessageComparator
         MessageComparator msgComp = new MessageComparator();
         deliveryQueue = new PriorityQueue<>(msgComp);
-    }
-
-    @Override
-    public void runServers() {
-
-        // Start up servers
-        CA_DEMS_server = new ServerThread("CA", Config.Replica1.CA_PORT);
-        UK_DEMS_server = new ServerThread("UK", Config.Replica1.UK_PORT);
-        US_DEMS_server = new ServerThread("US", Config.Replica1.US_PORT);
-
-        CA_DEMS_server.start();
-        UK_DEMS_server.start();
-        US_DEMS_server.start();
-
-        // Setup Multicast Socket, ListenForPackets thread and ProcessMessages thread
-        try {
-            if (CA_DEMS_server.isAlive() && UK_DEMS_server.isAlive() && US_DEMS_server.isAlive()) {
-                setupMulticastSocket();
-                listenForPackets = new ListenForPacketsThread();
-                processMessages = new ProcessMessagesThread();
-                listenForPackets.start();
-                processMessages.start();
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-            System.out.println("CenterServer Multicast Socket is closed.");
-        } catch (InterruptedException e ) {
-            System.out.println("CenterServer is shutting down.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private void setupMulticastSocket() throws Exception {
@@ -260,5 +235,83 @@ public class CenterServer implements Replica {
         UK_DEMS_server.setData(UKServerArray);
         US_DEMS_server.setData(USServerArray);
     }
+    
+    private void checkErrorType(int type) {
+    	
+    	if (Config.Failure.NONE.ordinal() == type) {
+    		// DO NOTHING
+    	} else if (Config.Failure.BYZANTINE.ordinal() == type) {
+    		failureType = Config.Failure.BYZANTINE;
+    		
+    	} else if (Config.Failure.PROCESS_CRASH.ordinal() == type) {
+    		// DO PROCESS CRASH
+    		failureType = Config.Failure.PROCESS_CRASH;
+    	}
+    }
+    
+    void checkToStartFailure() throws IOException, InterruptedException {
+    	if (numMessages >= Config.MESSAGE_DELAY) {
+    		switch(failureType) {
+    			case BYZANTINE:
+    				byzantineFailure();
+    				break;
+    			case PROCESS_CRASH:
+    				processCrashFailure();
+    				break;
+    				default:
+    					break;
+    		}
+    	}
+    }
+    
+    void byzantineFailure() throws IOException, InterruptedException {
+    	while (true) {
+	    	JSONObject obj = new JSONObject();
+	    	obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL);
+	    	byte[] buffer = obj.toString().getBytes();
+	    	
+	    	DatagramSocket socket = new DatagramSocket();
+	    	DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
+	    	
+	    	socket.send(packet);
+	    	Thread.sleep(200);
+    	}
+    }
+    
+    void processCrashFailure() {
+    	while (true);
+    }
+
+    @Override
+	public void runServers(int i) {
+		checkErrorType(i);
+    	
+        // Start up servers
+        CA_DEMS_server = new ServerThread("CA", Config.Replica1.CA_PORT);
+        UK_DEMS_server = new ServerThread("UK", Config.Replica1.UK_PORT);
+        US_DEMS_server = new ServerThread("US", Config.Replica1.US_PORT);
+
+        CA_DEMS_server.start();
+        UK_DEMS_server.start();
+        US_DEMS_server.start();
+
+        // Setup Multicast Socket, ListenForPackets thread and ProcessMessages thread
+        try {
+            if (CA_DEMS_server.isAlive() && UK_DEMS_server.isAlive() && US_DEMS_server.isAlive()) {
+                setupMulticastSocket();
+                listenForPackets = new ListenForPacketsThread();
+                processMessages = new ProcessMessagesThread();
+                listenForPackets.start();
+                processMessages.start();
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+            System.out.println("CenterServer Multicast Socket is closed.");
+        } catch (InterruptedException e ) {
+            System.out.println("CenterServer is shutting down.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 }
 
