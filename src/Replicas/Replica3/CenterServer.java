@@ -57,7 +57,7 @@ public class CenterServer extends Thread {
 
 				DatagramSocket serverSocket = new DatagramSocket(localPort);
 				byte[] receiveData = new byte[1024];
-				byte[] sendData;
+				byte[] sendData = new byte[1024];
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 					logger.log("udp waiting for connection");
@@ -75,7 +75,7 @@ public class CenterServer extends Thread {
 					}
 
 					JSONObject jsonSendObject = new JSONObject();
-					jsonSendObject.put(MessageKeys.MESSAGE_ID, jsonReceiveObject.get(MessageKeys.MESSAGE_ID).toString());
+					jsonSendObject.put(MessageKeys.MESSAGE_ID, jsonReceiveObject.get(MessageKeys.MESSAGE_ID));
 					jsonSendObject.put(MessageKeys.RM_PORT_NUMBER, Config.Replica3.RM_PORT);
 
 					String commandType = jsonReceiveObject.get(MessageKeys.COMMAND_TYPE).toString();
@@ -155,7 +155,7 @@ public class CenterServer extends Thread {
 	}
 
 	public CenterServer(String location) {
-		this.location = location;
+		this.location = location.toUpperCase();
 		this.logger = new Logger(location);
 
 		udpServerThread = new Thread(new UdpServer());
