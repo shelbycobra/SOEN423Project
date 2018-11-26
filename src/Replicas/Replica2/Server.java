@@ -249,7 +249,7 @@ public class Server implements Replica
             {
                 while (keepRunning.get())
                 {
-                	if (failureType == Config.Failure.PROCESS_CRASH)
+                	if (failureType == Config.Failure.PROCESS_CRASH && numberOfMessages >= Config.MESSAGE_DELAY)
                 	{
                 		while (true) {}
                 	}
