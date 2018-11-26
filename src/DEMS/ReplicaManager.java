@@ -196,7 +196,7 @@ public class ReplicaManager {
 		private void notifyFrontEnd(JSONObject jsonObject) {
 			logger.log("notifying frontend: " + jsonObject.toJSONString());
 			try {
-				InetAddress frontEndHost = InetAddress.getByName(Config.FRONT_END_HOST);
+				InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
 				int frontEndPort = Config.PortNumbers.RE_FE;
 				byte[] sendData = jsonObject.toString().getBytes();
 				DatagramPacket datagramPacket = new DatagramPacket(sendData, sendData.length, frontEndHost, frontEndPort);
