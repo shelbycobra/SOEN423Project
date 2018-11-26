@@ -6,10 +6,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -41,16 +43,33 @@ public class CenterServerController implements DEMS.Replica {
 	private int numMessages = 0;
 	private Config.Failure errorType = Config.Failure.NONE;
 
+	AtomicBoolean runThreadsAtomicBoolean = new AtomicBoolean(true);
+
 	private class ListenForPacketsThread extends Thread {
 
 		@Override
 		public void run() {
+			logger.log("started ListenForPacketsThread");
 			try {
 				while (true) {
 					byte[] buffer = new byte[1000];
 					DatagramPacket message = new DatagramPacket(buffer, buffer.length);
 					logger.log("listening on port: " + Config.PortNumbers.SEQ_RE);
-					multicastSocket.receive(message);
+
+					while (true) {
+						try {
+							multicastSocket.receive(message);
+							break;
+						} catch(SocketTimeoutException e) {
+							if (runThreadsAtomicBoolean.get()) {
+								continue;
+							} else {
+								logger.log("exiting ListenForPacketsThread");
+								multicastSocket.close();
+								return;
+							}
+						}
+					}
 
 					// logger.log("Received Message = " + new String(message.getData()));
 					// Get message string
@@ -92,9 +111,14 @@ public class CenterServerController implements DEMS.Replica {
 
 		@Override
 		public void run() {
-			logger.log("CenterServerController: Processing messages\n");
+			logger.log("started ProcessMessagesThread");
 			try {
 				while (true) {
+					if (!runThreadsAtomicBoolean.get()) {
+						logger.log("exiting ProcessMessagesThread");
+						return;
+					}
+
 					// Checks if failure should start
 					checkToStartFailure();
 
@@ -174,10 +198,6 @@ public class CenterServerController implements DEMS.Replica {
 	public CenterServerController() {
 		this.logger = new Logger("CenterServerController");
 
-		centerServerCA = new CenterServer("CA");
-		centerServerUS = new CenterServer("US");
-		centerServerUK = new CenterServer("UK");
-
 		// Instantiate Semaphores
 		mutex = new Semaphore(1);
 		deliveryQueueMutex = new Semaphore(0);
@@ -205,9 +225,11 @@ public class CenterServerController implements DEMS.Replica {
 	}
 
 	void byzantineFailure() throws IOException, InterruptedException {
+		this.logger.log("entering byzantineFailure");
 		while (true) {
 			JSONObject obj = new JSONObject();
-			obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL);
+			obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL.toString());
+			this.logger.log("sending to frontend: " + obj.toJSONString());
 			byte[] buffer = obj.toString().getBytes();
 
 			DatagramSocket socket = new DatagramSocket();
@@ -219,6 +241,7 @@ public class CenterServerController implements DEMS.Replica {
 	}
 
 	void processCrashFailure() {
+		this.logger.log("entering processCrashFailure");
 		while (true);
 	}
 
@@ -235,12 +258,13 @@ public class CenterServerController implements DEMS.Replica {
 		try {
 			setupMulticastSocket();
 
-			centerServerCA.start();
-			centerServerUS.start();
-			centerServerUK.start();
+			centerServerCA = new CenterServer("CA");
+			centerServerUS = new CenterServer("US");
+			centerServerUK = new CenterServer("UK");
 
 			listenForPackets = new ListenForPacketsThread();
 			processMessages = new ProcessMessagesThread();
+
 			listenForPackets.start();
 			processMessages.start();
 
@@ -257,6 +281,7 @@ public class CenterServerController implements DEMS.Replica {
 	private void setupMulticastSocket() throws Exception {
 		InetAddress group = InetAddress.getByName("228.5.6.7");
 		multicastSocket = new MulticastSocket(Config.PortNumbers.SEQ_RE);
+		multicastSocket.setSoTimeout(1000);
 		multicastSocket.joinGroup(group);
 	}
 
@@ -266,18 +291,23 @@ public class CenterServerController implements DEMS.Replica {
 
 	@Override
 	public void shutdownServers() {
-		this.logger.log("\nShutting down servers...\n");
+		this.logger.log("shutting down servers...");
 
-		centerServerCA.interrupt();
-		centerServerUS.interrupt();
-		centerServerUK.interrupt();
-
-		listenForPackets.interrupt();
+		runThreadsAtomicBoolean.set(false);
 		processMessages.interrupt();
 
-		if (multicastSocket != null) {
-			multicastSocket.close();
+		try {
+			listenForPackets.join();
+			processMessages.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+
+		centerServerCA.stopServer();
+		centerServerUS.stopServer();
+		centerServerUK.stopServer();
+
+		this.logger.log("shutdown all components");
 	}
 
 	@Override
