@@ -1,17 +1,21 @@
 package DEMS;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class ReplicaManager {
 
@@ -26,6 +30,8 @@ public class ReplicaManager {
 	private Thread udpServerThread;
 	private Logger logger;
 
+	private InetAddress thisReplicaHost = null;
+	private int thisReplicaPort = 0;
 	private InetAddress otherReplicaHost1 = null;
 	private int otherReplicaPort1 = 0;
 	private InetAddress otherReplicaHost2 = null;
@@ -66,8 +72,15 @@ public class ReplicaManager {
 				String commandType = jsonObject.get(MessageKeys.COMMAND_TYPE).toString();
 
 				if (commandType.equals(Config.GET_DATA)) {
-					jsonObject.put(MessageKeys.MESSAGE, replica.getData());
-					jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+					try {
+						JSONArray jsonArray = replicaGetData();
+						jsonObject.put(MessageKeys.MESSAGE, jsonArray);
+						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+					} catch (Exception e) {
+						e.printStackTrace();
+						jsonObject.put(MessageKeys.MESSAGE, "unable to get data for this replica");
+						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
+					}
 				} else if (commandType.equals(Config.REPORT_FAILURE)) {
 					if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.PROCESS_CRASH) {
 						replicaCrashCount += 1;
@@ -97,6 +110,31 @@ public class ReplicaManager {
 				notifyFrontEnd(jsonObject);
 			}
 
+		}
+
+		private JSONArray replicaGetData() throws Exception {
+			DatagramSocket datagramSocket = new DatagramSocket();
+
+			JSONObject jsonSendObject = new JSONObject();
+			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_DATA);
+			byte[] sendDate = jsonSendObject.toString().getBytes();
+			DatagramPacket sendPacket = new DatagramPacket(sendDate, sendDate.length, thisReplicaHost, thisReplicaPort);
+			datagramSocket.send(sendPacket);
+
+			byte[] receiveData = new byte[1024];
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			datagramSocket.receive(receivePacket);
+			JSONArray jsonArray = (JSONArray) jsonParser.parse(new String(receivePacket.getData()).trim());
+			return jsonArray;
+		}
+
+		private void replicaSetData(JSONArray jsonArray) throws IOException {
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.SET_DATA);
+			jsonObject.put(MessageKeys.MESSAGE, jsonArray);
+			byte[] sendDate = jsonArray.toString().getBytes();
+			DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, thisReplicaHost, thisReplicaPort);
+			datagramSocket.send(datagramPacket);
 		}
 
 		private JSONObject processRequest(DatagramPacket receivePacket) throws ParseException {
@@ -133,7 +171,7 @@ public class ReplicaManager {
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
 
 			JSONArray recordData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
-			replica.setData(recordData);
+			replicaSetData(recordData);
 		}
 
 		private void notifyFrontEnd(JSONObject jsonObject) {
@@ -157,18 +195,24 @@ public class ReplicaManager {
 
 		if (replicaNumber == 1) {
 			this.replicaManagerPort = DEMS.Config.Replica1.RM_PORT;
+			this.thisReplicaHost = InetAddress.getByName(Config.IPAddresses.REPLICA1);
+			this.thisReplicaPort = Config.Replica1.RE_PORT;
 			this.otherReplicaHost1 = InetAddress.getByName(Config.IPAddresses.REPLICA2);
 			this.otherReplicaPort1 = Config.Replica2.RM_PORT;
 			this.otherReplicaHost2 = InetAddress.getByName(Config.IPAddresses.REPLICA3);
 			this.otherReplicaPort2 = Config.Replica3.RM_PORT;
 		} else if (replicaNumber == 2) {
 			this.replicaManagerPort = DEMS.Config.Replica2.RM_PORT;
+			this.thisReplicaHost = InetAddress.getByName(Config.IPAddresses.REPLICA2);
+			this.thisReplicaPort = Config.Replica2.RE_PORT;
 			this.otherReplicaHost1 = InetAddress.getByName(Config.IPAddresses.REPLICA1);
 			this.otherReplicaPort1 = Config.Replica1.RM_PORT;
 			this.otherReplicaHost2 = InetAddress.getByName(Config.IPAddresses.REPLICA3);
 			this.otherReplicaPort2 = Config.Replica3.RM_PORT;
 		} else if (replicaNumber == 3) {
 			this.replicaManagerPort = DEMS.Config.Replica3.RM_PORT;
+			this.thisReplicaHost = InetAddress.getByName(Config.IPAddresses.REPLICA3);
+			this.thisReplicaPort = Config.Replica3.RE_PORT;
 			this.otherReplicaHost2 = InetAddress.getByName(Config.IPAddresses.REPLICA1);
 			this.otherReplicaPort2 = Config.Replica1.RM_PORT;
 			this.otherReplicaHost1 = InetAddress.getByName(Config.IPAddresses.REPLICA2);
