@@ -120,6 +120,16 @@ public class ReplicaManager {
 					}
 				}
 
+				InetAddress IPAddress = receivePacket.getAddress();
+				int port = receivePacket.getPort();
+				byte[] sendDate = jsonObject.toString().getBytes();
+				DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, IPAddress, port);
+				try {
+					datagramSocket.send(datagramPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
 				notifyFrontEnd(jsonObject);
 			}
 
@@ -137,6 +147,7 @@ public class ReplicaManager {
 
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			datagramSocket.receive(receivePacket); // ignore echo
 			datagramSocket.receive(receivePacket);
 			JSONArray jsonArray = (JSONArray) jsonParser.parse(new String(receivePacket.getData()).trim());
 			logger.log("got data from local replica: " + jsonArray.toJSONString());
@@ -180,10 +191,13 @@ public class ReplicaManager {
 			JSONObject jsonSendObject = new JSONObject();
 			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_DATA);
 			byte[] sendDate = jsonSendObject.toString().getBytes();
+
+			DatagramSocket datagramSocket = new DatagramSocket();
 			DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, otherReplicaHost1, otherReplicaPort1);
 			logger.log("getting data from otherReplica1: " + jsonSendObject.toJSONString());
+			// datagramSocket.setSoTimeout(2000);
 			datagramSocket.send(datagramPacket);
-
+			
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			datagramSocket.receive(receivePacket); // ignore echo packet
@@ -235,10 +249,10 @@ public class ReplicaManager {
 			this.replicaManagerPort = DEMS.Config.Replica3.RM_PORT;
 			this.thisReplicaHost = InetAddress.getByName(Config.IPAddresses.REPLICA3);
 			this.thisReplicaPort = Config.Replica3.RE_PORT;
-			this.otherReplicaHost2 = InetAddress.getByName(Config.IPAddresses.REPLICA1);
-			this.otherReplicaPort2 = Config.Replica1.RM_PORT;
-			this.otherReplicaHost1 = InetAddress.getByName(Config.IPAddresses.REPLICA2);
-			this.otherReplicaPort1 = Config.Replica2.RM_PORT;
+			this.otherReplicaHost1 = InetAddress.getByName(Config.IPAddresses.REPLICA1);
+			this.otherReplicaPort1 = Config.Replica1.RM_PORT;
+			this.otherReplicaHost2 = InetAddress.getByName(Config.IPAddresses.REPLICA2);
+			this.otherReplicaPort2 = Config.Replica2.RM_PORT;
 		} else {
 			throw new IllegalArgumentException("Invalid replicaNumber: " + replicaNumber);
 		}
