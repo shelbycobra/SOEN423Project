@@ -3,12 +3,18 @@ package DEMS;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+
+import static DEMS.Config.MULTICAST_PORT;
+import static DEMS.Config.MULTICAST_SOCKET;
 
 public class Sequencer {
 
@@ -22,7 +28,7 @@ public class Sequencer {
     private static InetAddress group;
     private static Semaphore mutex = new Semaphore(1);
     private static Semaphore processMessageSem = new Semaphore(0);
-    private static JSONParser parser;
+    private static JSONParser parser = new JSONParser();
 
     private static class SentMessage {
 
@@ -134,6 +140,9 @@ public class Sequencer {
     }
 
     public static void main (String[] args) {
+
+        sendIPAddress();
+
         startup();
     }
 
@@ -182,5 +191,69 @@ public class Sequencer {
             // Increment sequence number
             sequenceNumber++;
         }
+    }
+
+    public static void sendIPAddress() {
+
+        System.out.println("Waiting for FE...");
+        try {
+            InetAddress group = InetAddress.getByName(MULTICAST_SOCKET);
+            MulticastSocket socket = new MulticastSocket(MULTICAST_PORT);
+            socket.joinGroup(group);
+
+            byte[] buffer = new byte[1000];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            socket.receive(packet);
+
+            JSONObject message = (JSONObject) parser.parse(new String(packet.getData()).trim());
+
+            if (message.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.IP_ADDRESS_REQUEST)) {
+                System.out.println("Received IP Address request:");
+                Config.IPAddresses.FRONT_END = message.get(MessageKeys.IP_ADDRESS).toString();
+                System.out.println("FE Address: " + Config.IPAddresses.FRONT_END);
+                JSONObject response = new JSONObject();
+
+                Config.IPAddresses.SEQUENCER = getIPFromURL();
+                System.out.println("SEQUENCER IP: " + Config.IPAddresses.SEQUENCER);
+                response.put(MessageKeys.COMMAND_TYPE, Config.IP_ADDRESS_RESPONSE);
+                response.put(MessageKeys.IP_ADDRESS, Config.IPAddresses.SEQUENCER);
+
+                buffer = response.toString().getBytes();
+
+                DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), MULTICAST_PORT);
+
+                socket.send(responsePacket);
+
+            } else
+                System.err.println("INVALID IP ADDRESS REQUEST");
+
+            socket.leaveGroup(group);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getIPFromURL() {
+        String systemipaddress = "";
+        try
+        {
+            URL url_name = new URL("http://bot.whatismyipaddress.com");
+
+            BufferedReader sc =
+                    new BufferedReader(new InputStreamReader(url_name.openStream()));
+
+            // reads system IPAddress
+            systemipaddress = sc.readLine().trim();
+            sc.close();
+        }
+        catch (Exception e)
+        {
+            systemipaddress = "Cannot Execute Properly";
+        }
+        System.out.println("Public IP Address: " + systemipaddress +"\n");
+        return systemipaddress;
     }
 }

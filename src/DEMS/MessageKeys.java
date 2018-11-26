@@ -15,5 +15,5 @@ public class MessageKeys
 			STATUS_CODE = "status_code", 		RM_PORT_NUMBER = "rm_port_num",
 			REPLICA_NUMBER = "replica_number",	FAILURE_TYPE = "failure_type",
 			RECORD_COUNT = "record_count",		RECORD_EXISTS = "record_exists",
-			RECORDS = "records";
+			RECORDS = "records", 				IP_ADDRESS = "ip_address";
 }

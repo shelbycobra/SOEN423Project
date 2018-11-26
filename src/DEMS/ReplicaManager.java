@@ -5,13 +5,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import static DEMS.Config.*;
 
 public class ReplicaManager {
 
@@ -23,6 +21,7 @@ public class ReplicaManager {
 	private final int maxCrashCount = 1;
 	private final int maxByzantineCount = 3;
 
+	private static JSONParser parser = new JSONParser();
 	private Thread udpServerThread;
 	private Logger logger;
 
@@ -218,6 +217,8 @@ public class ReplicaManager {
 			}
 		});
 
+		sendIPAddress(replicaNumber);
+		
 		replicaManager.logger.log("starting replica: " + replicaNumber);
 		replica.runServers(errorType);
 
@@ -225,6 +226,81 @@ public class ReplicaManager {
 		replicaManager.start();
 	}
 
+	public static void sendIPAddress(int number) {
+		System.out.println("Waiting for FE...");
+		try {
+			InetAddress group = InetAddress.getByName(MULTICAST_SOCKET);
+			MulticastSocket socket = new MulticastSocket(MULTICAST_PORT);
+			socket.joinGroup(group);
+			
+			byte[] buffer = new byte[1000];
+			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+			socket.receive(packet);
+
+			JSONObject message = (JSONObject) parser.parse(new String(packet.getData()).trim());
+
+			if (number == 1)
+				IPAddresses.REPLICA1 = InetAddress.getLocalHost().getHostAddress();
+			else if (number == 2)
+				IPAddresses.REPLICA2 = InetAddress.getLocalHost().getHostAddress();
+			else if (number == 3)
+				IPAddresses.REPLICA3 = InetAddress.getLocalHost().getHostAddress();
+			else {
+				System.out.println("INVALID REPLICA NUMBER");
+				System.exit(1);
+			}
+			
+			if (message.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.IP_ADDRESS_REQUEST)) {
+				System.out.println("Received IP Address request:");
+				IPAddresses.FRONT_END = message.get(MessageKeys.IP_ADDRESS).toString();
+				System.out.println("FE Address: " + IPAddresses.FRONT_END);
+				JSONObject response = new JSONObject();
+
+				String addr = getIPFromURL();
+				System.out.println("REPLICA MANAGER IP: " + addr);
+
+				response.put(MessageKeys.COMMAND_TYPE, Config.IP_ADDRESS_RESPONSE);
+				response.put(MessageKeys.IP_ADDRESS, addr);
+				response.put(MessageKeys.REPLICA_NUMBER, number);
+				
+				buffer = response.toString().getBytes();
+				
+				DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(IPAddresses.FRONT_END), MULTICAST_PORT);
+				
+				socket.send(responsePacket);
+				
+			} else
+				System.err.println("INVALID IP ADDRESS REQUEST");
+
+			socket.leaveGroup(group);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static String getIPFromURL() {
+		String systemipaddress = "";
+		try
+		{
+			URL url_name = new URL("http://bot.whatismyipaddress.com");
+
+			BufferedReader sc =
+					new BufferedReader(new InputStreamReader(url_name.openStream()));
+
+			// reads system IPAddress
+			systemipaddress = sc.readLine().trim();
+			sc.close();
+		}
+		catch (Exception e)
+		{
+			systemipaddress = "Cannot Execute Properly";
+		}
+		System.out.println("Public IP Address: " + systemipaddress +"\n");
+		return systemipaddress;
+	}
 }
 
 class Logger {

@@ -35,11 +35,11 @@ public class Config {
 	
 	public static class IPAddresses
 	{
-		public static final String REPLICA1 = "132.205.64.132";
-		public static final String REPLICA2 = "132.205.64.137";
-		public static final String REPLICA3 = "132.205.64.123";
-		public static final String SEQUENCER = "132.205.64.132";
-		public static final String FRONT_END = "132.205.64.137";
+		public static String REPLICA1 = "132.205.64.132";
+		public static String REPLICA2 = "132.205.64.137";
+		public static String REPLICA3 = "132.205.64.123";
+		public static String SEQUENCER = "132.205.64.132";
+		public static String FRONT_END = "132.205.64.137";
 	}
 
 	public enum StatusCode {
@@ -53,6 +53,9 @@ public class Config {
 		PROCESS_CRASH,
 	}
 
+	public static final String MULTICAST_SOCKET = "228.10.10.10";
+	public static final int MULTICAST_PORT = 9999;
+
 	public static final int MESSAGE_DELAY = 3;
 	
 	public static final String CREATE_MANAGER_RECORD = "create_manager_record", CREATE_EMPLOYEE_RECORD = "create_employee_record",
@@ -60,5 +63,6 @@ public class Config {
 			EXIT = "exit", ACK = "ack", RECORD_EXISTS = "record_exists", RESTART_REPLICA = "restart_replica",
 			BAD_REPLICA_NUMBER = "bad_replica_number", FAILED_REPLICA_RESTART_FAILED = "failed_replica_restart_failed",
 			FAILED_REPLICA_RESTARTED = "failed_replica_restarted", GET_DATA = "get_data", SET_DATA = "set_data", REPORT_FAILURE = "report_failure",
-			REPLICA_RESTARTED = "replica_restarted", FAILURE_COUNTS_INCREMENTED = "failure_counts_incremented";
+			REPLICA_RESTARTED = "replica_restarted", FAILURE_COUNTS_INCREMENTED = "failure_counts_incremented",
+			IP_ADDRESS_REQUEST = "ip_address_request", IP_ADDRESS_RESPONSE = "ip_address_response";
 }

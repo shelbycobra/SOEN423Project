@@ -237,16 +237,10 @@ public class CenterServer implements Replica {
     }
     
     private void checkErrorType(int type) {
-    	
-    	if (Config.Failure.NONE.ordinal() == type) {
-    		// DO NOTHING
-    	} else if (Config.Failure.BYZANTINE.ordinal() == type) {
+        if (Config.Failure.BYZANTINE.ordinal() == type)
     		failureType = Config.Failure.BYZANTINE;
-    		
-    	} else if (Config.Failure.PROCESS_CRASH.ordinal() == type) {
-    		// DO PROCESS CRASH
+    	else if (Config.Failure.PROCESS_CRASH.ordinal() == type)
     		failureType = Config.Failure.PROCESS_CRASH;
-    	}
     }
     
     void checkToStartFailure() throws IOException, InterruptedException {
