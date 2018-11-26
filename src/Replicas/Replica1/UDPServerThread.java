@@ -38,7 +38,7 @@ public class UDPServerThread extends Thread {
     public void run() {
         try {
             aSocket = new DatagramSocket(port);
-            System.out.println(location + "server UDP Socket started. Waiting for request...");
+            System.out.println(location + " server UDP Socket started. Waiting for request...");
             
             while(true) 
             {
@@ -65,7 +65,7 @@ public class UDPServerThread extends Thread {
                     JSONParser parser = new JSONParser();
                     JSONObject jsonMessage = (JSONObject) parser.parse(new String(request.getData()).trim());
 
-                    msgID = (String) jsonMessage.get(MessageKeys.MESSAGE_ID);
+                    msgID = jsonMessage.get(MessageKeys.MESSAGE_ID).toString();
 
                     // recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
                     // FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
@@ -205,7 +205,7 @@ public class UDPServerThread extends Thread {
          message.put(MessageKeys.MESSAGE, msg);
          message.put(MessageKeys.MESSAGE_ID, msgID);
          message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
-         message.put(MessageKeys.STATUS_CODE, status);
+         message.put(MessageKeys.STATUS_CODE, status.toString());
 
          byte[] buffer = message.toString().getBytes();
          DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
