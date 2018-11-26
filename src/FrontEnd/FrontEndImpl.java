@@ -2,7 +2,6 @@ package FrontEnd;
 
 import DEMS.Config;
 import DEMS.MessageKeys;
-import javafx.util.Pair;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -272,10 +271,10 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    datagramSocket.receive(responsePacket);
 	                    String data = new String(responsePacket.getData()).trim();
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
-	                    System.out.println(jsonMessage);
+	                    
 	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
-	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), (Config.StatusCode) jsonMessage.get(MessageKeys.STATUS_CODE));
+	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), Integer.parseInt(jsonMessage.get(MessageKeys.STATUS_CODE).toString()));
 	                    message.setReturnMessage(returnMessage);
 	                    
 	                    clockTime(message, port);
@@ -283,10 +282,14 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    receiveFromReplica.release();
 	                    System.out.println("Received response from Replica Manager for ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString() + " Semaphore: " + receiveFromReplica.availablePermits());
 	                }
-	        		catch (ParseException | IOException e)
+	        		catch (ParseException e)
 	        		{
-						continue;
+	        			e.printStackTrace();
 					}
+	        		catch (IOException e)
+	        		{
+	        			continue;
+	        		}
 	            }
 			}
 			catch (SocketException e1)
