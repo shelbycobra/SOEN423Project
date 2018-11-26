@@ -8,9 +8,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -37,6 +39,8 @@ public class ReplicaManager {
 	private InetAddress otherReplicaHost2 = null;
 	private int otherReplicaPort2 = 0;
 
+	AtomicBoolean runThreadsAtomicBoolean = new AtomicBoolean(true);
+
 	class UdpServer extends Thread {
 
 		private int replicaCrashCount = 0;
@@ -50,6 +54,7 @@ public class ReplicaManager {
 
 			try {
 				datagramSocket = new DatagramSocket(replicaManagerPort);
+				datagramSocket.setSoTimeout(1000);
 				logger.log("listening on port: " + replicaManagerPort);
 			} catch (SocketException e) {
 				e.printStackTrace();
@@ -64,7 +69,22 @@ public class ReplicaManager {
 
 				try {
 					logger.log("waiting for request");
-					datagramSocket.receive(receivePacket);
+
+					while (true) {
+						try {
+							datagramSocket.receive(receivePacket);
+							break;
+						} catch(SocketTimeoutException e) {
+							if (runThreadsAtomicBoolean.get()) {
+								continue;
+							} else {
+								logger.log("exiting UdpServer");
+								datagramSocket.close();
+								return;
+							}
+						}
+					}
+
 					jsonObject = processRequest(receivePacket);
 					logger.log("received object: " + jsonObject.toJSONString());
 				} catch (IOException | ParseException e) {
@@ -267,7 +287,12 @@ public class ReplicaManager {
 
 	public void stop() {
 		this.logger.log("interrupting udpServerThread");
-		udpServerThread.interrupt();
+		runThreadsAtomicBoolean.set(false);
+		try {
+			udpServerThread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		this.logger.close();
 	}
 
