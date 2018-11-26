@@ -8,16 +8,18 @@ public class ReturnMessage
 	String message;
 	StatusCode code;
 	
-	public ReturnMessage(int port, String message, int code)
+	public ReturnMessage(int port, String message, String code)
 	{
 		this.port = port;
 		this.message = message;
 		
-		switch (code)
+		if (code.equals(StatusCode.SUCCESS.toString()))
 		{
-			case 0: this.code = StatusCode.SUCCESS;
-			break;
-			case 1: this.code = StatusCode.FAIL;
+			this.code = StatusCode.SUCCESS;
+		}
+		else
+		{
+			this.code = StatusCode.FAIL;
 		}
 	}
 }

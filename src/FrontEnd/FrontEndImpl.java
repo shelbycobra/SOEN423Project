@@ -26,10 +26,10 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	private ORB orb;
 	private Semaphore receiveFromReplica = new Semaphore(0);
 	private ConcurrentHashMap<Integer, Message> messages = new ConcurrentHashMap<>();
-	private long longestTimeout = 1000;
+	private long longestTimeout = 5000;
 	private JSONParser parser = new JSONParser();
 	private int messageID = 1;
-	private final AtomicBoolean listeningForResponses = new AtomicBoolean(true); 
+	private final AtomicBoolean listeningForResponses = new AtomicBoolean(true);
 
 	public FrontEndImpl()
 	{
@@ -272,15 +272,15 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    String data = new String(responsePacket.getData()).trim();
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
 	                    
-	                    Integer port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
+	                    int port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
-	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), Integer.parseInt(jsonMessage.get(MessageKeys.STATUS_CODE).toString()));
+	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), jsonMessage.get(MessageKeys.STATUS_CODE).toString());
 	                    message.setReturnMessage(returnMessage);
 	                    
 	                    clockTime(message, port);
 	                    
 	                    receiveFromReplica.release();
-	                    System.out.println("Received response from Replica Manager for ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString() + " Semaphore: " + receiveFromReplica.availablePermits());
+	                    System.out.println("Received response from Replica on port " + port + " for message ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString() + " Semaphore: " + receiveFromReplica.availablePermits());
 	                }
 	        		catch (ParseException e)
 	        		{
@@ -325,13 +325,18 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		{
 			while (elapsedTime < 2 * longestTimeout)
 			{
+				System.out.println("Received " + message.getReturnMessages().size() + " messages so far...");
+				
 				if (message.getReturnMessages().size() == 3)
 				{
-					return;
+					System.out.println("Got 3 messages!");
+					break;
 				}
 				
 				elapsedTime = System.currentTimeMillis() - startTime;
 			}
+			
+			System.out.println("Keys: " + message.getReturnTimes().keySet().toString());
 			
 			if (!message.getReturnTimes().containsKey(Config.Replica1.RM_PORT))
 			{
@@ -411,7 +416,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 				InetAddress host = InetAddress.getByName(hosts[i]);
 				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, ports[i]);
 				socket.send(request);
-				System.out.println("Sending process crash error message to Replica Manager " + ports[i]);
+				System.out.println("Sending process crash error message to Replica Manager " + ports[i] + " about Replica on port: " + port);
 			}
 			
 		}
@@ -449,7 +454,6 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		try
 		{
 			response = sendToSequencerTask.get();
-//			stopTimer(message.getId());
 		}
 		catch (InterruptedException e)
 		{
@@ -484,15 +488,11 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 
 	private synchronized Message createMessage(JSONObject payload) throws InterruptedException
 	{
-//		mutex.acquire();
-		
 		payload.put(MessageKeys.MESSAGE_ID, messageID);
 		Message message = new Message(messageID);
 		message.setSendData(payload);
 		messages.put(messageID, message);
 		messageID++;
-		
-//        mutex.release();
         
         return message;
 	}
