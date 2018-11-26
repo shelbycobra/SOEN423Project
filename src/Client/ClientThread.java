@@ -35,7 +35,7 @@ public class ClientThread implements Callable<String>
 		{
 			case Config.CREATE_MANAGER_RECORD:	 response = client.createMRecord("Vik", "Singh", "1", "2", new Project[] {new Project("PID", "ClientName", "ProjectName")}, "CA");
 					break;
-			case Config.CREATE_EMPLOYEE_RECORD: response = client.createERecord("Peter", "Parker", "1", "2", "3");
+			case Config.CREATE_EMPLOYEE_RECORD: response = client.createERecord("Peter", "Parker", "1", "peter@parker.com", "P12345");
 					break;
 			case Config.GET_RECORD_COUNT: response = client.getRecordCount();
 					break;
