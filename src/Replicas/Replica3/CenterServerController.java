@@ -64,9 +64,7 @@ public class CenterServerController implements DEMS.Replica {
 							if (runThreadsAtomicBoolean.get()) {
 								continue;
 							} else {
-								logger.log("exiting ListenForPacketsThread");
-								multicastSocket.close();
-								return;
+								throw new Exception("runThreadsAtomicBoolean is false");
 							}
 						}
 					}
@@ -87,11 +85,11 @@ public class CenterServerController implements DEMS.Replica {
 					// Signal to Process Messages Thread to start processing a message from the queue
 					deliveryQueueMutex.release();
 				}
-			} catch (InterruptedException | IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				logger.log("ListenForPacketsThread is shutting down");
-			} catch (ParseException e) {
-				e.printStackTrace();
+				logger.log("exiting ListenForPacketsThread");
+				multicastSocket.close();
+				return;
 			}
 		}
 
@@ -115,12 +113,8 @@ public class CenterServerController implements DEMS.Replica {
 			try {
 				while (true) {
 					if (!runThreadsAtomicBoolean.get()) {
-						logger.log("exiting ProcessMessagesThread");
-						return;
+						throw new Exception("runThreadsAtomicBoolean is false");
 					}
-
-					// Checks if failure should start
-					checkToStartFailure();
 
 					// Sleep a bit so that the message can be added to the queue
 					Thread.sleep(300);
@@ -140,15 +134,21 @@ public class CenterServerController implements DEMS.Replica {
 						obj = deliveryQueue.peek();
 						mutex.release();
 					}
+					
+					// Checks if failure should start
+					if (checkToStartFailure(obj.get(MessageKeys.MESSAGE_ID).toString())) {
+						continue;
+					}
 
 					lastSequenceNumber = seqNum;
 					sendMessageToServer(obj);
 					numMessages++;
 				}
-			} catch (InterruptedException e) {
-				logger.log("ProcessMessageThread is shutting down.");
 			} catch (Exception e) {
 				e.printStackTrace();
+				logger.log("exiting ProcessMessageThread");
+				multicastSocket.close();
+				return;
 			}
 		}
 
@@ -207,37 +207,36 @@ public class CenterServerController implements DEMS.Replica {
 		deliveryQueue = new PriorityQueue<>(msgComp);
 	}
 
-	void checkToStartFailure() throws IOException, InterruptedException {
+	boolean checkToStartFailure(String messageID) throws IOException, InterruptedException {
 		if (numMessages >= Config.MESSAGE_DELAY) {
 			switch(this.errorType) {
 				case BYZANTINE:
-					byzantineFailure();
-					numMessages = 0;
-					break;
+					byzantineFailure(messageID);
+					return true;
 				case PROCESS_CRASH:
 					processCrashFailure();
-					numMessages = 0;
-					break;
+					return true;
 				default:
-					break;
+					return false;
 			}
 		}
+		return false;
 	}
 
-	void byzantineFailure() throws IOException, InterruptedException {
+	void byzantineFailure(String messageID) throws IOException, InterruptedException {
 		this.logger.log("entering byzantineFailure");
-		while (true) {
-			JSONObject obj = new JSONObject();
-			obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL.toString());
-			this.logger.log("sending to frontend: " + obj.toJSONString());
-			byte[] buffer = obj.toString().getBytes();
+		JSONObject obj = new JSONObject();
+		obj.put(MessageKeys.MESSAGE_ID, messageID);
+		obj.put(MessageKeys.MESSAGE, "byzantineFailure");
+		obj.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
+		obj.put(MessageKeys.RM_PORT_NUMBER, Integer.toString(Config.Replica3.RM_PORT));
+		this.logger.log("sending to frontend: " + obj.toJSONString());
+		byte[] buffer = obj.toString().getBytes();
 
-			DatagramSocket socket = new DatagramSocket();
-			DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
-
-			socket.send(packet);
-			Thread.sleep(200);
-		}
+		DatagramSocket socket = new DatagramSocket();
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
+		socket.send(packet);
+		socket.close();
 	}
 
 	void processCrashFailure() {
@@ -294,6 +293,7 @@ public class CenterServerController implements DEMS.Replica {
 		this.logger.log("shutting down servers...");
 
 		runThreadsAtomicBoolean.set(false);
+		listenForPackets.interrupt();
 		processMessages.interrupt();
 
 		try {
