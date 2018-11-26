@@ -180,7 +180,7 @@ public class ServerThread extends Thread
         message.put(MessageKeys.MESSAGE, msg);
         message.put(MessageKeys.MESSAGE_ID, messageID);
         message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
-        message.put(MessageKeys.STATUS_CODE, status);
+        message.put(MessageKeys.STATUS_CODE, status.toString());
 
         byte[] buffer = message.toString().getBytes();
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getLocalHost(), Config.PortNumbers.RE_FE);
