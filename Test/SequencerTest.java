@@ -285,10 +285,10 @@ public class SequencerTest {
 
     private void sendFourRecords(byte[] msg1, byte[] msg2, byte[] msg3, byte[] msg4) {
         try {
-            DatagramPacket packet1 = new DatagramPacket(msg1, msg1.length, address, 8000);
-            DatagramPacket packet2 = new DatagramPacket(msg2, msg2.length, address, 8000);
-            DatagramPacket packet3 = new DatagramPacket(msg3, msg3.length, address, 8000);
-            DatagramPacket packet4 = new DatagramPacket(msg4, msg4.length, address, 8000);
+            DatagramPacket packet1 = new DatagramPacket(msg1, msg1.length, address, Config.PortNumbers.FE_SEQ);
+            DatagramPacket packet2 = new DatagramPacket(msg2, msg2.length, address, Config.PortNumbers.FE_SEQ);
+            DatagramPacket packet3 = new DatagramPacket(msg3, msg3.length, address, Config.PortNumbers.FE_SEQ);
+            DatagramPacket packet4 = new DatagramPacket(msg4, msg4.length, address, Config.PortNumbers.FE_SEQ);
 
             Thread.sleep(150);
             socket.send(packet1);
