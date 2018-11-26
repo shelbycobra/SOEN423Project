@@ -63,6 +63,7 @@ public class ReplicaManager {
 				JSONObject jsonObject;
 
 				try {
+					logger.log("waiting for request");
 					datagramSocket.receive(receivePacket);
 					jsonObject = processRequest(receivePacket);
 				} catch (IOException | ParseException e) {
@@ -136,11 +137,13 @@ public class ReplicaManager {
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			datagramSocket.receive(receivePacket);
 			JSONArray jsonArray = (JSONArray) jsonParser.parse(new String(receivePacket.getData()).trim());
+			logger.log("got data from local replica: " + jsonArray.toJSONString());
+
 			return jsonArray;
 		}
 
 		private void replicaSetData(JSONArray jsonArray) throws IOException {
-			logger.log("setting data in local replica");
+			logger.log("setting data in local replica: " + jsonArray.toJSONString());
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.SET_DATA);
 			jsonObject.put(MessageKeys.MESSAGE, jsonArray);
@@ -172,25 +175,26 @@ public class ReplicaManager {
 			replica.shutdownServers();
 			replica.runServers(0);
 
-			logger.log("getting data from other replica 1");
 			JSONObject jsonSendObject = new JSONObject();
 			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_DATA);
 			byte[] sendDate = jsonSendObject.toString().getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, otherReplicaHost1, otherReplicaPort1);
+			logger.log("getting data from otherReplica1: " + jsonSendObject.toJSONString());
+			datagramSocket.send(datagramPacket);
 
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			datagramSocket.receive(receivePacket); // ignore echo packet
 			datagramSocket.receive(receivePacket);
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
+			logger.log("got data from otherReplica1: " + jsonReceiveObject.toJSONString());
 
 			JSONArray recordData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
-			logger.log("got data from other replica 1");
 			replicaSetData(recordData);
 		}
 
 		private void notifyFrontEnd(JSONObject jsonObject) {
-			logger.log("notifying frontend");
+			logger.log("notifying frontend: " + jsonObject.toJSONString());
 			try {
 				InetAddress frontEndHost = InetAddress.getByName(Config.FRONT_END_HOST);
 				int frontEndPort = Config.PortNumbers.RE_FE;
