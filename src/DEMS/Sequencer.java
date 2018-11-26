@@ -139,7 +139,7 @@ public class Sequencer {
         }
     }
 
-    public static void main (String[] args) {
+    public static void main (String[] args) throws Exception{
 
         sendIPAddress();
 
@@ -193,9 +193,12 @@ public class Sequencer {
         }
     }
 
-    public static void sendIPAddress() {
+    public static void sendIPAddress() throws InterruptedException{
 
         System.out.println("Waiting for FE...");
+        Config.IPAddresses.SEQUENCER = getIPFromURL();
+
+        System.out.println("SEQUENCER IP: " + Config.IPAddresses.SEQUENCER);
         try {
             InetAddress group = InetAddress.getByName(MULTICAST_SOCKET);
             MulticastSocket socket = new MulticastSocket(MULTICAST_PORT);
@@ -203,25 +206,25 @@ public class Sequencer {
 
             byte[] buffer = new byte[1000];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
             socket.receive(packet);
 
             JSONObject message = (JSONObject) parser.parse(new String(packet.getData()).trim());
+
+            System.out.println("Message Received = " + message.toString());
 
             if (message.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.IP_ADDRESS_REQUEST)) {
                 System.out.println("Received IP Address request:");
                 Config.IPAddresses.FRONT_END = message.get(MessageKeys.IP_ADDRESS).toString();
                 System.out.println("FE Address: " + Config.IPAddresses.FRONT_END);
                 JSONObject response = new JSONObject();
-
-                Config.IPAddresses.SEQUENCER = getIPFromURL();
-                System.out.println("SEQUENCER IP: " + Config.IPAddresses.SEQUENCER);
                 response.put(MessageKeys.COMMAND_TYPE, Config.IP_ADDRESS_RESPONSE);
                 response.put(MessageKeys.IP_ADDRESS, Config.IPAddresses.SEQUENCER);
 
                 buffer = response.toString().getBytes();
 
-                DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), MULTICAST_PORT);
+                DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
+
+                System.out.println("Sent message = " + response.toString());
 
                 socket.send(responsePacket);
 
@@ -253,7 +256,6 @@ public class Sequencer {
         {
             systemipaddress = "Cannot Execute Properly";
         }
-        System.out.println("Public IP Address: " + systemipaddress +"\n");
         return systemipaddress;
     }
 }

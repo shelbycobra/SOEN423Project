@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="21fc6de4-adad-4aff-99da-8c5b39dbab40" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/DEMS/Config.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DEMS/Config.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/DEMS/MessageKeys.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DEMS/MessageKeys.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/DEMS/ReplicaManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DEMS/ReplicaManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/DEMS/Sequencer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DEMS/Sequencer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/FrontEnd/FrontEndServerMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FrontEnd/FrontEndServerMain.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Replicas/Replica1/CenterServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Replicas/Replica1/CenterServer.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,11 +16,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Sequencer.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Sequencer.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/DEMS/Sequencer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="310">
-              <caret line="216" column="61" selection-start-line="216" selection-start-column="61" selection-end-line="216" selection-end-column="61" />
+            <state relative-caret-position="343">
+              <caret line="222" column="56" lean-forward="true" selection-start-line="222" selection-start-column="56" selection-end-line="222" selection-end-column="56" />
             </state>
           </provider>
         </entry>
@@ -45,8 +41,8 @@
       <file leaf-file-name="FrontEndServerMain.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/FrontEnd/FrontEndServerMain.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="93" column="4" selection-start-line="93" selection-start-column="4" selection-end-line="112" selection-end-column="5" />
+            <state relative-caret-position="221">
+              <caret line="69" column="40" lean-forward="true" selection-start-line="69" selection-start-column="40" selection-end-line="69" selection-end-column="40" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -54,11 +50,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ReplicaManager.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ReplicaManager.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/DEMS/ReplicaManager.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="444">
-              <caret line="258" column="87" lean-forward="true" selection-start-line="258" selection-start-column="87" selection-end-line="258" selection-end-column="87" />
+            <state relative-caret-position="313">
+              <caret line="267" column="56" lean-forward="true" selection-start-line="267" selection-start-column="56" selection-end-line="267" selection-end-column="56" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -123,14 +119,14 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>FE_ADDRESS</find>
-      <find>get</find>
       <find>getLocalHost()</find>
       <find>SEQUENCER_ADDRESS</find>
+      <find>get</find>
     </findStrings>
     <replaceStrings>
       <replace>IPAddresses.FRONT_END</replace>
-      <replace>getLocalHost().getHostAddress()</replace>
       <replace>IPAddresses.SEQUENCER</replace>
+      <replace>getLocalHost().getHostAddress()</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -155,9 +151,9 @@
         <option value="$PROJECT_DIR$/src/Replicas/Replica1/CenterServer.java" />
         <option value="$PROJECT_DIR$/src/DEMS/MessageKeys.java" />
         <option value="$PROJECT_DIR$/src/DEMS/Config.java" />
-        <option value="$PROJECT_DIR$/src/DEMS/ReplicaManager.java" />
         <option value="$PROJECT_DIR$/src/FrontEnd/FrontEndServerMain.java" />
         <option value="$PROJECT_DIR$/src/DEMS/Sequencer.java" />
+        <option value="$PROJECT_DIR$/src/DEMS/ReplicaManager.java" />
       </list>
     </option>
   </component>
@@ -407,12 +403,12 @@
       <option name="presentableId" value="Default" />
       <updated>1542083578995</updated>
       <workItem from="1542083581459" duration="241000" />
-      <workItem from="1543175125158" duration="8540000" />
+      <workItem from="1543175125158" duration="11279000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="8781000" />
+    <option name="totallyTimeSpent" value="11520000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="31" y="-1" width="1250" height="802" extended-state="6" />
@@ -427,9 +423,9 @@
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="right" id="Maven Projects" order="3" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.1724138" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.22988506" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.0" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.35632184" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Designer" order="2" />
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
@@ -605,20 +601,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/DEMS/ReplicaManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="444">
-          <caret line="258" column="87" lean-forward="true" selection-start-line="258" selection-start-column="87" selection-end-line="258" selection-end-column="87" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/FrontEnd/FrontEndServerMain.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="93" column="4" selection-start-line="93" selection-start-column="4" selection-end-line="112" selection-end-column="5" />
+        <state relative-caret-position="221">
+          <caret line="69" column="40" lean-forward="true" selection-start-line="69" selection-start-column="40" selection-end-line="69" selection-end-column="40" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -627,8 +613,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/DEMS/Sequencer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="310">
-          <caret line="216" column="61" selection-start-line="216" selection-start-column="61" selection-end-line="216" selection-end-column="61" />
+        <state relative-caret-position="343">
+          <caret line="222" column="56" lean-forward="true" selection-start-line="222" selection-start-column="56" selection-end-line="222" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/DEMS/ReplicaManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="313">
+          <caret line="267" column="56" lean-forward="true" selection-start-line="267" selection-start-column="56" selection-end-line="267" selection-end-column="56" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

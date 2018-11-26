@@ -226,8 +226,11 @@ public class ReplicaManager {
 		replicaManager.start();
 	}
 
-	public static void sendIPAddress(int number) {
+	public static void sendIPAddress(int number) throws InterruptedException{
 		System.out.println("Waiting for FE...");
+
+		String addr = getIPFromURL();
+		System.out.println("REPLICA MANAGER IP: " + addr);
 		try {
 			InetAddress group = InetAddress.getByName(MULTICAST_SOCKET);
 			MulticastSocket socket = new MulticastSocket(MULTICAST_PORT);
@@ -235,7 +238,6 @@ public class ReplicaManager {
 			
 			byte[] buffer = new byte[1000];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
 			socket.receive(packet);
 
 			JSONObject message = (JSONObject) parser.parse(new String(packet.getData()).trim());
@@ -250,15 +252,14 @@ public class ReplicaManager {
 				System.out.println("INVALID REPLICA NUMBER");
 				System.exit(1);
 			}
-			
+
+			System.out.println("Message Received = " + message.toString());
+
 			if (message.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.IP_ADDRESS_REQUEST)) {
 				System.out.println("Received IP Address request:");
 				IPAddresses.FRONT_END = message.get(MessageKeys.IP_ADDRESS).toString();
 				System.out.println("FE Address: " + IPAddresses.FRONT_END);
 				JSONObject response = new JSONObject();
-
-				String addr = getIPFromURL();
-				System.out.println("REPLICA MANAGER IP: " + addr);
 
 				response.put(MessageKeys.COMMAND_TYPE, Config.IP_ADDRESS_RESPONSE);
 				response.put(MessageKeys.IP_ADDRESS, addr);
@@ -266,8 +267,10 @@ public class ReplicaManager {
 				
 				buffer = response.toString().getBytes();
 				
-				DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(IPAddresses.FRONT_END), MULTICAST_PORT);
-				
+				DatagramPacket responsePacket = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
+
+				System.out.println("Sent message = " + response.toString());
+
 				socket.send(responsePacket);
 				
 			} else

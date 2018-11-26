@@ -20,28 +20,27 @@ public class FrontEndServerMain
 
 	public static void main(String[] args)
 	{
-		getIPAddresses();
+		try
+		{
+			getIPAddresses();
 
-//		new FrontEndServer(new String[]{args[0], args[1], args[2], args[3]}, args[4]);
-		
-		FrontEndServerThread frontEndServerThread = new FrontEndServerThread(new String[]{args[0], args[1], args[2], args[3]});
-		Thread thread = new Thread(frontEndServerThread);
-		
-		thread.start();
-//		try
-//		{
-//			Thread.sleep(2000);
-//			
-//		} catch (InterruptedException e)
-//		{
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+	//		new FrontEndServer(new String[]{args[0], args[1], args[2], args[3]}, args[4]);
+
+			FrontEndServerThread frontEndServerThread = new FrontEndServerThread(new String[]{args[0], args[1], args[2], args[3]});
+			Thread thread = new Thread(frontEndServerThread);
+
+			thread.start();
+
+		} catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 //		frontEndServerThread.shutdown();
 	}
 
-	public static void getIPAddresses() {
+	public static void getIPAddresses() throws InterruptedException{
 
 		try {
 			InetAddress group = InetAddress.getByName(MULTICAST_SOCKET);
@@ -59,14 +58,22 @@ public class FrontEndServerMain
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, MULTICAST_PORT);
 
 			socket.send(packet);
+			buffer = new byte[1000];
+
+			DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+			socket.receive(receivePacket);
 
 			for (int i = 0; i < 4; i++) {
 				buffer = new byte[1000];
-
+				System.out.println("Waiting for packets");
 				DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
 				socket.receive(receive);
 
 				JSONObject message = (JSONObject) parser.parse(new String(receive.getData()).trim());
+
+				System.out.println("Message Received = " + message.toString());
+
+				System.out.println("COMMAND TYPE = " + message.get(MessageKeys.COMMAND_TYPE));
 
 				if (message.get(MessageKeys.COMMAND_TYPE).equals(IP_ADDRESS_RESPONSE)) {
 					System.out.println("REPLICA NUMBER = " + message.get(MessageKeys.REPLICA_NUMBER));
@@ -89,8 +96,6 @@ public class FrontEndServerMain
 						System.out.println("SEQUENCER = " + IPAddresses.SEQUENCER);
 					}
 
-				} else {
-					System.out.println("Invalid Message Type");
 				}
 			}
 
