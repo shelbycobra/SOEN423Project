@@ -50,6 +50,7 @@ public class ReplicaManager {
 
 			try {
 				datagramSocket = new DatagramSocket(replicaManagerPort);
+				logger.log("listening on port: " + replicaManagerPort);
 			} catch (SocketException e) {
 				e.printStackTrace();
 				return;
@@ -72,27 +73,36 @@ public class ReplicaManager {
 				String commandType = jsonObject.get(MessageKeys.COMMAND_TYPE).toString();
 
 				if (commandType.equals(Config.GET_DATA)) {
+					logger.log("processing get_data request");
 					try {
 						JSONArray jsonArray = replicaGetData();
+						logger.log("got data from local replica");
 						jsonObject.put(MessageKeys.MESSAGE, jsonArray);
 						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} catch (Exception e) {
 						e.printStackTrace();
+						logger.log("unable to get data from local replica");
 						jsonObject.put(MessageKeys.MESSAGE, "unable to get data for this replica");
 						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
 				} else if (commandType.equals(Config.REPORT_FAILURE)) {
+					logger.log("processing report_failure request");
 					if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.PROCESS_CRASH) {
 						replicaCrashCount += 1;
+						logger.log("incrementing replicaCrashCount to: " + replicaCrashCount);
 					} else if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.BYZANTINE) {
 						replicaByzantineCount += 1;
+						logger.log("incrementing replicaByzantineCount to: " + replicaByzantineCount);
 					}
 
 					if (replicaCrashCount >= maxCrashCount || replicaByzantineCount >= maxByzantineCount) {
 						try {
+							logger.log("trying to restart local replica...");
 							restartReplica();
+							logger.log("restarting local replica failed");
 						} catch (Exception e) {
 							e.printStackTrace();
+							logger.log("restarting local replica successful");
 							jsonObject.put(MessageKeys.MESSAGE, Config.FAILED_REPLICA_RESTART_FAILED);
 							jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 							continue;
@@ -113,6 +123,7 @@ public class ReplicaManager {
 		}
 
 		private JSONArray replicaGetData() throws Exception {
+			logger.log("getting data from local replica");
 			DatagramSocket datagramSocket = new DatagramSocket();
 
 			JSONObject jsonSendObject = new JSONObject();
@@ -129,6 +140,7 @@ public class ReplicaManager {
 		}
 
 		private void replicaSetData(JSONArray jsonArray) throws IOException {
+			logger.log("setting data in local replica");
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.SET_DATA);
 			jsonObject.put(MessageKeys.MESSAGE, jsonArray);
@@ -156,9 +168,11 @@ public class ReplicaManager {
 		}
 
 		private void restartReplica() throws Exception {
+			logger.log("restarting local replica");
 			replica.shutdownServers();
 			replica.runServers(0);
 
+			logger.log("getting data from other replica 1");
 			JSONObject jsonSendObject = new JSONObject();
 			jsonSendObject.put(MessageKeys.COMMAND_TYPE, Config.GET_DATA);
 			byte[] sendDate = jsonSendObject.toString().getBytes();
@@ -171,10 +185,12 @@ public class ReplicaManager {
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
 
 			JSONArray recordData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
+			logger.log("got data from other replica 1");
 			replicaSetData(recordData);
 		}
 
 		private void notifyFrontEnd(JSONObject jsonObject) {
+			logger.log("notifying frontend");
 			try {
 				InetAddress frontEndHost = InetAddress.getByName(Config.FRONT_END_HOST);
 				int frontEndPort = Config.PortNumbers.RE_FE;
