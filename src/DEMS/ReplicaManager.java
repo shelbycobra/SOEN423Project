@@ -93,6 +93,9 @@ public class ReplicaManager {
 				}
 
 				String commandType = jsonObject.get(MessageKeys.COMMAND_TYPE).toString();
+				int replicaPortNumber = Integer.parseInt(jsonObject.get(MessageKeys.RM_PORT_NUMBER).toString());
+
+				jsonObject.put(MessageKeys.COMMAND_TYPE, Config.ACK);
 
 				if (commandType.equals(Config.GET_DATA)) {
 					logger.log("processing get_data request");
@@ -107,7 +110,7 @@ public class ReplicaManager {
 						jsonObject.put(MessageKeys.MESSAGE, "unable to get data for this replica");
 						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
-				} else if (commandType.equals(Config.REPORT_FAILURE)) {
+				} else if (replicaPortNumber == replicaNumber && commandType.equals(Config.REPORT_FAILURE)) {
 					logger.log("processing report_failure request");
 					String failureType = jsonObject.get(MessageKeys.FAILURE_TYPE).toString();
 					if (failureType.equals(Config.Failure.PROCESS_CRASH.toString())) {
@@ -140,15 +143,15 @@ public class ReplicaManager {
 					}
 				}
 
-				InetAddress IPAddress = receivePacket.getAddress();
-				int port = receivePacket.getPort();
-				byte[] sendDate = jsonObject.toString().getBytes();
-				DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, IPAddress, port);
-				try {
-					datagramSocket.send(datagramPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+//				InetAddress IPAddress = receivePacket.getAddress();
+//				int port = receivePacket.getPort();
+//				byte[] sendDate = jsonObject.toString().getBytes();
+//				DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, IPAddress, port);
+//				try {
+//					datagramSocket.send(datagramPacket);
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
 
 				notifyFrontEnd(jsonObject);
 			}
@@ -220,7 +223,7 @@ public class ReplicaManager {
 			
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			datagramSocket.receive(receivePacket); // ignore echo packet
+			// datagramSocket.receive(receivePacket); // ignore echo packet
 			datagramSocket.receive(receivePacket);
 			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
 			logger.log("got data from otherReplica1: " + jsonReceiveObject.toJSONString());
