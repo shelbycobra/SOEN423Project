@@ -88,10 +88,11 @@ public class ReplicaManager {
 					}
 				} else if (commandType.equals(Config.REPORT_FAILURE)) {
 					logger.log("processing report_failure request");
-					if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.PROCESS_CRASH) {
+					String failureType = jsonObject.get(MessageKeys.FAILURE_TYPE).toString();
+					if (failureType.equals(Config.Failure.PROCESS_CRASH.toString())) {
 						replicaCrashCount += 1;
 						logger.log("incrementing replicaCrashCount to: " + replicaCrashCount);
-					} else if ((Config.Failure) jsonObject.get(MessageKeys.FAILURE_TYPE) == Config.Failure.BYZANTINE) {
+					} else if (failureType.equals(Config.Failure.BYZANTINE.toString())) {
 						replicaByzantineCount += 1;
 						logger.log("incrementing replicaByzantineCount to: " + replicaByzantineCount);
 					}
