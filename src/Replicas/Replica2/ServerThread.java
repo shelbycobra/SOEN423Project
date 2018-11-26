@@ -82,7 +82,7 @@ public class ServerThread extends Thread
 					JSONParser parser = new JSONParser();
 					String str = new String(request.getData()).trim();
 					JSONObject jsonMessage = (JSONObject) parser.parse(str);
-					messageID = (String) jsonMessage.get(MessageKeys.MESSAGE_ID);
+					messageID = jsonMessage.get(MessageKeys.MESSAGE_ID).toString();
 					
 					// recordData = [ SEQUENCE_ID, MANAGER_ID, MSG_ID, COMMAND_TYPE,
 					// FIRST_NAME, LAST_NAME, EMPLOYEEID, MAILID,
@@ -179,7 +179,7 @@ public class ServerThread extends Thread
         JSONObject message = new JSONObject();
         message.put(MessageKeys.MESSAGE, msg);
         message.put(MessageKeys.MESSAGE_ID, messageID);
-        message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+        message.put(MessageKeys.RM_PORT_NUMBER, Config.Replica2.RM_PORT);
         message.put(MessageKeys.STATUS_CODE, status.toString());
 
         byte[] buffer = message.toString().getBytes();

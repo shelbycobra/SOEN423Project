@@ -190,39 +190,58 @@ public class Server implements Replica
         @Override
         public void run()
         {
-            try
-            {
-                while (keepRunning.get())
-                {
-                    byte[] buffer = new byte[1000];
-                    DatagramPacket message = new DatagramPacket(buffer, buffer.length);
-                    socket.receive(message);
-
-                    // Get message string
-                    JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
-
-                    // Immediately send "SeqNum:ACK" after receiving a message
-                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
-                    sendACK(seqNum);
-
-                    // Add message to delivery queue
-                    mutex.acquire();
-                    deliveryQueue.add(jsonMessage);
-                    mutex.release();
-
-                    // Signal to Process Messages Thread to start processing a message from the queue
-                    deliveryQueueMutex.release();
-                }
-            }
-            catch (InterruptedException | IOException e)
-            {
-                e.printStackTrace();
-                System.out.println("ListenForPacketsThread is shutting down");
-            }
-            catch (ParseException e)
-            {
-                e.printStackTrace();
-            }
+        	try
+        	{
+        		socket.setSoTimeout(1000);
+        		
+	        	while (keepRunning.get())
+	            {
+		            try
+		            {
+		            	byte[] buffer = new byte[1000];
+	                    DatagramPacket message = new DatagramPacket(buffer, buffer.length);
+	                    socket.receive(message);
+	
+	                    // Get message string
+	                    JSONObject jsonMessage = (JSONObject) parser.parse(new String(message.getData()).trim());
+	
+	                    // Immediately send "SeqNum:ACK" after receiving a message
+	                    int seqNum =  Integer.parseInt( (String) jsonMessage.get(MessageKeys.SEQUENCE_NUMBER));
+	                    sendACK(seqNum);
+	
+	                    // Add message to delivery queue
+	                    mutex.acquire();
+	                    deliveryQueue.add(jsonMessage);
+	                    mutex.release();
+	
+	                    // Signal to Process Messages Thread to start processing a message from the queue
+	                    deliveryQueueMutex.release();
+		                
+		            }
+		            catch (InterruptedException | ParseException e)
+		            {
+		                e.printStackTrace();
+		                System.out.println("ListenForPacketsThread is shutting down");
+		            }
+		            catch (IOException e)
+		            {
+		                continue;
+		            }
+	            }
+        	}
+        	catch (SocketException e1)
+			{
+				e1.printStackTrace();
+			}
+			finally
+			{
+				if (socket != null)
+				{
+					socket.close();
+				}
+				
+				System.out.println("Not listening for responses any longer.");
+			}
         }
 
         @SuppressWarnings("unchecked")
