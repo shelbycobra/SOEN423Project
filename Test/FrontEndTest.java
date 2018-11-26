@@ -83,7 +83,7 @@ public class FrontEndTest
 		{
 			try
 			{
-				ClientThread clientThread = new ClientThread(orbArguments, "CA100"+i, 2);
+				ClientThread clientThread = new ClientThread(orbArguments, "CA100"+i, Config.CREATE_EMPLOYEE_RECORD);
 				clients.add(clientThread);
 				tasks.add(new FutureTask<>(clientThread));
 			}

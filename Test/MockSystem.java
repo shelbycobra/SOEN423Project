@@ -40,6 +40,7 @@ public class MockSystem
 			running.set(false);
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public void run()
 		{
@@ -67,6 +68,11 @@ public class MockSystem
 	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.SEQ_RE);
 	    				datagramSocket.send(request);
 	    				System.out.println("Sequencer: Sending request to Replica Manager...");
+	    				
+	    				jsonMessage.put(MessageKeys.COMMAND_TYPE, Config.ACK);
+	    				messageBuffer = jsonMessage.toString().getBytes();
+	    				request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.SEQ_FE);
+	    				datagramSocket.send(request);
                 	}
                 	catch (ParseException | IOException e)
         			{
@@ -99,6 +105,7 @@ public class MockSystem
 			running.set(false);
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public void run()
 		{
@@ -122,8 +129,9 @@ public class MockSystem
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
 	
 	                    jsonMessage.put(MessageKeys.MESSAGE, "Successfully received client request ID: " + jsonMessage.get(MessageKeys.MESSAGE_ID).toString());
-	                    jsonMessage.put(MessageKeys.STATUS_CODE, StatusCode.SUCCESS);
-	                    
+	                    jsonMessage.put(MessageKeys.STATUS_CODE, StatusCode.SUCCESS.ordinal());
+	                    jsonMessage.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+	                    System.out.println(jsonMessage);
 	                    byte[] messageBuffer = jsonMessage.toString().getBytes();
 	    				InetAddress host = InetAddress.getByName("localhost");
 	    				DatagramPacket request = new DatagramPacket(messageBuffer, messageBuffer.length, host, Config.PortNumbers.RE_FE);
@@ -131,21 +139,22 @@ public class MockSystem
 	    				System.out.println("Replica Manager: Sending response to Front End...");
 	    				
 	    				Random random = new Random();
-	    				if (random.nextFloat() > 0.5)
-	    				{
+//	    				if (random.nextFloat() > 0.5)
+//	    				{
 		    				// Sending "bad" second message
 		    				JSONObject jsonMessage2 = new JSONObject();
 		    				jsonMessage2.put(MessageKeys.MESSAGE_ID, jsonMessage.get(MessageKeys.MESSAGE_ID));
 		                    jsonMessage2.put(MessageKeys.MESSAGE, "Bad message!");
-		                    jsonMessage.put(MessageKeys.STATUS_CODE, StatusCode.FAIL);
+		                    jsonMessage2.put(MessageKeys.STATUS_CODE, StatusCode.FAIL.ordinal());
+		                    jsonMessage2.put(MessageKeys.RM_PORT_NUMBER, Config.Replica2.RM_PORT);
 		                    byte[] messageBuffer2 = jsonMessage2.toString().getBytes();
 		    				DatagramPacket request2 = new DatagramPacket(messageBuffer2, messageBuffer2.length, host, Config.PortNumbers.RE_FE);
 		    				datagramSocket.send(request2);
 		    				System.out.println("Replica Manager: Sending response to Front End...");
-	    				}
+//	    				}
 	    				
-	    				datagramSocket.send(request);
-	    				System.out.println("Replica Manager: Sending response to Front End...");
+//	    				datagramSocket.send(request);
+//	    				System.out.println("Replica Manager: Sending response to Front End...");
                 	}
                 	catch (ParseException | IOException e)
         			{

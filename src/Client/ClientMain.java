@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
+import DEMS.Config;
 import FrontEnd.Project;
 
 public class ClientMain
@@ -17,12 +18,13 @@ public class ClientMain
 		ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 		ArrayList<FutureTask<String>> tasks = new ArrayList<>();
 		ArrayList<String> responses = new ArrayList<>();
+		int numberOfClients = 1;
 		
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < numberOfClients; i++)
 		{
 			try
 			{
-				ClientThread clientThread = new ClientThread(orbArguments, "CA100"+i, 2);
+				ClientThread clientThread = new ClientThread(orbArguments, "CA100"+i, Config.CREATE_EMPLOYEE_RECORD);
 				clients.add(clientThread);
 				tasks.add(new FutureTask<>(clientThread));
 			}
@@ -32,13 +34,13 @@ public class ClientMain
 			}
 		}
 		
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < numberOfClients; i++)
 		{
 			Thread thread = new Thread(tasks.get(i));
 			thread.start();
 		}
 		
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < numberOfClients; i++)
 		{
 			try
 			{
@@ -50,7 +52,7 @@ public class ClientMain
 			}
 		}
 		
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < numberOfClients; i++)
 		{
 			System.out.println(responses.get(i));
 		}
