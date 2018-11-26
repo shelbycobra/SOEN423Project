@@ -66,6 +66,7 @@ public class ReplicaManager {
 					logger.log("waiting for request");
 					datagramSocket.receive(receivePacket);
 					jsonObject = processRequest(receivePacket);
+					logger.log("received object: " + jsonObject.toJSONString());
 				} catch (IOException | ParseException e) {
 					e.printStackTrace();
 					continue;
