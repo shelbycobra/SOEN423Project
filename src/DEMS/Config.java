@@ -2,8 +2,6 @@ package DEMS;
 
 public class Config {
 
-	public static final String FRONT_END_HOST = "localhost";
-
 	public static class Replica1 {
 		public static final int RM_PORT = 9000;
 		public static final int RE_PORT = 9100;
