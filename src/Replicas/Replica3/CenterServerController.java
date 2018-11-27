@@ -389,7 +389,11 @@ public class CenterServerController implements DEMS.Replica {
 
 		for (CenterServer centerServer : centerServers) {
 			String serverLocation = centerServer.getLocation();
-			jsonArray.add(centerServer.getRecords().getJSONArray(serverLocation));
+			JSONArray locationRecords = centerServer.getRecords().getJSONArray(serverLocation);
+
+			for (int i = 0; i < locationRecords.size(); i++) {
+				jsonArray.add(locationRecords.get(i));
+			}
 		}
 
 		this.logger.log("got data from replica: " + jsonArray.toJSONString());
