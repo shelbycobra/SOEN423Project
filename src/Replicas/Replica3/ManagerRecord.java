@@ -3,6 +3,8 @@ package Replicas.Replica3;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.List;
+
 public class ManagerRecord extends Record {
 	private static final long serialVersionUID = -7309796150452080853L;
 
@@ -39,8 +41,16 @@ public class ManagerRecord extends Record {
 
 	@Override
 	public String toString() {
-		return "ManagerRecord [recordID=" + getRecordID() + ", firstName=" + getFirstName() + ", lastName=" + getLastName()
-		+ ", employeeID=" + getEmployeeID() + ", mailID=" + getMailID() + ", location=" + location + "]";
+		String str =  "ManagerRecord \n\trecordID=" + getRecordID() + ", \n\tfirstName=" + getFirstName() + ", \n\tlastName=" + getLastName()
+		+ "\n\temployeeID=" + getEmployeeID() + "\n\tmailID=" + getMailID() + "\n\tlocation=" + location + "\n\tProjects:";
+
+		for (Project p : projects.getProjects()) {
+			str += "\n\t\tProject ID: " + p.getID();
+			str += "\n\t\tProject Client: " + p.getClientName();
+			str += "\n\t\tProject Name: " + p.getProjectName();
+		}
+
+		return str;
 	}
 
 	@Override

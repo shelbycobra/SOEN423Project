@@ -100,32 +100,58 @@ public class Records {
 		addRecord(record);
 	}
 
-	public void editRecord(String recordID, String fieldName, String newValue) throws IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
+	public Record editRecord(String recordID, String fieldName, String newValue) throws IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
 		Record record = getRecord(recordID);
 
 		if (fieldName.equals(MessageKeys.FIRST_NAME)) {
 			record.setFirstName(newValue);
+			return record;
 		} else if (fieldName.equals(MessageKeys.LAST_NAME)) {
 			record.setLastName(newValue);
+			return record;
 		} else if (fieldName.equals(MessageKeys.EMPLOYEE_ID)) {
 			record.setEmployeeID(Integer.parseInt(newValue));
+			return record;
 		} else if (fieldName.equals(MessageKeys.MAIL_ID)) {
 			record.setMailID(newValue);
+			return record;
 		}
 
 		if (recordID.substring(0, 2).toLowerCase().equals("er")) {
 			EmployeeRecord recordER = (EmployeeRecord) getRecord(recordID);
 			if (fieldName.equals(MessageKeys.PROJECT_ID)) {
 				recordER.setProjectID(newValue);
+				return recordER;
 			}
 		} else if (recordID.substring(0, 2).toLowerCase().equals("mr")) {
 			ManagerRecord recordMR = (ManagerRecord) getRecord(recordID);
 			if (fieldName.equals(MessageKeys.LOCATION)) {
 				recordMR.setLocation(newValue);
-			} else if (fieldName.equals(MessageKeys.PROJECTS)) {
-				// recordMR.setProjects(newValue);
+				return recordMR;
+			} else if (fieldName.equals(MessageKeys.PROJECT_NAME)) {
+				Projects projects = recordMR.getProjects();
+				Project project = projects.getProjects().get(0);
+				project.setProjectName(newValue);
+				projects.getProjects().set(0, project);
+				recordMR.setProjects(projects);
+				return recordMR;
+			} else if (fieldName.equals(MessageKeys.PROJECT_CLIENT)) {
+				Projects projects = recordMR.getProjects();
+				Project project = projects.getProjects().get(0);
+				project.setClientName(newValue);
+				projects.getProjects().set(0, project);
+				recordMR.setProjects(projects);
+				return recordMR;
+			} else if (fieldName.equals(MessageKeys.PROJECT_ID)) {
+				Projects projects = recordMR.getProjects();
+				Project project = projects.getProjects().get(0);
+				project.setID(newValue);
+				projects.getProjects().set(0, project);
+				recordMR.setProjects(projects);
+				return recordMR;
 			}
 		}
+		return null;
 	}
 
 	public void printRecords(Logger logger) {

@@ -21,12 +21,14 @@ public class Server implements Replica
     private ServerThread US_DEMS_server;
     private ListenForPacketsThread listenForPackets;
     private ProcessMessagesThread processMessages;
+    private CommunicateWithRMThread communicateWithRM;
 	
 	private int lastSequenceNumber = 0;
     private MulticastSocket socket;
     private PriorityQueue<JSONObject> deliveryQueue;
     private Semaphore mutex; // Used to ensure that the delivery queue is thread safe
     private Semaphore deliveryQueueMutex; // Used to signal the Process Messages Thread to start processing a message
+    private Semaphore proceedWithMessagesMutex; // Used when the RM needs to communicate with the replica
     private JSONParser parser = new JSONParser();
     private Config.Failure failureType;
     private int numberOfMessages = 0;
@@ -37,6 +39,7 @@ public class Server implements Replica
         // Instantiate Semaphores
         mutex = new Semaphore(1);
         deliveryQueueMutex = new Semaphore(0);
+        proceedWithMessagesMutex = new Semaphore(1);
 
         // Instantiate Delivery Queue with the MessageComparator
         MessageComparator msgComp = new MessageComparator();
@@ -65,8 +68,10 @@ public class Server implements Replica
                 setupMulticastSocket();
                 listenForPackets = new ListenForPacketsThread();
                 processMessages = new ProcessMessagesThread();
+                communicateWithRM = new CommunicateWithRMThread();
                 listenForPackets.start();
                 processMessages.start();
+                communicateWithRM.start();
             }
         }
         catch (SocketException e)
@@ -341,7 +346,10 @@ public class Server implements Replica
 
                 // Send packet
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
+
+                proceedWithMessagesMutex.acquire();
                 serverSocket.send(packet);
+                proceedWithMessagesMutex.release();
             }
             catch (SocketException e)
             {
@@ -381,6 +389,71 @@ public class Server implements Replica
             }
             
             return 0;
+        }
+    }
+
+    private class CommunicateWithRMThread extends Thread {
+
+        private DatagramSocket socket;
+
+        @Override
+        public void run(){
+
+            try {
+                socket = new DatagramSocket(Config.Replica1.RE_PORT);
+            } catch (SocketException e1) {
+                e1.printStackTrace();
+            }
+
+            System.out.println("\n*** Listening for packets from RM 1 on port "+Config.Replica1.RE_PORT+" ***\n");
+
+            while (keepRunning.get()) {
+                try {
+                    byte[] buffer = new byte[1024*10];
+
+                    socket.setSoTimeout(1000);
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+                    socket.receive(packet);
+
+                    System.out.println("\n*** Received message from RM: ***" + new String(packet.getData()).trim());
+
+                    JSONObject obj = (JSONObject) parser.parse(new String(packet.getData()).trim());
+                    if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.GET_DATA)) {
+                        System.out.println("\n*** Sending Data to RM ***");
+                        sendDataToRM(packet.getPort());
+                    } else if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.SET_DATA)) {
+                        JSONArray arr = (JSONArray) parser.parse(new String(obj.get(MessageKeys.MESSAGE).toString()).trim());
+                        proceedWithMessagesMutex.acquire();
+                        System.out.println("\n*** Received data from RM. Resetting Data ***\n");
+                        setData(arr);
+                        proceedWithMessagesMutex.release();
+                    }
+                } catch (SocketTimeoutException e) {
+                    continue;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+
+                }
+            }
+
+            System.out.println("CommunicateWithRMThread is shutting down...");
+            socket.close();
+        }
+
+        private void sendDataToRM(int port) throws IOException,InterruptedException {
+            proceedWithMessagesMutex.acquire();
+            JSONArray arr = getData();
+            System.out.println("\n*** DATA: " + arr.toString().length());
+            System.out.println(arr.toString());
+            proceedWithMessagesMutex.release();
+            byte[] buffer = arr.toString().getBytes();
+            socket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.REPLICA1), port);
+            socket.send(packet);
         }
     }
 }

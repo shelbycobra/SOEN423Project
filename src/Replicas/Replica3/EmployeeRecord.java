@@ -27,8 +27,8 @@ public class EmployeeRecord extends Record {
 
 	@Override
 	public String toString() {
-		return "EmployeeRecord [recordID=" + getRecordID() + ", firstName=" + getFirstName() + ", lastName=" + getLastName()
-		+ ", employeeID=" + getEmployeeID() + ", mailID=" + getMailID() + ", projectID=" + projectID + "]";
+		return "EmployeeRecord \n\trecordID=" + getRecordID() + "\n\tfirstName=" + getFirstName() + "\n\tlastName=" + getLastName()
+		+ "\n\temployeeID=" + getEmployeeID() + "\n\tmailID=" + getMailID() + "\n\tprojectID=" + projectID;
 	}
 
 	@Override
