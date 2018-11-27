@@ -66,7 +66,7 @@ public class ReplicaManager {
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
 				JSONObject jsonObject;
-
+				
 				try {
 					logger.log("waiting for request");
 
@@ -93,7 +93,13 @@ public class ReplicaManager {
 				}
 
 				String commandType = jsonObject.get(MessageKeys.COMMAND_TYPE).toString();
-				int replicaPortNumber = Integer.parseInt(jsonObject.get(MessageKeys.RM_PORT_NUMBER).toString());
+				
+				int replicaPortNumber = 0;
+				try {
+					replicaPortNumber = Integer.parseInt(jsonObject.get(MessageKeys.RM_PORT_NUMBER).toString());
+				} catch (NullPointerException e) {
+					
+				}
 
 				jsonObject.put(MessageKeys.COMMAND_TYPE, Config.ACK);
 
@@ -104,13 +110,24 @@ public class ReplicaManager {
 						logger.log("got data from local replica");
 						jsonObject.put(MessageKeys.MESSAGE, jsonArray);
 						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+
+						InetAddress IPAddress = receivePacket.getAddress();
+						int port = receivePacket.getPort();
+						byte[] sendDate = jsonObject.toString().getBytes();
+						DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, IPAddress, port);
+						try {
+							datagramSocket.send(datagramPacket);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 						logger.log("unable to get data from local replica");
 						jsonObject.put(MessageKeys.MESSAGE, "unable to get data for this replica");
 						jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
-				} else if (replicaPortNumber == replicaNumber && commandType.equals(Config.REPORT_FAILURE)) {
+					continue;
+				} else if (replicaPortNumber == replicaManagerPort && commandType.equals(Config.REPORT_FAILURE)) {
 					logger.log("processing report_failure request");
 					String failureType = jsonObject.get(MessageKeys.FAILURE_TYPE).toString();
 					if (failureType.equals(Config.Failure.PROCESS_CRASH.toString())) {
@@ -143,16 +160,6 @@ public class ReplicaManager {
 					}
 				}
 
-//				InetAddress IPAddress = receivePacket.getAddress();
-//				int port = receivePacket.getPort();
-//				byte[] sendDate = jsonObject.toString().getBytes();
-//				DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, IPAddress, port);
-//				try {
-//					datagramSocket.send(datagramPacket);
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-
 				notifyFrontEnd(jsonObject);
 			}
 
@@ -170,7 +177,6 @@ public class ReplicaManager {
 
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			datagramSocket.receive(receivePacket); // ignore echo
 			datagramSocket.receive(receivePacket);
 			JSONArray jsonArray = (JSONArray) jsonParser.parse(new String(receivePacket.getData()).trim());
 			logger.log("got data from local replica: " + jsonArray.toJSONString());
