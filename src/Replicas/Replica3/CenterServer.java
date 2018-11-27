@@ -130,17 +130,22 @@ public class CenterServer {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String remoteCenterServerName = (String) jsonReceiveObject.get(MessageKeys.REMOTE_SERVER_NAME);
 						try {
-							String recordString = records.getRecord(recordID).toString();
-							String message = transferRecord(managerID, recordID, remoteCenterServerName);
-							message = transferRecord(managerID, recordID, remoteCenterServerName);
-							if (message.equals("ok")) {
-								sendMessage += "Transfer Success \n";
-								jsonSendObject.put(MessageKeys.MESSAGE, recordString);
+							if (remoteCenterServerName.toLowerCase().equals(location.toLowerCase())) {
+								String recordString = records.getRecord(recordID).toString();
+								jsonSendObject.put(MessageKeys.MESSAGE, "record ID "+recordID+" already exists in "+location+" hashmap");
 								jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 							} else {
-								sendMessage += "Transfer Failure \n";
-								jsonSendObject.put(MessageKeys.MESSAGE, message);
-								jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
+								String recordString = records.getRecord(recordID).toString();
+								String message = transferRecord(managerID, recordID, remoteCenterServerName);
+								if (message.equals("ok")) {
+									sendMessage += "Transfer Success \n";
+									jsonSendObject.put(MessageKeys.MESSAGE, recordString);
+									jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+								} else {
+									sendMessage += "Transfer Failure \n";
+									jsonSendObject.put(MessageKeys.MESSAGE, message);
+									jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
+								}
 							}
 						} catch (IllegalArgumentException e) {
 							jsonSendObject.put(MessageKeys.MESSAGE, "could not find record ID "+recordID+" in "+location+" hashmap");
