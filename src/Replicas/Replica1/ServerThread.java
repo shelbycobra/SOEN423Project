@@ -10,7 +10,8 @@ public class ServerThread extends Thread {
     private String location;
     private int UDP_port;
     private DEMSImpl demsImpl;
-
+    UDPServerThread UDPThread = null;
+    
     public ServerThread (String location, int port) {
         this.location = location;
         UDP_port = port;
@@ -18,7 +19,6 @@ public class ServerThread extends Thread {
     
     @Override
     public void run() {
-        UDPServerThread UDPThread = null;
         BufferedWriter log = null;
         try {
             // Create log file
@@ -46,10 +46,15 @@ public class ServerThread extends Thread {
                 log.close();
         } catch (InterruptedException e) {
             System.out.println("Shutting down " + location + " server");
+//            shutdown();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    
+//    void shutdown() {
+//    	UDPThread.shutdown();
+//    }
 
     JSONArray getData(){
         return demsImpl.getMap().getData();

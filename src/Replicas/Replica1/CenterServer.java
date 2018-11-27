@@ -41,8 +41,9 @@ public class CenterServer implements Replica {
 
         @Override
         public void run() {
-            try {
-                while (keepRunning.get()) {
+        	while (keepRunning.get()) {
+	            try {
+	                socket.setSoTimeout(1000);
                     byte[] buffer = new byte[1000];
                     DatagramPacket message = new DatagramPacket(buffer, buffer.length);
                     socket.receive(message);
@@ -62,13 +63,17 @@ public class CenterServer implements Replica {
 
                     // Signal to Process Messages Thread to start processing a message from the queue
                     deliveryQueueMutex.release();
-                }
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-                System.out.println("ListenForPacketsThread is shutting down");
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+	                
+	            } catch (SocketTimeoutException e) {
+	            	continue;
+	            } catch (InterruptedException | IOException e) {
+	            } catch (ParseException e) {
+	                e.printStackTrace();
+	            }
+        	}
+
+            System.out.println("ListenForPacketsThread is shutting down");
+        	socket.close();
         }
 
         private void sendACK(Integer num) throws IOException {
@@ -89,15 +94,16 @@ public class CenterServer implements Replica {
 
     private class ProcessMessagesThread extends Thread {
 
+        DatagramSocket serverSocket;
         @Override
         public void run() {
             System.out.println("CenterServer: Processing messages\n");
+            while (keepRunning.get()) {
             try {
-                while (keepRunning.get()) {
-
-                    // Checks if failure should start
-                    checkWhenToStartFailure();
-
+            	serverSocket = new DatagramSocket();
+            	serverSocket.setSoTimeout(1000);
+                    
+                   
                     // Sleep a bit so that the message can be added to the queue
                     Thread.sleep(300);
                     deliveryQueueMutex.acquire();
@@ -121,17 +127,23 @@ public class CenterServer implements Replica {
                     lastSequenceNumber = seqNum;
                     sendMessageToServer(obj);
                     numMessages++;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                System.out.println("ProcessMessageThread is shutting down.");
-            } catch (Exception e) {
-                e.printStackTrace();
+                
+	            } catch (SocketTimeoutException e) {
+	            	continue;
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            } catch (InterruptedException e) {
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
             }
+
+            System.out.println("ProcessMessageThread is shutting down.");
+            if (serverSocket != null)
+            	serverSocket.close();
         }
 
-        private void sendMessageToServer(JSONObject message){
+        private void sendMessageToServer(JSONObject message) throws InterruptedException, IOException {
 
             if (message == null) {
                 System.out.println("Cannot send null to servers");
@@ -140,26 +152,26 @@ public class CenterServer implements Replica {
 
             int port = setPortNumber(((String) message.get(MessageKeys.MANAGER_ID)).substring(0,2));
 
-            try {
-                // Remove msg from delivery queue
-                mutex.acquire();
-                deliveryQueue.remove(message);
-                mutex.release();
-
-                // Setup Server Socket
-                InetAddress address = InetAddress.getLocalHost();
-                DatagramSocket serverSocket = new DatagramSocket();
-                byte[] buffer = message.toString().getBytes();
-                System.out.println("CenterServer msg to server = " + message.toString());
-                // Send packet
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
-
-                proceedWithMessagesMutex.acquire();
-                serverSocket.send(packet);
-                proceedWithMessagesMutex.release();
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+            // Remove msg from delivery queue
+            mutex.acquire();
+            deliveryQueue.remove(message);
+            mutex.release();
+            
+         // Checks if failure should start
+            if (checkWhenToStartFailure(message.get(MessageKeys.MESSAGE_ID).toString())) {
+            	return;
             }
+
+            // Setup Server Socket
+            InetAddress address = InetAddress.getLocalHost();
+            byte[] buffer = message.toString().getBytes();
+            System.out.println("CenterServer msg to server = " + message.toString());
+            // Send packet
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
+
+            proceedWithMessagesMutex.acquire();
+            serverSocket.send(packet);
+            proceedWithMessagesMutex.release();
         }
 
         private int setPortNumber(String location) {
@@ -182,43 +194,61 @@ public class CenterServer implements Replica {
 
         @Override
         public void run(){
-            try {
-                while (keepRunning.get()) {
-                    byte[] buffer = new byte[1024];
 
-                    socket = new DatagramSocket(Config.Replica1.RE_PORT);
+            try {
+				socket = new DatagramSocket(Config.Replica1.RE_PORT);
+			} catch (SocketException e1) {
+				e1.printStackTrace();
+			}
+
+            System.out.println("\n*** Listening for packets from RM 1 on port "+Config.Replica1.RE_PORT+" ***\n");
+            
+        	while (keepRunning.get()) {
+        		try {
+                    byte[] buffer = new byte[1024*10];
+
+        			socket.setSoTimeout(1000);
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
-                    System.out.println("Listening for packets from RM 1");
                     socket.receive(packet);
 
+                    System.out.println("\n*** Received message from RM: ***" + new String(packet.getData()).trim());
+                    
                     JSONObject obj = (JSONObject) parser.parse(new String(packet.getData()).trim());
                     if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.GET_DATA)) {
-                        sendDataToRM();
+                    	System.out.println("\n*** Sending Data to RM ***");
+                        sendDataToRM(packet.getPort());
                     } else if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.SET_DATA)) {
                         JSONArray arr = (JSONArray) parser.parse(new String(obj.get(MessageKeys.MESSAGE).toString()).trim());
                         proceedWithMessagesMutex.acquire();
+                        System.out.println("\n*** Received data from RM. Resetting Data ***\n");
                         setData(arr);
                         proceedWithMessagesMutex.release();
                     }
-
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+	            } catch (SocketTimeoutException e) {
+	            	continue;
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            } catch (ParseException e) {
+	                e.printStackTrace();
+	            } catch (InterruptedException e) {
+	              
+	            }
+	        }
+        	
+            System.out.println("CommunicateWithRMThread is shutting down...");
+            socket.close();
         }
 
-        private void sendDataToRM() throws IOException,InterruptedException {
+        private void sendDataToRM(int port) throws IOException,InterruptedException {
             proceedWithMessagesMutex.acquire();
             JSONArray arr = getData();
+            System.out.println("\n*** DATA: " + arr.toString().length());
+            System.out.println(arr.toString());
             proceedWithMessagesMutex.release();
             byte[] buffer = arr.toString().getBytes();
             socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.REPLICA1), Config.Replica1.RM_PORT);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.REPLICA1), port);
             socket.send(packet);
         }
     } // END THREAD CLASS
@@ -246,18 +276,20 @@ public class CenterServer implements Replica {
     @Override
     public void runServers(int i) {
         checkErrorType(i);
-
+        keepRunning.set(true);
         // Start up servers
         CA_DEMS_server = new ServerThread("CA", Config.Replica1.CA_PORT);
         UK_DEMS_server = new ServerThread("UK", Config.Replica1.UK_PORT);
         US_DEMS_server = new ServerThread("US", Config.Replica1.US_PORT);
-
-        CA_DEMS_server.start();
-        UK_DEMS_server.start();
-        US_DEMS_server.start();
-
-        // Setup Multicast Socket, ListenForPackets thread and ProcessMessages thread
+        
         try {
+
+	        CA_DEMS_server.start();
+	        UK_DEMS_server.start();
+	        US_DEMS_server.start();
+
+	        // Setup Multicast Socket, ListenForPackets thread and ProcessMessages thread
+       
             if (CA_DEMS_server.isAlive() && UK_DEMS_server.isAlive() && US_DEMS_server.isAlive()) {
                 setupMulticastSocket();
                 listenForPackets = new ListenForPacketsThread();
@@ -281,14 +313,27 @@ public class CenterServer implements Replica {
     public void shutdownServers() {
         System.out.println("\nShutting down servers...\n");
         keepRunning.set(false);
+
+        socket.close();
         CA_DEMS_server.interrupt();
         UK_DEMS_server.interrupt();
         US_DEMS_server.interrupt();
         listenForPackets.interrupt();
         processMessages.interrupt();
         communicateWithRM.interrupt();
-        if (socket != null)
-            socket.close();
+    
+        try {
+			CA_DEMS_server.join();
+			UK_DEMS_server.join();
+            US_DEMS_server.join();
+            listenForPackets.join();
+            processMessages.join();
+            communicateWithRM.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
     }
 
     @Override
@@ -349,33 +394,35 @@ public class CenterServer implements Replica {
             failureType = Config.Failure.PROCESS_CRASH;
     }
 
-    void checkWhenToStartFailure() throws IOException, InterruptedException {
+    boolean checkWhenToStartFailure(String msgID) throws IOException, InterruptedException {
         if (numMessages >= Config.MESSAGE_DELAY) {
             switch(failureType) {
                 case BYZANTINE:
-                    byzantineFailure();
-                    break;
+                    byzantineFailure(msgID);
+                    return true;
                 case PROCESS_CRASH:
-                    processCrashFailure();
-                    break;
+                	processCrashFailure();
                 default:
-                    break;
+                    return false;
             }
-        }
+        } 
+        return false;
     }
 
-    void byzantineFailure() throws IOException, InterruptedException {
-        while (true) {
-            JSONObject obj = new JSONObject();
-            obj.put(MessageKeys.FAILURE_TYPE, Config.StatusCode.FAIL);
-            byte[] buffer = obj.toString().getBytes();
+    void byzantineFailure(String msgID) throws IOException, InterruptedException {
+        JSONObject obj = new JSONObject();
+        obj.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL);
+        obj.put(MessageKeys.RM_PORT_NUMBER, Config.Replica1.RM_PORT);
+        obj.put(MessageKeys.MESSAGE_ID, msgID);
+        obj.put(MessageKeys.MESSAGE, "Byzantine Failure");
+        
+        byte[] buffer = obj.toString().getBytes();
 
-            DatagramSocket socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
+        DatagramSocket socket = new DatagramSocket();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
 
-            socket.send(packet);
-            Thread.sleep(200);
-        }
+        socket.send(packet);
+        socket.close();
     }
 
     void processCrashFailure() {

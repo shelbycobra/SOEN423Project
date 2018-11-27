@@ -8,12 +8,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.sun.media.sound.InvalidFormatException;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UDPServerThread extends Thread {
 
@@ -26,6 +30,7 @@ public class UDPServerThread extends Thread {
     private int port;
     private String msgID;
     private String location;
+    private AtomicBoolean keepRunning = new AtomicBoolean(true);
 
     UDPServerThread (DEMSImpl demsImpl, int port, String location) {
         this.demsImpl = demsImpl;
@@ -36,14 +41,22 @@ public class UDPServerThread extends Thread {
 
     @Override
     public void run() {
+		 System.out.println(location + " server UDP Socket started. Waiting for request...");
+
         try {
-            aSocket = new DatagramSocket(port);
-            System.out.println(location + " server UDP Socket started. Waiting for request...");
-            
-            while(true) 
-            {
+			aSocket = new DatagramSocket(port);
+		} catch (SocketException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		 while(keepRunning.get()) 
+		 {
+	    	try {
+           
                 byte[] buffer = new byte[1000];
                 request = new DatagramPacket(buffer, buffer.length);
+
+                aSocket.setSoTimeout(1000);
                 aSocket.receive(request);
 
                 byte request_type = request.getData()[0];
@@ -118,16 +131,25 @@ public class UDPServerThread extends Thread {
                         }
                     }
                 }
-            }
-        } catch (ParseException | SocketException e) {
-            e.printStackTrace();
-        } catch (IOException e){
-            System.out.println("Socket already bound.");
-        } finally {
-            if(aSocket != null) 
-                aSocket.close();
-        }
+            
+	        } catch (SocketTimeoutException e) {
+	        	continue;
+	        } catch (ParseException | SocketException e) {
+	            e.printStackTrace();
+	        } catch (IOException e){
+	            System.out.println("Socket already bound.");
+	        } 
+		 }
     }
+    
+//    public void shutdown() {
+//    	try {
+//    		System.out.println("Shutting down socket");
+//    		aSocket.close();
+//    	} catch (NullPointerException e) {
+//    		// DO NOTHING
+//    	}
+//    }
     
     /*
     *  SEND RECORD COUNTS
@@ -199,8 +221,6 @@ public class UDPServerThread extends Thread {
      }
 
      private void replyToFE(String msg, Config.StatusCode status) throws IOException {
-
-         DatagramSocket socket = new DatagramSocket();
          JSONObject message = new JSONObject();
          message.put(MessageKeys.MESSAGE, msg);
          message.put(MessageKeys.MESSAGE_ID, msgID);
@@ -209,8 +229,9 @@ public class UDPServerThread extends Thread {
 
          byte[] buffer = message.toString().getBytes();
          DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.FRONT_END), Config.PortNumbers.RE_FE);
-
-         socket.send(packet);
+         
+         System.out.println("** Sending message to FE: " + message.toString());
+         aSocket.send(packet);
      }
 
      private Project[] getProjectArray(JSONArray recordData) {

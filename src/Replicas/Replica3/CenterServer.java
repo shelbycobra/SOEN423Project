@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,10 +15,10 @@ import org.json.simple.parser.ParseException;
 import DEMS.Config;
 import DEMS.MessageKeys;
 
-public class CenterServer extends Thread {
+public class CenterServer {
 
 	private String location;
-	private Thread udpServerThread;
+	private UdpServer udpServer;
 	private Logger logger;
 	private JSONParser jsonParser = new JSONParser();
 
@@ -41,12 +42,15 @@ public class CenterServer extends Thread {
 		public static final String recordExistsInternal = "recordExistsInternal";
 	}
 
-	class UdpServer implements Runnable {
+	AtomicBoolean runThreadsAtomicBoolean = new AtomicBoolean(true);
+
+	class UdpServer extends Thread {
 
 		@Override
 		public void run() {
 			try {
 				int localPort = 0;
+
 				if (location.equals("CA")) {
 					localPort = Config.Replica3.CA_PORT;
 				} else if (location.equals("UK")) {
@@ -56,12 +60,28 @@ public class CenterServer extends Thread {
 				}
 
 				DatagramSocket serverSocket = new DatagramSocket(localPort);
+				serverSocket.setSoTimeout(1000);
+
 				byte[] receiveData = new byte[1024];
 				byte[] sendData = new byte[1024];
+
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 					logger.log("udp waiting for connection on port: " + localPort);
-					serverSocket.receive(receivePacket);
+
+					while (true) {
+						try {
+							serverSocket.receive(receivePacket);
+							break;
+						} catch(SocketTimeoutException e) {
+							if (runThreadsAtomicBoolean.get()) {
+								continue;
+							} else {
+								serverSocket.close();
+								return;
+							}
+						}
+					}
 
 					JSONObject jsonReceiveObject;
 					try {
@@ -76,7 +96,8 @@ public class CenterServer extends Thread {
 
 					JSONObject jsonSendObject = new JSONObject();
 					jsonSendObject.put(MessageKeys.MESSAGE_ID, jsonReceiveObject.get(MessageKeys.MESSAGE_ID));
-					jsonSendObject.put(MessageKeys.RM_PORT_NUMBER, Config.Replica3.RM_PORT);
+					jsonSendObject.put(MessageKeys.RM_PORT_NUMBER, Integer.toString(Config.Replica3.RM_PORT));
+					//jsonSendObject.put(MessageKeys.REPLICA_NUMBER, "3");
 
 					String commandType = jsonReceiveObject.get(MessageKeys.COMMAND_TYPE).toString();
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
@@ -146,6 +167,7 @@ public class CenterServer extends Thread {
 					sendData = jsonSendObject.toString().getBytes();
 					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 					serverSocket.send(sendPacket1);
+
 					InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
 					DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
 					serverSocket.send(sendPacket2);
@@ -161,7 +183,17 @@ public class CenterServer extends Thread {
 		this.location = location.toUpperCase();
 		this.logger = new Logger(location);
 
-		udpServerThread = new Thread(new UdpServer());
+		udpServer = new UdpServer();
+		udpServer.start();
+	}
+
+	public void stopServer() {
+		runThreadsAtomicBoolean.set(false);
+		try {
+			udpServer.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public synchronized String createMRecord(String managerID, String firstName, String lastName, int employeeID, String mailID, Projects projects, String location) {
@@ -362,11 +394,6 @@ public class CenterServer extends Thread {
 		records.removeRecord(recordID);
 
 		return "ok";
-	}
-
-	@Override
-	public void run() {
-		udpServerThread.start();
 	}
 
 }

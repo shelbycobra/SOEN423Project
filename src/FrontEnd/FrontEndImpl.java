@@ -272,6 +272,12 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    String data = new String(responsePacket.getData()).trim();
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
 	                    
+	                    String commandType = (String) jsonMessage.get(MessageKeys.COMMAND_TYPE);
+	                    if (commandType != null && commandType.equals(Config.ACK)) {
+	                    	System.out.println("received ack from RM " + responsePacket.getPort() + ". jsonMessage: " + jsonMessage.toJSONString());
+	                    	continue;
+	                    }
+	                    
 	                    int port = Integer.parseInt(jsonMessage.get(MessageKeys.RM_PORT_NUMBER).toString());
 	                    Message message = messages.get(Integer.parseInt(jsonMessage.get(MessageKeys.MESSAGE_ID).toString()));
 	                    ReturnMessage returnMessage = new ReturnMessage(port, jsonMessage.get(MessageKeys.MESSAGE).toString(), jsonMessage.get(MessageKeys.STATUS_CODE).toString());
