@@ -331,8 +331,6 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		{
 			while (elapsedTime < 2 * longestTimeout)
 			{
-				// System.out.println("Received " + message.getReturnMessages().size() + " messages so far...");
-				
 				if (message.getReturnMessages().size() == 3)
 				{
 					System.out.println("Got 3 messages!");
