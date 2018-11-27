@@ -189,7 +189,7 @@ public class ReplicaManager {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(MessageKeys.COMMAND_TYPE, Config.SET_DATA);
 			jsonObject.put(MessageKeys.MESSAGE, jsonArray);
-			byte[] sendDate = jsonArray.toString().getBytes();
+			byte[] sendDate = jsonObject.toString().getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, thisReplicaHost, thisReplicaPort);
 			datagramSocket.send(datagramPacket);
 		}
