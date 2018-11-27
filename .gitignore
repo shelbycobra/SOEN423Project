@@ -6,6 +6,7 @@ Test/Logs/
 Logs/ManagerLogs/*
 Logs/ServerLogs/*
 *.txt
+orb.db/
 
 # bin folder
 bin/
