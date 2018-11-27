@@ -114,7 +114,7 @@ public class CenterServer {
 						internalMessage = true;
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
-					} else if (commandType == InternalMessage.recordExistsInternal) {
+					} else if (commandType.equals(InternalMessage.recordExistsInternal)) {
 						internalMessage = true;
 						sendMessage += "Record Exists in "+location+" Database.\n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
