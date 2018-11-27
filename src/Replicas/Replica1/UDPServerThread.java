@@ -90,7 +90,7 @@ public class UDPServerThread extends Thread {
                             JSONArray jsonProjects = (JSONArray) jsonMessage.get(MessageKeys.PROJECTS);
                             Project[] projects = getProjectArray(jsonProjects);
                             System.out.println("Creating Record: " + jsonMessage.toJSONString());
-
+                            
                             // Create Manager Record
                             String msg = demsImpl.createMRecord((String) jsonMessage.get(MessageKeys.MANAGER_ID),
                                     (String) jsonMessage.get(MessageKeys.FIRST_NAME),

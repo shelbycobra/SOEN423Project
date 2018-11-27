@@ -74,7 +74,7 @@ public class Client
 	
 	String createMRecord(String firstName, String lastName, String employeeID, String mailID, Project[] projects, String location)
 	{
-		return server.createMRecord(managerID, firstName, lastName, employeeID, mailID, new Project[]{new Project("PID", "ClientName", "ProjectName")}, managerLocale);
+		return server.createMRecord(managerID, firstName, lastName, employeeID, mailID, projects, managerLocale);
 	}
 	
 	String createERecord(String firstName, String lastName, String employeeID, String mailID, String projectID)

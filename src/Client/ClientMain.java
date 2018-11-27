@@ -299,7 +299,7 @@ public class ClientMain
 	 * SETUP LOG FILE
 	 */
 	private static BufferedWriter setupLogFile(String managerID) throws IOException{
-		String logFileName = "../Logs/ManagerLogs/" + managerID + "_log.txt";
+		String logFileName = "Logs/ManagerLogs/" + managerID + "_log.txt";
 		Path path = Paths.get(logFileName);
 		File logFile = new File(path.toAbsolutePath().toString());
 		return new BufferedWriter(new FileWriter(logFile, true));
@@ -399,9 +399,8 @@ public class ClientMain
 		System.out.println("Projects: ");
 
 		for(int i = 0; i<projects.size(); i++) {
-			System.out.println("\t"+projects.get(i));
+			System.out.println("\tProject ID:" + projects.get(i).projectID + "\tProject Client: " + projects.get(i).clientName + "\tProject Name: " + projects.get(i).projectName);
 		}
-
 
 		askLocation_Strict(in, log);
 

@@ -177,7 +177,8 @@ public class CenterServer {
 					int port = receivePacket.getPort();
 
 
-					sendData = sendMessage.getBytes();
+					jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
+					sendData = jsonSendObject.toString().getBytes();
 					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 					serverSocket.send(sendPacket1);
 
