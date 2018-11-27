@@ -36,11 +36,11 @@ public class Config {
 	
 	public static class IPAddresses
 	{
-		public static final String REPLICA1 = "132.205.64.132";
-		public static final String REPLICA2 = "132.205.64.137";
-		public static final String REPLICA3 = "132.205.64.123";
-		public static final String SEQUENCER = "132.205.64.132";
-		public static final String FRONT_END = "132.205.64.137";
+		public static final String REPLICA1 = "132.205.64.153";
+		public static final String REPLICA2 = "132.205.64.129";
+		public static final String REPLICA3 = "132.205.64.129";
+		public static final String SEQUENCER = "132.205.64.153";
+		public static final String FRONT_END = "132.205.64.129";
 	}
 
 	public enum StatusCode {

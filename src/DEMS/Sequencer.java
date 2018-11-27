@@ -12,7 +12,7 @@ import java.util.concurrent.Semaphore;
 
 public class Sequencer {
 
-    private final static int MAX_NUM_ACKS = 3, TIME_LIMIT = 10;
+    private final static int MAX_NUM_ACKS = 3, TIME_LIMIT = 50;
 
     private static int sequenceNumber = 1;
     private static ArrayDeque<JSONObject> deliveryQueue = new ArrayDeque<>();
