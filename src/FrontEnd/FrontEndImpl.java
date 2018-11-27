@@ -2,6 +2,8 @@ package FrontEnd;
 
 import DEMS.Config;
 import DEMS.MessageKeys;
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -270,6 +272,7 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 	                    
 	                    datagramSocket.receive(responsePacket);
 	                    String data = new String(responsePacket.getData()).trim();
+	                    System.out.println(data);
 	                    JSONObject jsonMessage = (JSONObject) parser.parse(data);
 	                    
 	                    String commandType = (String) jsonMessage.get(MessageKeys.COMMAND_TYPE);
@@ -518,9 +521,25 @@ public class FrontEndImpl extends FrontEndInterfacePOA
 		payload.put(MessageKeys.FIRST_NAME, firstName);
 		payload.put(MessageKeys.LAST_NAME, lastName);
 		payload.put(MessageKeys.EMPLOYEE_ID, employeeID);
-		payload.put(MessageKeys.PROJECTS, projects);
+		payload.put(MessageKeys.MAIL_ID, mailID);
 		payload.put(MessageKeys.LOCATION, location);
 		payload.put(MessageKeys.COMMAND_TYPE, Config.CREATE_MANAGER_RECORD);
+		
+		JSONArray projectArray = new JSONArray();
+		
+		for (Project project : projects)
+		{
+			JSONObject jsonProject = new JSONObject();
+			
+			jsonProject.put(MessageKeys.PROJECT_ID, project.projectID);
+			jsonProject.put(MessageKeys.PROJECT_NAME, project.projectName);
+			jsonProject.put(MessageKeys.PROJECT_CLIENT, project.clientName);
+			
+			projectArray.add(jsonProject);
+		}
+		System.out.println(projectArray.toString());
+		System.out.println(projects[0].projectID + " " + projects[0].projectName + " " + projects[0].clientName);
+		payload.put(MessageKeys.PROJECTS, projectArray);
 		
 		try
 		{
