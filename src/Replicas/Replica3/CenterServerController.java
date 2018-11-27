@@ -44,7 +44,7 @@ public class CenterServerController implements DEMS.Replica {
 	private Config.Failure errorType = Config.Failure.NONE;
 
 	AtomicBoolean runThreadsAtomicBoolean = new AtomicBoolean(true);
-
+	
 	private class ListenForPacketsThread extends Thread {
 
 		@Override
@@ -135,11 +135,6 @@ public class CenterServerController implements DEMS.Replica {
 						mutex.release();
 					}
 					
-					// Checks if failure should start
-					if (checkToStartFailure(obj.get(MessageKeys.MESSAGE_ID).toString())) {
-						continue;
-					}
-
 					lastSequenceNumber = seqNum;
 					sendMessageToServer(obj);
 					numMessages++;
@@ -174,6 +169,11 @@ public class CenterServerController implements DEMS.Replica {
 				mutex.acquire();
 				deliveryQueue.remove(message);
 				mutex.release();
+				
+				// Checks if failure should start
+				if (checkToStartFailure(message.get(MessageKeys.MESSAGE_ID).toString())) {
+					return;
+				}
 
 				// Setup Server Socket
 				InetAddress address = InetAddress.getLocalHost();
@@ -321,11 +321,14 @@ public class CenterServerController implements DEMS.Replica {
 			jsonArray.add(centerServer.getRecords().getJSONArray(serverLocation));
 		}
 
+		this.logger.log("got data from replica: " + jsonArray.toJSONString());
 		return jsonArray;
 	}
 
 	@Override
 	public void setData(JSONArray jsonArray) {
+		this.logger.log("setting data in replica: " + jsonArray.toJSONString());
+		
 		Records recordsCA = new Records();
 		Records recordsUK = new Records();
 		Records recordsUS = new Records();
