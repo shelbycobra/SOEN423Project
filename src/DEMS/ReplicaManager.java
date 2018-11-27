@@ -222,21 +222,31 @@ public class ReplicaManager {
 			byte[] sendDate = jsonSendObject.toString().getBytes();
 
 			DatagramSocket datagramSocket = new DatagramSocket();
-			DatagramPacket datagramPacket = new DatagramPacket(sendDate, sendDate.length, otherReplicaHost1, otherReplicaPort1);
-			logger.log("getting data from otherReplica1: " + jsonSendObject.toJSONString());
-			// datagramSocket.setSoTimeout(2000);
-			datagramSocket.send(datagramPacket);
-			
-			byte[] receiveData = new byte[1024];
-			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			datagramSocket.receive(receivePacket); // ignore echo
-			datagramSocket.receive(receivePacket);
-			String receiveStringData = new String(receivePacket.getData()).trim();
-			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(receiveStringData);
-			logger.log("got jsonReceiveObject otherReplica1: " + jsonReceiveObject.toJSONString());
-			JSONArray jsonReceiveData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
+			logger.log("getting data from other replicas: " + jsonSendObject.toJSONString());
 
-			replicaSetData(jsonReceiveData);
+			DatagramPacket datagramPacket1 = new DatagramPacket(sendDate, sendDate.length, otherReplicaHost1, otherReplicaPort1);
+			datagramSocket.send(datagramPacket1);
+			byte[] receiveData1 = new byte[1024];
+			DatagramPacket receivePacket1 = new DatagramPacket(receiveData1, receiveData1.length);
+			datagramSocket.receive(receivePacket1); // ignore echo
+			datagramSocket.receive(receivePacket1);
+			String receiveStringData1 = new String(receivePacket1.getData()).trim();
+			JSONObject jsonReceiveObject1 = (JSONObject) jsonParser.parse(receiveStringData1);
+			logger.log("got jsonReceiveObject otherReplica1: " + jsonReceiveObject1.toJSONString());
+			JSONArray jsonReceiveData1 = (JSONArray) jsonReceiveObject1.get(MessageKeys.MESSAGE);
+
+			DatagramPacket datagramPacket2 = new DatagramPacket(sendDate, sendDate.length, otherReplicaHost2, otherReplicaPort2);
+			datagramSocket.send(datagramPacket2);
+			byte[] receiveData2 = new byte[1024];
+			DatagramPacket receivePacket2 = new DatagramPacket(receiveData2, receiveData2.length);
+			datagramSocket.receive(receivePacket2); // ignore echo
+			datagramSocket.receive(receivePacket2);
+			String receiveStringData2 = new String(receivePacket2.getData()).trim();
+			JSONObject jsonReceiveObject2 = (JSONObject) jsonParser.parse(receiveStringData2);
+			logger.log("got jsonReceiveObject otherReplica2: " + jsonReceiveObject2.toJSONString());
+			JSONArray jsonReceiveData2 = (JSONArray) jsonReceiveObject2.get(MessageKeys.MESSAGE);
+
+			replicaSetData(jsonReceiveData1);
 		}
 
 		private void notifyFrontEnd(JSONObject jsonObject) {

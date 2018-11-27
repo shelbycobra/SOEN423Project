@@ -308,7 +308,7 @@ public class CenterServerController implements DEMS.Replica {
 
 	void processCrashFailure() {
 		this.logger.log("entering processCrashFailure");
-		while (true);
+		while (runThreadsAtomicBoolean.get());
 	}
 
 	@Override

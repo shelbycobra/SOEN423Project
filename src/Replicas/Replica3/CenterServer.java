@@ -104,15 +104,18 @@ public class CenterServer {
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
 
 					logger.log(String.format("udp message: managerID: %s, commandType: %s", managerID, commandType));
+					boolean internalMessage = false;
 
 					if (commandType.equals(InternalMessage.getRecordCountInternal)) {
+						internalMessage = true;
 						jsonSendObject.put(MessageKeys.MESSAGE, Integer.toString(records.getRecordCount()));
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(InternalMessage.transferRecordInternal)) {
-
+						internalMessage = true;
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
-					} else if (commandType == InternalMessage.recordExistsInternal) {
+					} else if (commandType.equals(InternalMessage.recordExistsInternal)) {
+						internalMessage = true;
 						sendMessage += "Record Exists in "+location+" Database.\n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.MESSAGE, Boolean.toString(records.recordExists(recordID)));
@@ -126,16 +129,22 @@ public class CenterServer {
 						sendMessage += "Transfer Record: \n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String remoteCenterServerName = (String) jsonReceiveObject.get(MessageKeys.REMOTE_SERVER_NAME);
-						String recordString = records.getRecord(recordID).toString();
-						String message = transferRecord(managerID, recordID, remoteCenterServerName);
-						if (message.equals("ok")) {
-							sendMessage += "Transfer Success \n";
-							jsonSendObject.put(MessageKeys.MESSAGE, recordString);
+						try {
+							String recordString = records.getRecord(recordID).toString();
+							String message = transferRecord(managerID, recordID, remoteCenterServerName);
+							message = transferRecord(managerID, recordID, remoteCenterServerName);
+							if (message.equals("ok")) {
+								sendMessage += "Transfer Success \n";
+								jsonSendObject.put(MessageKeys.MESSAGE, recordString);
+								jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+							} else {
+								sendMessage += "Transfer Failure \n";
+								jsonSendObject.put(MessageKeys.MESSAGE, message);
+								jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
+							}
+						} catch (IllegalArgumentException e) {
+							jsonSendObject.put(MessageKeys.MESSAGE, "could not find record ID "+recordID+" in "+location+" hashmap");
 							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
-						} else {
-							sendMessage += "Transfer Failure \n";
-							jsonSendObject.put(MessageKeys.MESSAGE, message);
-							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 						}
 					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
 						sendMessage += location + " Server Creating Manager Record: ";
@@ -163,9 +172,14 @@ public class CenterServer {
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
-						editRecord(managerID, recordID, fieldName, newValue);
-						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
-						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+						try {
+							editRecord(managerID, recordID, fieldName, newValue);
+							jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+						} catch (IllegalArgumentException e) {
+							jsonSendObject.put(MessageKeys.MESSAGE, "could not find record ID "+recordID+" in "+location+" hashmap");
+							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
+						}
 					} else {
 						sendMessage += location + " Server -  Unknown Command Type ";
 						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
@@ -176,15 +190,17 @@ public class CenterServer {
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
 
-
-					jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
+					// jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
 					sendData = jsonSendObject.toString().getBytes();
-					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-					serverSocket.send(sendPacket1);
 
-					InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
-					DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
-					serverSocket.send(sendPacket2);
+					if (internalMessage) {
+						DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+						serverSocket.send(sendPacket1);
+					} else {
+						InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
+						DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
+						serverSocket.send(sendPacket2);
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -331,7 +347,7 @@ public class CenterServer {
 		return 0;
 	}
 
-	public synchronized String transferRecord(String managerID, String recordID, String remoteCenterServerName) {
+	public synchronized String transferRecord(String managerID, String recordID, String remoteCenterServerName) throws IllegalArgumentException {
 		this.logger.log(String.format("transferRecord(%s, %s, %s)", managerID, recordID, remoteCenterServerName));
 
 		int remoteCenterServerPort = 0;
@@ -343,13 +359,7 @@ public class CenterServer {
 			remoteCenterServerPort = Config.Replica3.US_PORT;
 		}
 
-		Record recordToTransfer = null;
-		try {
-			recordToTransfer = records.getRecord(recordID);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			return "recordToTransfer does not exist";
-		}
+		Record recordToTransfer = records.getRecord(recordID);
 
 		boolean newServerContainsRecordResponse;
 
