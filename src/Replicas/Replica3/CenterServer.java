@@ -104,15 +104,18 @@ public class CenterServer {
 					String managerID = (String) jsonReceiveObject.get(MessageKeys.MANAGER_ID);
 
 					logger.log(String.format("udp message: managerID: %s, commandType: %s", managerID, commandType));
+					boolean internalMessage = false;
 
 					if (commandType.equals(InternalMessage.getRecordCountInternal)) {
+						internalMessage = true;
 						jsonSendObject.put(MessageKeys.MESSAGE, Integer.toString(records.getRecordCount()));
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(InternalMessage.transferRecordInternal)) {
-
+						internalMessage = true;
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType == InternalMessage.recordExistsInternal) {
+						internalMessage = true;
 						sendMessage += "Record Exists in "+location+" Database.\n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.MESSAGE, Boolean.toString(records.recordExists(recordID)));
@@ -176,15 +179,17 @@ public class CenterServer {
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
 
-
-					jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
+					// jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
 					sendData = jsonSendObject.toString().getBytes();
-					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-					serverSocket.send(sendPacket1);
 
-					InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
-					DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
-					serverSocket.send(sendPacket2);
+					if (internalMessage) {
+						DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+						serverSocket.send(sendPacket1);
+					} else {
+						InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
+						DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
+						serverSocket.send(sendPacket2);
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
