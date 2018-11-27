@@ -44,7 +44,73 @@ public class CenterServerController implements DEMS.Replica {
 	private Config.Failure errorType = Config.Failure.NONE;
 
 	AtomicBoolean runThreadsAtomicBoolean = new AtomicBoolean(true);
+    private CommunicateWithRMThread communicateWithRM;
+    private Semaphore proceedWithMessagesMutex; // Used when the RM needs to communicate with the replica
 
+    private JSONParser parser = new JSONParser();
+
+    private class CommunicateWithRMThread extends Thread {
+
+        private DatagramSocket socket;
+
+        @Override
+        public void run(){
+
+            try {
+				socket = new DatagramSocket(Config.Replica3.RE_PORT);
+			} catch (SocketException e1) {
+				e1.printStackTrace();
+			}
+
+            logger.log("listening for packats from RM on port: " + Config.Replica3.RE_PORT);
+            
+        	while (runThreadsAtomicBoolean.get()) {
+        		try {
+                    byte[] buffer = new byte[1024*10];
+
+        			socket.setSoTimeout(1000);
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+                    socket.receive(packet);
+
+                    JSONObject obj = (JSONObject) parser.parse(new String(packet.getData()).trim());
+                    logger.log("received message from RM: " + obj.toJSONString());
+                    if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.GET_DATA)) {
+                        sendDataToRM(packet.getPort());
+                    } else if (obj.get(MessageKeys.COMMAND_TYPE).toString().equals(Config.SET_DATA)) {
+                        JSONArray arr = (JSONArray) parser.parse(new String(obj.get(MessageKeys.MESSAGE).toString()).trim());
+                        proceedWithMessagesMutex.acquire();
+                        logger.log("setting data");
+                        setData(arr);
+                        proceedWithMessagesMutex.release();
+                    }
+	            } catch (SocketTimeoutException e) {
+	            	continue;
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            } catch (ParseException e) {
+	                e.printStackTrace();
+	            } catch (InterruptedException e) {
+	              
+	            }
+	        }
+        	
+            logger.log("communicateWithRMThread is shutting down...");
+            socket.close();
+        }
+
+        private void sendDataToRM(int port) throws IOException,InterruptedException {
+        	logger.log("sending data to RM on port: " + port);
+            proceedWithMessagesMutex.acquire();
+            JSONArray arr = getData();
+            proceedWithMessagesMutex.release();
+            byte[] buffer = arr.toString().getBytes();
+            socket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Config.IPAddresses.REPLICA1), port);
+            socket.send(packet);
+        }
+    }
+    
 	private class ListenForPacketsThread extends Thread {
 
 		@Override
@@ -135,11 +201,6 @@ public class CenterServerController implements DEMS.Replica {
 						mutex.release();
 					}
 					
-					// Checks if failure should start
-					if (checkToStartFailure(obj.get(MessageKeys.MESSAGE_ID).toString())) {
-						continue;
-					}
-
 					lastSequenceNumber = seqNum;
 					sendMessageToServer(obj);
 					numMessages++;
@@ -174,6 +235,11 @@ public class CenterServerController implements DEMS.Replica {
 				mutex.acquire();
 				deliveryQueue.remove(message);
 				mutex.release();
+				
+				// Checks if failure should start
+				if (checkToStartFailure(message.get(MessageKeys.MESSAGE_ID).toString())) {
+					return;
+				}
 
 				// Setup Server Socket
 				InetAddress address = InetAddress.getLocalHost();
@@ -201,6 +267,7 @@ public class CenterServerController implements DEMS.Replica {
 		// Instantiate Semaphores
 		mutex = new Semaphore(1);
 		deliveryQueueMutex = new Semaphore(0);
+        proceedWithMessagesMutex = new Semaphore(1);
 
 		// Instantiate Delivery Queue with the MessageComparator
 		MessageComparator msgComp = new MessageComparator();
@@ -246,8 +313,10 @@ public class CenterServerController implements DEMS.Replica {
 
 	@Override
 	public void runServers(int errorType) {
+		runThreadsAtomicBoolean.set(true);
+
 		if (errorType == Config.Failure.NONE.ordinal()) {
-			// no error
+			this.errorType = Config.Failure.NONE;
 		} else if (errorType == Config.Failure.BYZANTINE.ordinal()) {
 			this.errorType = Config.Failure.BYZANTINE;
 		} else if (errorType == Config.Failure.PROCESS_CRASH.ordinal()) {
@@ -263,10 +332,11 @@ public class CenterServerController implements DEMS.Replica {
 
 			listenForPackets = new ListenForPacketsThread();
 			processMessages = new ProcessMessagesThread();
-
+			communicateWithRM = new CommunicateWithRMThread();
+			
 			listenForPackets.start();
 			processMessages.start();
-
+            communicateWithRM.start();
 		} catch (SocketException e) {
 			this.logger.log("CenterServerController Multicast Socket is closed.");
 		} catch (InterruptedException e ) {
@@ -298,6 +368,7 @@ public class CenterServerController implements DEMS.Replica {
 
 		try {
 			listenForPackets.join();
+            communicateWithRM.join();
 			processMessages.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -321,11 +392,14 @@ public class CenterServerController implements DEMS.Replica {
 			jsonArray.add(centerServer.getRecords().getJSONArray(serverLocation));
 		}
 
+		this.logger.log("got data from replica: " + jsonArray.toJSONString());
 		return jsonArray;
 	}
 
 	@Override
 	public void setData(JSONArray jsonArray) {
+		this.logger.log("setting data in replica: " + jsonArray.toJSONString());
+		
 		Records recordsCA = new Records();
 		Records recordsUK = new Records();
 		Records recordsUS = new Records();
