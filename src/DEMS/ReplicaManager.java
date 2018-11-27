@@ -142,10 +142,10 @@ public class ReplicaManager {
 						try {
 							logger.log("trying to restart local replica...");
 							restartReplica();
-							logger.log("restarting local replica failed");
+							logger.log("restarting local replica successful");
 						} catch (Exception e) {
 							e.printStackTrace();
-							logger.log("restarting local replica successful");
+							logger.log("restarting local replica failed");
 							jsonObject.put(MessageKeys.MESSAGE, Config.FAILED_REPLICA_RESTART_FAILED);
 							jsonObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 							continue;
@@ -229,13 +229,14 @@ public class ReplicaManager {
 			
 			byte[] receiveData = new byte[1024];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			// datagramSocket.receive(receivePacket); // ignore echo packet
+			datagramSocket.receive(receivePacket); // ignore echo
 			datagramSocket.receive(receivePacket);
-			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(new String(receivePacket.getData()).trim());
-			logger.log("got data from otherReplica1: " + jsonReceiveObject.toJSONString());
+			String receiveStringData = new String(receivePacket.getData()).trim();
+			JSONObject jsonReceiveObject = (JSONObject) jsonParser.parse(receiveStringData);
+			logger.log("got jsonReceiveObject otherReplica1: " + jsonReceiveObject.toJSONString());
+			JSONArray jsonReceiveData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
 
-			JSONArray recordData = (JSONArray) jsonReceiveObject.get(MessageKeys.MESSAGE);
-			replicaSetData(recordData);
+			replicaSetData(jsonReceiveData);
 		}
 
 		private void notifyFrontEnd(JSONObject jsonObject) {
