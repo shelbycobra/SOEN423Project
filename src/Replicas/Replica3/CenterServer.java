@@ -191,17 +191,17 @@ public class CenterServer {
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
 
-					logger.log("udp command response: " + jsonSendObject);
-					InetAddress IPAddress = receivePacket.getAddress();
-					int port = receivePacket.getPort();
-
 					// jsonSendObject.put(MessageKeys.MESSAGE, sendMessage);
 					sendData = jsonSendObject.toString().getBytes();
 
 					if (internalMessage) {
+						logger.log("internal udp command response: " + jsonSendObject);
+						InetAddress IPAddress = receivePacket.getAddress();
+						int port = receivePacket.getPort();
 						DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 						serverSocket.send(sendPacket1);
 					} else {
+						logger.log("frontend udp command response: " + jsonSendObject);
 						InetAddress frontEndHost = InetAddress.getByName(Config.IPAddresses.FRONT_END);
 						DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, frontEndHost, Config.PortNumbers.RE_FE);
 						serverSocket.send(sendPacket2);
