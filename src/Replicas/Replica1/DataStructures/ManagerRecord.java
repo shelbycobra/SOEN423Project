@@ -61,7 +61,7 @@ public class ManagerRecord extends Record {
 
 		record.put(MessageKeys.FIRST_NAME, getFirstName());
 		record.put(MessageKeys.LAST_NAME, getLastName());
-		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID());
+		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID()+"");
 		record.put(MessageKeys.MAIL_ID, getMailID());
 		record.put(MessageKeys.LOCATION, location);
 		record.put(MessageKeys.PROJECTS, getProjectsAsJSONArray());

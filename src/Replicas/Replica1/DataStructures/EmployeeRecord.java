@@ -42,7 +42,7 @@ public class EmployeeRecord extends Record {
 
 		record.put(MessageKeys.FIRST_NAME, getFirstName());
 		record.put(MessageKeys.LAST_NAME, getLastName());
-		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID());
+		record.put(MessageKeys.EMPLOYEE_ID, getEmployeeID()+"");
 		record.put(MessageKeys.MAIL_ID, getMailID());
 		record.put(MessageKeys.PROJECT_ID, projectID);
 

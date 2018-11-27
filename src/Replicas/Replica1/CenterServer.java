@@ -329,6 +329,7 @@ public class CenterServer implements Replica {
             listenForPackets.join();
             processMessages.join();
             communicateWithRM.join();
+            Thread.sleep(300);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -426,7 +427,7 @@ public class CenterServer implements Replica {
     }
 
     void processCrashFailure() {
-        while (true);
+        while (keepRunning.get());
     }
 }
 

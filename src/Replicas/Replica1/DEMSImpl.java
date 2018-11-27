@@ -121,9 +121,9 @@ public class DEMSImpl {
                     writeToLogFile(msg, log);
                     System.out.println(msg);
                 } else {
-                    if (fieldName.equals("mailID"))
+                    if (fieldName.equals("mail_id"))
                         record.setMailID(newValue);
-                    else if (fieldName.equals("projectID"))
+                    else if (fieldName.equals("project_id"))
                         record.setProjectID(newValue);
                     else {
                         msg += "DEMSClass: Invalid Field Name: " + fieldName;
@@ -143,17 +143,17 @@ public class DEMSImpl {
                     msg += "Record does not exist.";
                     writeToLogFile(msg, log);
                 } else {
-                    if (fieldName.equals("mailID"))
+                    if (fieldName.equals("mail_id"))
                         record.setMailID(newValue);
                     else if (fieldName.trim().equals("location"))
                         record.setLocation(newValue);
-                    else if (fieldName.equals("projectID")) {
+                    else if (fieldName.equals("project_id")) {
                         Project project = record.getProject(0);
                         project.setProjectID(newValue);
-                    } else if (fieldName.equals("projectClient")) {
+                    } else if (fieldName.equals("project_client")) {
                         Project project = record.getProject(0);
                         project.setProjectClient(newValue);
-                    } else if (fieldName.equals("projectName")) {
+                    } else if (fieldName.equals("project_name")) {
                         Project project = record.getProject(0);
                         project.setProjectName(newValue);
                     } else {
@@ -185,7 +185,7 @@ public class DEMSImpl {
         DatagramSocket aSocket = null;
         
         if (remoteCenterServerName.trim().equals(location))
-            return "Entry "+recordID+" already exists in database:" + map;
+            return "Entry "+recordID+" already exists in " +location+ " database";
         
         try {
             InetAddress address = InetAddress.getByName("localhost");
@@ -193,7 +193,7 @@ public class DEMSImpl {
             Record record = map.getRecord(recordID.trim());
             
             if (record == null) 
-                return "Invalid Record ID: Record Does Not Exist in Current Database:" + map;
+                return "Invalid Record ID: Record Does Not Exist in Current Database("+location+")";
             
             //Create socket and buffer
             aSocket = new DatagramSocket();

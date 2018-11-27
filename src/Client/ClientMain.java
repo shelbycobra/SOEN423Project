@@ -473,11 +473,11 @@ public class ClientMain
 			projectFieldName = askProjectFieldName(in, log, fieldName);
 
 		String newValue = "";
-		if ("projectID".equals(projectFieldName) || "projectID".equals(fieldName)){
+		if ("project_id".equals(projectFieldName) || "project_id".equals(fieldName)){
 			newValue = askProjectID(in, log);
 		} else if ("location".equals(fieldName)){
 			newValue = askLocation(in, log);
-		} else if ("mailID".equals(fieldName)) {
+		} else if ("mail_id".equals(fieldName)) {
 			newValue = askMailID(in, log);
 		} else {
 			System.out.print("New Value: ");
@@ -584,11 +584,11 @@ public class ClientMain
 		while(true){
 			System.out.print("Field Name : ");
 			fieldName = in.nextLine();
-			if ((recordID.startsWith("ER") || recordID.startsWith("er")) && !"mailID".equals(fieldName) && !"projectID".equals(fieldName) ){
-				System.out.println("\n** Invalid fieldName. You can only choose \"mailID\" or \"projectID\". **\n");
+			if ((recordID.startsWith("ER") || recordID.startsWith("er")) && !"mail_id".equals(fieldName) && !"project_id".equals(fieldName) ){
+				System.out.println("\n** Invalid fieldName. You can only choose \"mail_id\" or \"project_id\". **\n");
 				writeToLogFile("Invalid Employee Record Field Name: " + fieldName, log);
-			} else if ((recordID.startsWith("MR") || recordID.startsWith("mr")) && !"mailID".equals(fieldName)  && !"project".equals(fieldName)  && !"location".equals(fieldName)  ) {
-				System.out.println("\n** Invalid fieldName. You can only choose \"mailID\", \"project\", or \"location\". **\n");
+			} else if ((recordID.startsWith("MR") || recordID.startsWith("mr")) && !"mail_id".equals(fieldName)  && !"project".equals(fieldName)  && !"location".equals(fieldName)  ) {
+				System.out.println("\n** Invalid fieldName. You can only choose \"mail_id\", \"project\", or \"location\". **\n");
 				writeToLogFile("Invalid Manager Record Field Name: " + fieldName, log);
 			} else if (!recordID.startsWith("ER") && !recordID.startsWith("MR") && !recordID.startsWith("er") && !recordID.startsWith("mr")){
 				System.out.println("\n** Invalid RecordID. Exiting System. **\n");
@@ -606,8 +606,8 @@ public class ClientMain
 		while(true){
 			System.out.print("Project Field: ");
 			projectFieldName = in.nextLine();
-			if ( !"projectID".equals(projectFieldName) && !"projectClient".equals(projectFieldName) && !"projectName".equals(projectFieldName)){
-				System.out.println("\n** Invalid project field name. You can only choose \"projectID\", \"projectClient\", or \"projectName\". **\n");
+			if ( !"project_id".equals(projectFieldName) && !"project_client".equals(projectFieldName) && !"project_name".equals(projectFieldName)){
+				System.out.println("\n** Invalid project field name. You can only choose \"project_id\", \"project_client\", or \"project_name\". **\n");
 				writeToLogFile("Invalid Project Field Name: " + projectFieldName, log);
 			} else return projectFieldName;
 		}
