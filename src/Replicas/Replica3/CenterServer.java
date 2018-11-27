@@ -5,8 +5,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sun.xml.internal.ws.resources.SenderMessages;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -21,7 +23,7 @@ public class CenterServer {
 	private UdpServer udpServer;
 	private Logger logger;
 	private JSONParser jsonParser = new JSONParser();
-
+	private String sendMessage;
 	private Records records = new Records();
 
 	public Records getRecords() {
@@ -64,7 +66,6 @@ public class CenterServer {
 
 				byte[] receiveData = new byte[1024];
 				byte[] sendData = new byte[1024];
-
 				while (true) {
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 					logger.log("udp waiting for connection on port: " + localPort);
@@ -108,29 +109,36 @@ public class CenterServer {
 						jsonSendObject.put(MessageKeys.MESSAGE, Integer.toString(records.getRecordCount()));
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(InternalMessage.transferRecordInternal)) {
+
 						records.addRecord(jsonReceiveObject);
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType == InternalMessage.recordExistsInternal) {
+						sendMessage += "Record Exists in "+location+" Database.\n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						jsonSendObject.put(MessageKeys.MESSAGE, Boolean.toString(records.recordExists(recordID)));
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.GET_RECORD_COUNT)) {
+						sendMessage += "Get Record Count: \n";
 						String recordCount = getRecordCounts(managerID);
 						jsonSendObject.put(MessageKeys.MESSAGE, recordCount);
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.TRANSFER_RECORD)) {
+						sendMessage += "Transfer Record: \n";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String remoteCenterServerName = (String) jsonReceiveObject.get(MessageKeys.REMOTE_SERVER_NAME);
 						String recordString = records.getRecord(recordID).toString();
 						String message = transferRecord(managerID, recordID, remoteCenterServerName);
 						if (message.equals("ok")) {
+							sendMessage += "Transfer Success \n";
 							jsonSendObject.put(MessageKeys.MESSAGE, recordString);
 							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 						} else {
+							sendMessage += "Transfer Failure \n";
 							jsonSendObject.put(MessageKeys.MESSAGE, message);
 							jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 						}
 					} else if (commandType.equals(Config.CREATE_MANAGER_RECORD)) {
+						sendMessage += location + " Server Creating Manager Record: ";
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
 						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
@@ -141,6 +149,7 @@ public class CenterServer {
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.CREATE_EMPLOYEE_RECORD)) {
+						sendMessage += location + " Server Creating Employee Record: ";
 						String firstName = (String) jsonReceiveObject.get(MessageKeys.FIRST_NAME);
 						String lastName = (String) jsonReceiveObject.get(MessageKeys.LAST_NAME);
 						int employeeID = Integer.parseInt((String) jsonReceiveObject.get(MessageKeys.EMPLOYEE_ID));
@@ -150,6 +159,7 @@ public class CenterServer {
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else if (commandType.equals(Config.EDIT_RECORD)) {
+						sendMessage += "Editing a record ";
 						String recordID = (String) jsonReceiveObject.get(MessageKeys.RECORD_ID);
 						String fieldName = (String) jsonReceiveObject.get(MessageKeys.FIELD_NAME);
 						String newValue = (String) jsonReceiveObject.get(MessageKeys.NEW_VALUE);
@@ -157,6 +167,7 @@ public class CenterServer {
 						jsonSendObject.put(MessageKeys.MESSAGE, records.getRecord(recordID).toString());
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.SUCCESS.toString());
 					} else {
+						sendMessage += location + " Server -  Unknown Command Type ";
 						jsonSendObject.put(MessageKeys.MESSAGE, "unknown command type");
 						jsonSendObject.put(MessageKeys.STATUS_CODE, Config.StatusCode.FAIL.toString());
 					}
@@ -164,7 +175,9 @@ public class CenterServer {
 					logger.log("udp command response: " + jsonSendObject);
 					InetAddress IPAddress = receivePacket.getAddress();
 					int port = receivePacket.getPort();
-					sendData = jsonSendObject.toString().getBytes();
+
+
+					sendData = sendMessage.getBytes();
 					DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 					serverSocket.send(sendPacket1);
 
@@ -201,6 +214,15 @@ public class CenterServer {
 
 		ManagerRecord record = new ManagerRecord(firstName, lastName, employeeID, mailID, projects, location);
 		records.addRecord(record);
+		sendMessage += "Record created: " + record.getRecordID();
+		sendMessage += "\n\tFull Name: " + firstName + " " + lastName + "\n\tEmployee ID: " + employeeID + "\n\tMail ID: " + mailID + "\n\tProjects:";
+
+		List<Project> projs = projects.getProjects();
+		for (Project p : projs) {
+			sendMessage += "\n\t\tProject ID: " + p.getID();
+			sendMessage += "\n\t\tProject Client: " + p.getClientName();
+			sendMessage += "\n\t\tProject Name: " + p.getProjectName();
+		}
 
 		return record.getRecordID();
 	}
@@ -210,7 +232,8 @@ public class CenterServer {
 
 		EmployeeRecord record = new EmployeeRecord(firstName, lastName, employeeID, mailID, projectID);
 		records.addRecord(record);
-
+		sendMessage += "Record created: ";
+		sendMessage += record.toString();
 		return record.getRecordID();
 	}
 
@@ -274,14 +297,15 @@ public class CenterServer {
 		// remove comma at end of string
 		result = result.substring(0, result.length() - 2);
 
+		sendMessage += result;
 		return result;
 	}
 
 	public synchronized int editRecord(String managerID, String recordID, String fieldName, String newValue) {
 		this.logger.log(String.format("editRecord(%s, %s, %s, %s)", managerID, recordID, fieldName, newValue));
-
+		Record record;
 		try {
-			records.editRecord(recordID, fieldName, newValue);
+			record = records.editRecord(recordID, fieldName, newValue);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			return -2;
@@ -289,6 +313,11 @@ public class CenterServer {
 			e.printStackTrace();
 			return -1;
 		}
+
+		sendMessage += record.toString();
+
+		if (record == null)
+			return -1;
 
 		return 0;
 	}
